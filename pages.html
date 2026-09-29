@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>გვერდები | Emigrantbook</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #050505;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ზედა ჰედერი */
+    .pages-header {
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f2f5;
+      z-index: 100;
+    }
+
+    .pages-header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pages-back-btn {
+      background: none;
+      border: none;
+      font-size: 26px;
+      font-weight: 300;
+      color: #050505;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .pages-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    /* მოქმედების ღილაკები ზედა ზოლში */
+    .pages-top-actions {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f2f5;
+      overflow-x: auto;
+    }
+
+    .pages-action-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #e4e6eb;
+      border-radius: 20px;
+      border: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #050505;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .pages-action-chip.primary {
+      background: #1877f2;
+      color: #ffffff;
+    }
+
+    .pages-action-chip img {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* სექციის სათაური */
+    .pages-section-header {
+      padding: 16px 16px 8px 16px;
+    }
+
+    .pages-section-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    /* გვერდების ჩამონათვალი */
+    .pages-list {
+      display: flex;
+      flex-direction: column;
+      padding: 0 16px 30px 16px;
+      gap: 12px;
+    }
+
+    .page-item-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f7f8fa;
+      border: 1px solid #e4e6eb;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .page-item-card:active {
+      background: #ebedf0;
+    }
+
+    .page-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-avatar-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #dadde1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .page-avatar-box img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+    }
+
+    .page-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .page-name {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .page-category {
+      font-size: 13px;
+      color: #65676b;
+    }
+
+    .page-switch-btn {
+      padding: 6px 12px;
+      background: #e7f3ff;
+      color: #1877f2;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .pages-empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #65676b;
+      font-size: 14.5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ზედა ჰედერი -->
+  <header class="pages-header">
+    <div class="pages-header-left">
+      <button class="pages-back-btn" onclick="window.location.href='index.html'" aria-label="უკან">‹</button>
+      <span class="pages-title">გვერდები</span>
+    </div>
+  </header>
+
+  <!-- მოქმედებები: შექმნა და ა.შ. -->
+  <div class="pages-top-actions">
+    <button class="pages-action-chip primary" onclick="window.location.href='create-page.html'">
+      <span>+ შექმნა</span>
+    </button>
+    <button class="pages-action-chip" onclick="alert('მოწონებული გვერდები მალე დაემატება')">
+      <span>მოწონებული გვერდები</span>
+    </button>
+    <button class="pages-action-chip" onclick="alert('მოსაწვევები არ არის')">
+      <span>მოწვევები</span>
+    </button>
+  </div>
+
+  <!-- სექცია: თქვენი მართვადი გვერდები -->
+  <div class="pages-section-header">
+    <div class="pages-section-title">თქვენ მიერ მართული გვერდები</div>
+  </div>
+
+  <main class="pages-list" id="pagesListContainer">
+    <div class="pages-empty-state" id="pagesLoading">გვერდები იტვირთება...</div>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        loadUserManagedPages(user.uid);
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    async function loadUserManagedPages(uid) {
+      const container = document.getElementById('pagesListContainer');
+
+      try {
+        const snap = await db.collection('pages')
+          .where('owner_id', '==', uid)
+          .get();
+
+        if (snap.empty) {
+          container.innerHTML = `
+            <div class="pages-empty-state">
+              <span>თქვენ ჯერ არ გაქვთ შექმნილი გვერდი.</span>
+              <button class="pages-action-chip primary" onclick="window.location.href='create-page.html'">ახალი გვერდის შექმნა</button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = "";
+
+        snap.forEach(doc => {
+          const page = doc.data();
+          const pageId = doc.id;
+
+          const card = document.createElement('div');
+          card.className = 'page-item-card';
+          card.innerHTML = `
+            <div class="page-item-left" onclick="alert('გვერდი: ${page.page_name}')">
+              <div class="page-avatar-box">
+                <img src="${page.avatar_url || 'icons/flag.svg'}" class="post-action-icon" alt="flag">
+              </div>
+              <div class="page-info">
+                <span class="page-name">${page.page_name}</span>
+                <span class="page-category">${page.category || 'გვერდი'}</span>
+              </div>
+            </div>
+            <button class="page-switch-btn" onclick="switchToPage('${pageId}', '${page.page_name}')">გადართვა</button>
+          `;
+
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error("Pages load error:", err);
+        container.innerHTML = `<div class="pages-empty-state">შეცდომა გვერდების ჩატვირთვისას.</div>`;
+      }
+    }
+
+    function switchToPage(pageId, pageName) {
+      alert(`თქვენ გადაერთეთ გვერდზე: ${pageName}`);
+      sessionStorage.setItem('active_page_id', pageId);
+      sessionStorage.setItem('active_page_name', pageName);
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
