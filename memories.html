@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>მოგონებები | Emigrantbook</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #050505;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ჰედერი (Facebook Header) */
+    .mem-header {
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #dadde1;
+      z-index: 100;
+    }
+
+    .mem-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .mem-back-btn {
+      background: none;
+      border: none;
+      font-size: 22px;
+      font-weight: bold;
+      color: #050505;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .mem-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .mem-header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mem-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .mem-header-icon-btn img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+    }
+
+    /* კონტენტი */
+    .mem-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 500px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ბარათის ტექსტური ჰედერი */
+    .mem-card-header {
+      padding: 16px 16px 10px 16px;
+    }
+
+    .mem-years-ago {
+      font-size: 17px;
+      font-weight: 800;
+      color: #050505;
+      margin-bottom: 6px;
+    }
+
+    .mem-subtext {
+      font-size: 14px;
+      color: #050505;
+      line-height: 1.4;
+    }
+
+    /* მედია კონტეინერი */
+    .mem-media-wrap {
+      width: 100%;
+      background: #000000;
+      max-height: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .mem-media-wrap img,
+    .mem-media-wrap video {
+      width: 100%;
+      height: auto;
+      max-height: 520px;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* პრივატულობის ზოლი */
+    .mem-privacy-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 14px 16px 10px 16px;
+      font-size: 12.5px;
+      color: #65676b;
+      text-align: center;
+    }
+
+    .mem-privacy-bar img {
+      width: 13px;
+      height: 13px;
+      opacity: 0.7;
+    }
+
+    /* მოქმედების ღილაკები */
+    .mem-actions-row {
+      display: flex;
+      gap: 10px;
+      padding: 0 16px 16px 16px;
+    }
+
+    .mem-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      border: none;
+      transition: background 0.15s ease;
+    }
+
+    .mem-btn-post {
+      background: #e4e6eb;
+      color: #050505;
+    }
+
+    .mem-btn-post:active {
+      background: #d8dadf;
+    }
+
+    .mem-btn-story {
+      background: #e7f3ff;
+      color: #1877f2;
+    }
+
+    .mem-btn-story:active {
+      background: #d0e7ff;
+    }
+
+    /* ნაცრისფერი გამყოფი ზოლი */
+    .mem-divider {
+      height: 8px;
+      background: #e4e6eb;
+      width: 100%;
+    }
+
+    /* ქვედა ბლოკი: "გადაამოწმეთ ეს სივრცე მალე" */
+    .mem-check-later-box {
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .mem-blue-card-art {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #1877f2, #00c6ff);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(24, 119, 242, 0.25);
+      position: relative;
+    }
+
+    .mem-blue-card-art::after {
+      content: '♥';
+      color: #ffffff;
+      font-size: 34px;
+    }
+
+    .mem-check-later-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #050505;
+      line-height: 1.4;
+      max-width: 320px;
+    }
+
+    /* ჩატვირთვის ინდიკატორი */
+    #memLoadingState {
+      text-align: center;
+      padding: 50px 20px;
+      color: #65676b;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ზედა ჰედერი -->
+  <header class="mem-header">
+    <div class="mem-header-left">
+      <button class="mem-back-btn" onclick="window.location.href='index.html'" aria-label="უკან">‹</button>
+      <span class="mem-title">მოგონებები</span>
+    </div>
+    <div class="mem-header-right">
+      <button class="mem-header-icon-btn" onclick="location.reload()" title="განახლება">
+        <img src="icons/clock-4.svg" alt="ისტორია">
+      </button>
+      <button class="mem-header-icon-btn" onclick="alert('მოგონებების შეტყობინებები ჩართულია')" title="პარამეტრები">
+        <img src="icons/settings.svg" alt="პარამეტრები">
+      </button>
+    </div>
+  </header>
+
+  <!-- მთავარი კონტეინერი -->
+  <main class="mem-content">
+    <div id="memLoadingState">მოგონებები იტვირთება...</div>
+
+    <!-- მოგონების ბარათი (ჩაიტვირთება დინამიკურად) -->
+    <div id="memoryCardWrapper" style="display: none;">
+      <div class="mem-card-header">
+        <div class="mem-years-ago" id="memYearsAgoText">წარსული მოგონება Emigrantbook-ზე</div>
+        <div class="mem-subtext" id="memPostCaption">თქვენი მოგონებები ინახავს ძველ ფოტოებსა და მომენტებს თქვენი პროფილიდან.</div>
+      </div>
+
+      <!-- ფოტო ან ვიდეო -->
+      <div class="mem-media-wrap" id="memMediaContainer"></div>
+
+      <!-- პრივატულობა -->
+      <div class="mem-privacy-bar">
+        <img src="icons/lock.svg" alt="დაბლოკილი">
+        <span>ეს მხოლოდ თქვენთვის არის ხილული, სანამ არ გააზიარებთ</span>
+      </div>
+
+      <!-- ღილაკები -->
+      <div class="mem-actions-row">
+        <button class="mem-btn mem-btn-post" onclick="shareMemoryAsPost()">პოსტის შექმნა</button>
+        <button class="mem-btn mem-btn-story" onclick="shareMemoryAsStory()">სიუჟეტის შექმნა</button>
+      </div>
+
+      <div class="mem-divider"></div>
+    </div>
+
+    <!-- ქვედა მუდმივი ბლოკი (ზუსტად სქრინის მიხედვით) -->
+    <div class="mem-check-later-box">
+      <div class="mem-blue-card-art"></div>
+      <div class="mem-check-later-title">
+        გადაამოწმეთ ეს სივრცე მალე სხვა მოგონებებისთვის
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Firebase კონფიგურაცია
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let loadedMemoryPost = null;
+
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        currentUser = user;
+        loadUserMemories(user.uid);
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    // ძველი პოსტების მოძიება Firestore-დან
+    async function loadUserMemories(uid) {
+      const loadingEl = document.getElementById('memLoadingState');
+      const cardWrap = document.getElementById('memoryCardWrapper');
+
+      try {
+        const snap = await db.collection('posts')
+          .where('user_id', '==', uid)
+          .orderBy('created_at', 'asc')
+          .get();
+
+        let memoryCandidate = null;
+        let yearsDiff = 0;
+        const now = new Date();
+
+        snap.forEach(doc => {
+          const data = doc.data();
+          if (data.media_url && !memoryCandidate) {
+            const postDate = data.created_at ? (data.created_at.toDate ? data.created_at.toDate() : new Date(data.created_at)) : null;
+            if (postDate) {
+              const diffTime = Math.abs(now - postDate);
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              
+              // თუ პოსტი 1 თვეზე ძველია, ითვლება მოგონებად
+              if (diffDays >= 30) {
+                memoryCandidate = Object.assign({ id: doc.id }, data);
+                yearsDiff = now.getFullYear() - postDate.getFullYear();
+              }
+            }
+          }
+        });
+
+        if (loadingEl) loadingEl.style.display = 'none';
+
+        if (memoryCandidate) {
+          loadedMemoryPost = memoryCandidate;
+          renderMemoryUI(memoryCandidate, yearsDiff);
+          if (cardWrap) cardWrap.style.display = 'block';
+        } else {
+          // თუ ჯერ ძველი პოსტი არ არის, რჩება მხოლოდ ქვედა საინფორმაციო ბარათი
+          if (cardWrap) cardWrap.style.display = 'none';
+        }
+
+      } catch (err) {
+        console.error("Memories load error:", err);
+        if (loadingEl) loadingEl.innerText = "მოგონებები ვერ ჩაიტვირთა.";
+      }
+    }
+
+    function renderMemoryUI(post, years) {
+      const yearsEl = document.getElementById('memYearsAgoText');
+      const captionEl = document.getElementById('memPostCaption');
+      const mediaBox = document.getElementById('memMediaContainer');
+
+      if (yearsEl) {
+        if (years >= 1) {
+          yearsEl.innerText = `${years} წლის წინ Emigrantbook-ზე`;
+        } else {
+          yearsEl.innerText = `წარსული მოგონება Emigrantbook-ზე`;
+        }
+      }
+
+      if (captionEl && post.content) {
+        captionEl.innerText = post.content;
+      }
+
+      if (mediaBox && post.media_url) {
+        const firstMedia = post.media_url.split(',')[0].trim();
+        if (post.media_type === 'video') {
+          mediaBox.innerHTML = `<video src="${firstMedia}" controls playsinline></video>`;
+        } else {
+          mediaBox.innerHTML = `<img src="${firstMedia}" alt="მოგონება">`;
+        }
+      }
+    }
+
+    // 1. მოგონების პოსტად გაზიარება
+    function shareMemoryAsPost() {
+      if (!loadedMemoryPost || !currentUser) return;
+      
+      const newCaption = prompt("დაამატეთ კომენტარი მოგონებასთან ერთად:", "ვიხსენებ ძველ დროს...") || "";
+
+      db.collection('posts').add({
+        user_id: currentUser.uid,
+        author_name: currentUser.displayName || "Emigrant",
+        content: newCaption + "\n\n(გაზიარებულია მოგონებებიდან)",
+        media_url: loadedMemoryPost.media_url,
+        media_type: loadedMemoryPost.media_type || 'image',
+        likes_count: 0,
+        comments_count: 0,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert("მოგონება წარმატებით გამოქვეყნდა თქვენს კედელზე!");
+        window.location.href = "index.html";
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+      });
+    }
+
+    // 2. მოგონების სიუჟეტად (Story) გაზიარება
+    function shareMemoryAsStory() {
+      if (!loadedMemoryPost || !currentUser) return;
+
+      const firstMedia = loadedMemoryPost.media_url.split(',')[0].trim();
+      const isVideo = loadedMemoryPost.media_type === 'video';
+
+      db.collection('stories').add({
+        user_id: currentUser.uid,
+        media_url: firstMedia,
+        media_type: isVideo ? 'video' : 'image',
+        likes_count: 0,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert("გაზიარდა თქვენს სიუჟეტში!");
+        window.location.href = "index.html";
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+      });
+    }
+  </script>
+</body>
+</html>
