@@ -8880,6 +8880,99 @@ function toggleFbMoreItems(btn) {
   }
 }
 
+
+// საძიებო ველის მთავარ საიტზე ჰედერში
+  function openSearchOverlay() {
+  const overlay = document.getElementById('globalSearchOverlay');
+  overlay.style.display = 'flex';
+  const input = document.getElementById('globalSearchInput');
+  input.value = '';
+  input.focus();
+  document.getElementById('globalSearchResults').innerHTML = '<div class="search-hint-text">ჩაწერეთ სახელი მოსაძებნად...</div>';
+}
+
+function closeSearchOverlay() {
+  document.getElementById('globalSearchOverlay').style.display = 'none';
+}
+
+async function handleGlobalSearch(query) {
+  const container = document.getElementById('globalSearchResults');
+  const cleanQuery = query.trim().toLowerCase();
+
+  if (!cleanQuery) {
+    container.innerHTML = '<div class="search-hint-text">ჩაწერეთ სახელი მოსაძებნად...</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="search-hint-text">იძებნება...</div>';
+
+  try {
+    // 1. გვერდების ძიება 'pages' კოლექციაში
+    const pagesSnap = await db.collection('pages').get();
+    const matchedPages = [];
+
+    pagesSnap.forEach(doc => {
+      const data = doc.data();
+      const pName = (data.page_name || '').toLowerCase();
+      if (pName.includes(cleanQuery)) {
+        matchedPages.push({ id: doc.id, ...data });
+      }
+    });
+
+    // 2. პროფილების ძიება 'profiles' კოლექციაში
+    const profilesSnap = await db.collection('profiles').get();
+    const matchedProfiles = [];
+
+    profilesSnap.forEach(doc => {
+      const data = doc.data();
+      const uName = (data.full_name || data.display_name || '').toLowerCase();
+      if (uName.includes(cleanQuery)) {
+        matchedProfiles.push({ id: doc.id, ...data });
+      }
+    });
+
+    if (matchedPages.length === 0 && matchedProfiles.length === 0) {
+      container.innerHTML = '<div class="search-hint-text">შედეგი ვერ მოიძებნა.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+
+    // გვერდების გამოტანა შედეგებში
+    matchedPages.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'search-result-row';
+      row.onclick = () => window.location.href = `page-view.html?id=${p.id}`;
+      row.innerHTML = `
+        <img src="${p.avatar_url || 'icons/flag.svg'}" class="search-result-avatar" alt="გვერდი">
+        <div>
+          <div class="search-result-name">${p.page_name}</div>
+          <div class="search-result-sub">გვერდი • ${p.category || 'ზოგადი'}</div>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+
+    // ხალხის/პროფილების გამოტანა შედეგებში
+    matchedProfiles.forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'search-result-row';
+      row.onclick = () => window.location.href = `profile.html?uid=${u.id}`;
+      row.innerHTML = `
+        <img src="${u.avatar_url || 'icons/circle-user-round.svg'}" class="search-result-avatar" alt="პროფილი">
+        <div>
+          <div class="search-result-name">${u.full_name || u.display_name || 'მომხმარებელი'}</div>
+          <div class="search-result-sub">მომხმარებელი</div>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error("Search error:", err);
+    container.innerHTML = '<div class="search-hint-text">ძიებისას მოხდა შეცდომა.</div>';
+  }
+}
   
   </script>
 
