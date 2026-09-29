@@ -113,7 +113,7 @@
     .pages-list {
       display: flex;
       flex-direction: column;
-      padding: 0 16px 30px 16px;
+      padding: 0 16px 20px 16px;
       gap: 12px;
     }
 
@@ -137,6 +137,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex: 1;
     }
 
     .page-avatar-box {
@@ -184,17 +185,29 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .page-switch-btn.follow-btn-chip {
+      background: #1877f2;
+      color: #ffffff;
     }
 
     .pages-empty-state {
       text-align: center;
-      padding: 60px 20px;
+      padding: 30px 20px;
       color: #65676b;
       font-size: 14.5px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px;
+    }
+
+    .pages-section-divider {
+      height: 8px;
+      background: #f0f2f5;
+      margin: 10px 0;
     }
   </style>
 </head>
@@ -221,7 +234,7 @@
     </button>
   </div>
 
-  <!-- სექცია: თქვენი მართვადი გვერდები -->
+  <!-- სექცია 1: თქვენ მიერ მართული გვერდები -->
   <div class="pages-section-header">
     <div class="pages-section-title">თქვენ მიერ მართული გვერდები</div>
   </div>
@@ -229,6 +242,17 @@
   <main class="pages-list" id="pagesListContainer">
     <div class="pages-empty-state" id="pagesLoading">გვერდები იტვირთება...</div>
   </main>
+
+  <div class="pages-section-divider"></div>
+
+  <!-- სექცია 2: აღმოაჩინეთ ახალი გვერდები (სხვა მომხმარებლების მიერ შექმნილი) -->
+  <div class="pages-section-header">
+    <div class="pages-section-title">შემოთავაზებული თქვენთვის</div>
+  </div>
+
+  <section class="pages-list" id="discoverPagesListContainer">
+    <div class="pages-empty-state">იტვირთება...</div>
+  </section>
 
   <script>
     const firebaseConfig = {
@@ -246,62 +270,103 @@
 
     auth.onAuthStateChanged(user => {
       if (user) {
-        loadUserManagedPages(user.uid);
+        loadAllPages(user.uid);
       } else {
         window.location.href = "index.html";
       }
     });
 
-    async function loadUserManagedPages(uid) {
-      const container = document.getElementById('pagesListContainer');
+    async function loadAllPages(uid) {
+      const myPagesContainer = document.getElementById('pagesListContainer');
+      const discoverContainer = document.getElementById('discoverPagesListContainer');
 
       try {
-        const snap = await db.collection('pages')
-          .where('owner_id', '==', uid)
-          .get();
+        const snap = await db.collection('pages').get();
 
         if (snap.empty) {
-          container.innerHTML = `
+          myPagesContainer.innerHTML = `
             <div class="pages-empty-state">
               <span>თქვენ ჯერ არ გაქვთ შექმნილი გვერდი.</span>
               <button class="pages-action-chip primary" onclick="window.location.href='create-page.html'">ახალი გვერდის შექმნა</button>
             </div>
           `;
+          discoverContainer.innerHTML = `<div class="pages-empty-state">სხვა გვერდები ჯერ არ მოიძებნა.</div>`;
           return;
         }
 
-        container.innerHTML = "";
+        const myPages = [];
+        const otherPages = [];
 
         snap.forEach(doc => {
-          const page = doc.data();
-          const pageId = doc.id;
-
-          const card = document.createElement('div');
-          card.className = 'page-item-card';
-          card.innerHTML = `
-            <div class="page-item-left" onclick="alert('გვერდი: ${page.page_name}')">
-              <div class="page-avatar-box">
-                <img src="${page.avatar_url || 'icons/flag.svg'}" class="post-action-icon" alt="flag">
-              </div>
-              <div class="page-info">
-                <span class="page-name">${page.page_name}</span>
-                <span class="page-category">${page.category || 'გვერდი'}</span>
-              </div>
-            </div>
-            <button class="page-switch-btn" onclick="switchToPage('${pageId}', '${page.page_name}')">გადართვა</button>
-          `;
-
-          container.appendChild(card);
+          const data = doc.data();
+          const pageObj = Object.assign({ id: doc.id }, data);
+          if (data.owner_id === uid) {
+            myPages.push(pageObj);
+          } else {
+            otherPages.push(pageObj);
+          }
         });
+
+        // 1. თქვენი მართვადი გვერდების რენდერი
+        if (myPages.length === 0) {
+          myPagesContainer.innerHTML = `
+            <div class="pages-empty-state">
+              <span>თქვენ ჯერ არ გაქვთ შექმნილი გვერდი.</span>
+              <button class="pages-action-chip primary" onclick="window.location.href='create-page.html'">ახალი გვერდის შექმნა</button>
+            </div>
+          `;
+        } else {
+          myPagesContainer.innerHTML = "";
+          myPages.forEach(page => {
+            const card = document.createElement('div');
+            card.className = 'page-item-card';
+            card.innerHTML = `
+              <div class="page-item-left" onclick="switchToPage('${page.id}', '${page.page_name}')">
+                <div class="page-avatar-box">
+                  <img src="${page.avatar_url || 'icons/flag.svg'}" class="post-action-icon" alt="flag">
+                </div>
+                <div class="page-info">
+                  <span class="page-name">${page.page_name}</span>
+                  <span class="page-category">${page.category || 'გვერდი'}</span>
+                </div>
+              </div>
+              <button class="page-switch-btn" onclick="switchToPage('${page.id}', '${page.page_name}')">გადართვა</button>
+            `;
+            myPagesContainer.appendChild(card);
+          });
+        }
+
+        // 2. აღმოჩენა: სხვა მომხმარებლების გვერდები
+        if (otherPages.length === 0) {
+          discoverContainer.innerHTML = `<div class="pages-empty-state">სხვა საჯარო გვერდები ჯერ არ არის.</div>`;
+        } else {
+          discoverContainer.innerHTML = "";
+          otherPages.forEach(page => {
+            const card = document.createElement('div');
+            card.className = 'page-item-card';
+            card.innerHTML = `
+              <div class="page-item-left" onclick="switchToPage('${page.id}', '${page.page_name}')">
+                <div class="page-avatar-box">
+                  <img src="${page.avatar_url || 'icons/flag.svg'}" class="post-action-icon" alt="flag">
+                </div>
+                <div class="page-info">
+                  <span class="page-name">${page.page_name}</span>
+                  <span class="page-category">${page.category || 'გვერდი'} • ${page.followers_count || 0} გამომწერი</span>
+                </div>
+              </div>
+              <button class="page-switch-btn follow-btn-chip" onclick="switchToPage('${page.id}', '${page.page_name}')">ნახვა</button>
+            `;
+            discoverContainer.appendChild(card);
+          });
+        }
 
       } catch (err) {
         console.error("Pages load error:", err);
-        container.innerHTML = `<div class="pages-empty-state">შეცდომა გვერდების ჩატვირთვისას.</div>`;
+        myPagesContainer.innerHTML = `<div class="pages-empty-state">შეცდომა გვერდების ჩატვირთვისას.</div>`;
       }
     }
 
     function switchToPage(pageId, pageName) {
-      alert(`თქვენ გადაერთეთ გვერდზე: ${pageName}`);
       sessionStorage.setItem('active_page_id', pageId);
       sessionStorage.setItem('active_page_name', pageName);
       window.location.href = `page-view.html?id=${pageId}`;
