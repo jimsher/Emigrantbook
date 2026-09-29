@@ -9012,18 +9012,41 @@ async function handleGlobalSearch(query) {
 
 // ისტორიაში შენახვა და გადასვლა
 function saveToHistoryAndNavigate(item) {
-  searchHistory = searchHistory.filter(h => h.id !== item.id && h.title !== item.title);
+  // ისტორიაში შენახვა
+  searchHistory = searchHistory.filter(h => h.id !== item.id);
   searchHistory.unshift(item);
   localStorage.setItem('fb_search_history', JSON.stringify(searchHistory.slice(0, 15)));
 
+  // საძიებო ფანჯრის დახურვა
   closeSearchOverlay();
+
+  // 1. თუ გვერდია -> გადადის გვერდის პროფილზე
   if (item.type === 'page') {
     window.location.href = `page-view.html?id=${item.id}`;
+    return;
+  }
+
+  // 2. თუ მომხმარებელია -> ვტვირთავთ იმ კონკრეტული იუზერის პროფილს მისი ID-ით (item.id)
+  const targetUid = item.id;
+
+  if (typeof viewUserProfile === "function") {
+    viewUserProfile(targetUid);
+  } else if (typeof openUserProfile === "function") {
+    openUserProfile(targetUid);
+  } else if (typeof loadProfileData === "function") {
+    loadProfileData(targetUid);
+    if (typeof showScreen === "function") showScreen('profile');
+  } else if (typeof renderProfile === "function") {
+    renderProfile(targetUid);
+    if (typeof showScreen === "function") showScreen('profile');
+  } else if (typeof showUserProfile === "function") {
+    showUserProfile(targetUid);
   } else {
-    if (typeof openUserProfile === "function") openUserProfile(item.id);
-    else if (typeof showScreen === "function") showScreen('profile');
+    // თუ Feed-ში პოსტის ავტორზე დაჭერით სხვა ფუნქციას იძახებ:
+    window.location.href = `index.html?profile_id=${targetUid}`;
   }
 }
+
 
 function navigateFromHistory(index) {
   const item = searchHistory[index];
