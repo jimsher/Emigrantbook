@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>შექმნა | Emigrantbook</title>
+  <title>გვერდის შექმნა | Emigrantbook</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
   <style>
     * {
@@ -24,7 +30,7 @@
       justify-content: space-between;
     }
 
-    /* ჰედერი */
+    /* ზედა ჰედერი */
     .create-header {
       position: sticky;
       top: 0;
@@ -34,13 +40,13 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid #f0f2f5;
-      z-index: 10;
+      z-index: 100;
     }
 
     .create-close-btn {
       background: none;
       border: none;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1;
       color: #050505;
       cursor: pointer;
@@ -49,6 +55,11 @@
       justify-content: center;
       width: 32px;
       height: 32px;
+      border-radius: 50%;
+    }
+
+    .create-close-btn:active {
+      background: #e4e6eb;
     }
 
     .create-header-title {
@@ -62,18 +73,20 @@
       border: none;
       font-size: 15px;
       color: #1877f2;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       padding: 4px;
     }
 
-    /* მთავარი სივრცე */
-    .create-content {
+    /* შიგთავსის კონტეინერი */
+    .create-step-container {
       flex: 1;
       padding: 24px 16px;
       max-width: 500px;
       width: 100%;
       margin: 0 auto;
+      display: flex;
+      flex-direction: column;
     }
 
     .create-main-title {
@@ -85,7 +98,7 @@
       letter-spacing: -0.3px;
     }
 
-    /* არჩევანის ბარათები */
+    /* ბარათები (ნაბიჯი 1) */
     .option-card {
       position: relative;
       border: 1.5px solid #dadde1;
@@ -96,8 +109,8 @@
       align-items: flex-start;
       gap: 14px;
       cursor: pointer;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
       background: #ffffff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .option-card.selected {
@@ -141,7 +154,6 @@
       line-height: 1.4;
     }
 
-    /* რადიო ღილაკი მარჯვნივ */
     .option-radio {
       position: absolute;
       right: 16px;
@@ -154,30 +166,61 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
     }
 
     .option-card.selected .option-radio {
       border-color: #1877f2;
     }
 
-    .option-radio::after {
+    .option-card.selected .option-radio::after {
       content: '';
       width: 10px;
       height: 10px;
       border-radius: 50%;
       background: #1877f2;
-      opacity: 0;
-      transform: scale(0.5);
-      transition: all 0.2s ease;
     }
 
-    .option-card.selected .option-radio::after {
-      opacity: 1;
-      transform: scale(1);
+    /* ინპუტების სტილები (ნაბიჯი 2) */
+    .form-group {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
-    /* ქვედა ღილაკები */
+    .form-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #dadde1;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #050505;
+      outline: none;
+      background: #ffffff;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: #1877f2;
+    }
+
+    .form-textarea {
+      resize: none;
+      height: 80px;
+    }
+
+    .form-hint {
+      font-size: 12.5px;
+      color: #65676b;
+    }
+
+    /* ქვედა ფიქსირებული ღილაკები */
     .create-footer {
       padding: 16px;
       display: flex;
@@ -189,7 +232,7 @@
       background: #ffffff;
     }
 
-    .btn-next {
+    .btn-primary {
       width: 100%;
       background: #1877f2;
       color: #ffffff;
@@ -199,15 +242,15 @@
       font-size: 15.5px;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.15s ease;
       text-align: center;
+      transition: background 0.15s ease;
     }
 
-    .btn-next:active {
+    .btn-primary:active {
       background: #166fe5;
     }
 
-    .btn-compare {
+    .btn-secondary {
       width: 100%;
       background: #e4e6eb;
       color: #050505;
@@ -217,29 +260,68 @@
       font-size: 15.5px;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.15s ease;
       text-align: center;
+      transition: background 0.15s ease;
     }
 
-    .btn-compare:active {
+    .btn-secondary:active {
       background: #d8dadf;
+    }
+
+    /* შედარების მოდალი */
+    .compare-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .compare-modal-content {
+      width: 100%;
+      max-width: 500px;
+      background: #ffffff;
+      border-radius: 16px 16px 0 0;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: slideUpModal 0.2s ease-out;
+    }
+
+    @keyframes slideUpModal {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .compare-row {
+      display: flex;
+      border-bottom: 1px solid #f0f2f5;
+      padding-bottom: 10px;
+      font-size: 13.5px;
+    }
+
+    .compare-col {
+      flex: 1;
     }
   </style>
 </head>
 <body>
 
-  <!-- ზედა ჰედერი -->
+  <!-- ზედა ზოლი -->
   <header class="create-header">
-    <button class="create-close-btn" onclick="window.location.href='index.html'" aria-label="დახურვა">✕</button>
-    <span class="create-header-title">შექმნა</span>
+    <button class="create-close-btn" onclick="handleGoBack()" aria-label="უკან">✕</button>
+    <span class="create-header-title" id="headerTitle">შექმნა</span>
     <button class="create-cancel-btn" onclick="window.location.href='index.html'">გაუქმება</button>
   </header>
 
-  <!-- შუა კონტენტი -->
-  <main class="create-content">
+  <!-- 🟢 ეტაპი 1: ალტერნატივის არჩევა -->
+  <main class="create-step-container" id="step1Container">
     <h1 class="create-main-title">რომელი ალტერნატივა არის თქვენთვის საუკეთესო?</h1>
 
-    <!-- ვარიანტი 1: ახალი გვერდის შექმნა (ნაგულისხმევად არჩეული) -->
+    <!-- 1. ახალი გვერდი -->
     <div class="option-card selected" id="card-new-page" onclick="selectOption('new-page')">
       <div class="option-icon-box">
         <img src="icons/flag.svg" class="post-action-icon" alt="გვერდი">
@@ -251,7 +333,7 @@
       <div class="option-radio"></div>
     </div>
 
-    <!-- ვარიანტი 2: არსებული პროფილი -->
+    <!-- 2. არსებული პროფილი -->
     <div class="option-card" id="card-profile" onclick="selectOption('profile')">
       <div class="option-icon-box">
         <img src="icons/circle-user-round.svg" class="post-action-icon" alt="პროფილი">
@@ -264,40 +346,217 @@
     </div>
   </main>
 
+  <!-- 🟢 ეტაპი 2: გვერდის ინფორმაციის შევსება (ჩნდება „შემდეგი“-ს დაჭერისას) -->
+  <main class="create-step-container" id="step2Container" style="display: none;">
+    <h1 class="create-main-title">რა ჰქვია თქვენს გვერდს?</h1>
+
+    <div class="form-group">
+      <label class="form-label" for="pageNameInput">გვერდის სახელი</label>
+      <input type="text" id="pageNameInput" class="form-input" placeholder="მაგ. ქართული რესტორანი, ტვირთების გადაზიდვა..." maxlength="60">
+      <span class="form-hint">გამოიყენეთ თქვენი ბიზნესის, ბრენდის ან ორგანიზაციის ოფიციალური სახელი.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="pageCategorySelect">კატეგორია</label>
+      <select id="pageCategorySelect" class="form-select">
+        <option value="ბიზნესი და სერვისი">ბიზნესი და სერვისი</option>
+        <option value="გადაზიდვები / ტრანსპორტი">გადაზიდვები / ტრანსპორტი</option>
+        <option value="იურიდიული დახმარება">იურიდიული დახმარება</option>
+        <option value="რესტორანი / კაფე">რესტორანი / კაფე</option>
+        <option value="პირადი ბლოგი">პირადი ბლოგი</option>
+        <option value="საზოგადოებრივი ორგანიზაცია">საზოგადოებრივი ორგანიზაცია</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="pageBioInput">ბიოგრაფია / მოკლე აღწერა</label>
+      <textarea id="pageBioInput" class="form-textarea" placeholder="მოკლედ აღწერეთ თქვენი საქმიანობა..." maxlength="160"></textarea>
+    </div>
+  </main>
+
   <!-- ქვედა ღილაკები -->
   <footer class="create-footer">
-    <button class="btn-next" onclick="handleNextStep()">შემდეგი</button>
-    <button class="btn-compare" onclick="alert('შედარების ფუნქცია მალე დაემატება')">ვარიანტების შედარება</button>
+    <button class="btn-primary" id="btnNext" onclick="handleNextStep()">შემდეგი</button>
+    <button class="btn-secondary" id="btnSecondary" onclick="openCompareModal()">ვარიანტების შედარება</button>
   </footer>
 
+  <!-- ვარიანტების შედარების მოდალი -->
+  <div class="compare-modal-overlay" id="compareModal" onclick="closeCompareModal()">
+    <div class="compare-modal-content" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #dadde1; padding-bottom:10px;">
+        <span style="font-weight:700; font-size:16px;">ვარიანტების შედარება</span>
+        <button style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeCompareModal()">✕</button>
+      </div>
+
+      <div class="compare-row" style="font-weight:700; color:#1877f2;">
+        <div class="compare-col">ახალი გვერდი</div>
+        <div class="compare-col">პროფესიონალური პროფილი</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-col">• ცალკე ბრენდის სახელი და ავატარი</div>
+        <div class="compare-col">• რჩება თქვენი სახელი და გვარი</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-col">• გამომწერები იწყება 0-დან</div>
+        <div class="compare-col">• მეგობრები ხდებიან გამომწერები</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-col">• შესაძლებელია სხვა ადმინების დამატება</div>
+        <div class="compare-col">• მართავთ მხოლოდ თქვენ</div>
+      </div>
+
+      <button class="btn-primary" onclick="closeCompareModal()" style="margin-top:10px;">გასაგებია</button>
+    </div>
+  </div>
+
   <script>
-    let currentSelectedOption = 'new-page';
+    // Firebase კონფიგურაცია
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let currentStep = 1;
+    let selectedMode = 'new-page'; // 'new-page' ან 'profile'
+
+    auth.onAuthStateChanged(user => {
+      currentUser = user;
+    });
 
     function selectOption(opt) {
-      currentSelectedOption = opt;
-      const cardNewPage = document.getElementById('card-new-page');
-      const cardProfile = document.getElementById('card-profile');
+      selectedMode = opt;
+      const cardNew = document.getElementById('card-new-page');
+      const cardProf = document.getElementById('card-profile');
 
       if (opt === 'new-page') {
-        cardNewPage.classList.add('selected');
-        cardProfile.classList.remove('selected');
+        cardNew.classList.add('selected');
+        cardProf.classList.remove('selected');
       } else {
-        cardProfile.classList.add('selected');
-        cardNewPage.classList.remove('selected');
+        cardProf.classList.add('selected');
+        cardNew.classList.remove('selected');
       }
     }
 
     function handleNextStep() {
-      if (currentSelectedOption === 'new-page') {
-        const pageTitle = prompt("შეიყვანეთ თქვენი ახალი გვერდის სახელი:");
-        if (pageTitle && pageTitle.trim()) {
-          alert(`გვერდი "${pageTitle.trim()}" მზადების პროცესშია!`);
-          window.location.href = "index.html";
+      if (currentStep === 1) {
+        if (selectedMode === 'profile') {
+          // პროფესიონალური რეჟიმის გააქტიურება პროფილზე
+          enableProfessionalMode();
+        } else {
+          // გადასვლა ნაბიჯ 2-ზე: მონაცემების შევსება
+          currentStep = 2;
+          document.getElementById('step1Container').style.display = 'none';
+          document.getElementById('step2Container').style.display = 'flex';
+          document.getElementById('headerTitle').innerText = 'დეტალები';
+          document.getElementById('btnNext').innerText = 'გვერდის შექმნა';
+          document.getElementById('btnSecondary').innerText = 'უკან დაბრუნება';
         }
-      } else {
-        alert("თქვენს პროფილზე პროფესიონალური ხელსაწყოები გააქტიურებულია!");
-        window.location.href = "index.html";
+      } else if (currentStep === 2) {
+        saveNewPageToFirestore();
       }
+    }
+
+    function handleGoBack() {
+      if (currentStep === 2) {
+        currentStep = 1;
+        document.getElementById('step2Container').style.display = 'none';
+        document.getElementById('step1Container').style.display = 'flex';
+        document.getElementById('headerTitle').innerText = 'შექმნა';
+        document.getElementById('btnNext').innerText = 'შემდეგი';
+        document.getElementById('btnSecondary').innerText = 'ვარიანტების შედარება';
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+
+    // ახალი გვერდის ბაზაში შექმნა
+    async function saveNewPageToFirestore() {
+      if (!currentUser) {
+        alert("გვერდის შესაქმნელად გაიარეთ ავტორიზაცია!");
+        return;
+      }
+
+      const nameInput = document.getElementById('pageNameInput');
+      const catSelect = document.getElementById('pageCategorySelect');
+      const bioInput = document.getElementById('pageBioInput');
+      const nextBtn = document.getElementById('btnNext');
+
+      const pageName = nameInput.value.trim();
+      const pageCat = catSelect.value;
+      const pageBio = bioInput.value.trim();
+
+      if (!pageName) {
+        alert("გთხოვთ შეიყვანოთ გვერდის სახელი!");
+        nameInput.focus();
+        return;
+      }
+
+      nextBtn.disabled = true;
+      nextBtn.innerText = "იქმნება...";
+
+      try {
+        const docRef = await db.collection('pages').add({
+          owner_id: currentUser.uid,
+          page_name: pageName,
+          category: pageCat,
+          bio: pageBio,
+          avatar_url: 'icons/flag.svg',
+          cover_url: '',
+          followers_count: 0,
+          likes_count: 0,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert(`🎉 თქვენი გვერდი "${pageName}" წარმატებით შეიქმნა!`);
+        window.location.href = 'index.html';
+      } catch (err) {
+        console.error("Page create error:", err);
+        alert("შეცდომა: " + err.message);
+        nextBtn.disabled = false;
+        nextBtn.innerText = "გვერდის შექმნა";
+      }
+    }
+
+    // პროფესიონალური რეჟიმის ჩართვა პირად ანგარიშზე
+    async function enableProfessionalMode() {
+      if (!currentUser) {
+        alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+        return;
+      }
+
+      try {
+        await db.collection('profiles').doc(currentUser.uid).set({
+          is_professional_mode: true,
+          professional_enabled_at: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        alert("თქვენს პროფილზე პროფესიონალური რეჟიმი წარმატებით გააქტიურდა!");
+        window.location.href = 'index.html';
+      } catch (err) {
+        alert("შეცდომა: " + err.message);
+      }
+    }
+
+    // შედარების მოდალი
+    function openCompareModal() {
+      if (currentStep === 2) {
+        handleGoBack();
+        return;
+      }
+      document.getElementById('compareModal').style.display = 'flex';
+    }
+
+    function closeCompareModal() {
+      document.getElementById('compareModal').style.display = 'none';
     }
   </script>
 </body>
