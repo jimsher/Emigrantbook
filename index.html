@@ -8891,7 +8891,7 @@ function toggleFbMoreItems(btn) {
 
 
 // საძიებო ველის მთავარ საიტზე ჰედერში
-  function openSearchOverlay() {
+function openSearchOverlay() {
   const overlay = document.getElementById('globalSearchOverlay');
   overlay.style.display = 'flex';
   const input = document.getElementById('globalSearchInput');
@@ -8951,7 +8951,10 @@ async function handleGlobalSearch(query) {
     matchedPages.forEach(p => {
       const row = document.createElement('div');
       row.className = 'search-result-row';
-      row.onclick = () => window.location.href = `page-view.html?id=${p.id}`;
+      row.onclick = () => {
+        closeSearchOverlay();
+        window.location.href = `page-view.html?id=${p.id}`;
+      };
       row.innerHTML = `
         <img src="${p.avatar_url || 'icons/flag.svg'}" class="search-result-avatar" alt="გვერდი">
         <div>
@@ -8966,9 +8969,25 @@ async function handleGlobalSearch(query) {
     matchedProfiles.forEach(u => {
       const row = document.createElement('div');
       row.className = 'search-result-row';
-      row.onclick = () => window.location.href = `profile.html?uid=${u.id}`;
+      row.onclick = () => {
+        closeSearchOverlay();
+        if (typeof openUserProfile === "function") {
+          openUserProfile(u.id);
+        } else if (typeof viewProfile === "function") {
+          viewProfile(u.id);
+        } else if (typeof showUserProfile === "function") {
+          showUserProfile(u.id);
+        } else if (typeof loadProfileData === "function") {
+          loadProfileData(u.id);
+          if (typeof showScreen === "function") showScreen('profile');
+        } else if (typeof showMyProfile === "function") {
+          showMyProfile();
+        } else if (typeof showScreen === "function") {
+          showScreen('profile');
+        }
+      };
       row.innerHTML = `
-        <img src="${u.avatar_url || 'icons/circle-user-round.svg'}" class="search-result-avatar" alt="პროფილი">
+        <img src="${u.avatar_url || 'icons/circle-user-round.svg'}" class="search-result-avatar" onerror="this.src='icons/circle-user-round.svg'" alt="პროფილი">
         <div>
           <div class="search-result-name">${u.full_name || u.display_name || 'მომხმარებელი'}</div>
           <div class="search-result-sub">მომხმარებელი</div>
@@ -8982,6 +9001,7 @@ async function handleGlobalSearch(query) {
     container.innerHTML = '<div class="search-hint-text">ძიებისას მოხდა შეცდომა.</div>';
   }
 }
+
   
   </script>
 
