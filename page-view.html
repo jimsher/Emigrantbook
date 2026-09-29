@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>გვერდის პროფილი | Emigrantbook</title>
+  <title>გვერდი | Emigrantbook</title>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
   <style>
     * {
@@ -20,182 +21,564 @@
     }
 
     body {
-      background-color: #ffffff;
+      background-color: #f0f2f5;
       color: #050505;
       min-height: 100vh;
+      padding-bottom: 50px;
     }
 
     /* ჰედერი */
-    .page-v-header {
+    .fb-page-header {
       position: sticky;
       top: 0;
       background: #ffffff;
-      padding: 12px 16px;
+      height: 48px;
+      padding: 0 12px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      justify-content: space-between;
       border-bottom: 1px solid #dadde1;
       z-index: 100;
     }
 
-    .page-v-back {
-      background: none;
-      border: none;
-      font-size: 24px;
-      color: #050505;
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    .page-v-top-title {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    /* ქავერი და ავატარი */
-    .page-v-cover-wrap {
-      width: 100%;
-      height: 180px;
-      background: linear-gradient(135deg, #1877f2, #00c6ff);
-      position: relative;
-    }
-
-    .page-v-avatar-wrap {
-      position: absolute;
-      bottom: -40px;
-      left: 16px;
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: #ffffff;
-      border: 3px solid #ffffff;
+    .fb-header-left {
       display: flex;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      gap: 12px;
+      flex: 1;
       overflow: hidden;
     }
 
-    .page-v-avatar-wrap img {
-      width: 44px;
-      height: 44px;
-      object-fit: contain;
+    .fb-back-btn {
+      background: none;
+      border: none;
+      font-size: 26px;
+      color: #050505;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      line-height: 1;
+      padding: 4px;
     }
 
-    /* დეტალები */
-    .page-v-info-box {
-      margin-top: 48px;
-      padding: 0 16px;
+    .fb-header-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #050505;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .page-v-title {
+    .fb-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fb-icon-btn {
+      background: #e4e6eb;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .fb-icon-btn img {
+      width: 17px;
+      height: 17px;
+    }
+
+    /* პროფილის ბლოკი (ქავერი + ავატარი) */
+    .fb-profile-hero {
+      background: #ffffff;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #dadde1;
+    }
+
+    .fb-cover-container {
+      position: relative;
+      width: 100%;
+      height: 190px;
+      background: linear-gradient(135deg, #1877f2 0%, #00c6ff 100%);
+      overflow: hidden;
+    }
+
+    .fb-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .fb-cover-cam-btn {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      background: rgba(0, 0, 0, 0.65);
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+
+    .fb-cover-cam-btn img {
+      width: 15px;
+      height: 15px;
+      filter: brightness(0) invert(1);
+    }
+
+    /* ავატარი */
+    .fb-avatar-container {
+      position: relative;
+      margin-top: -60px;
+      padding-left: 16px;
+      width: fit-content;
+    }
+
+    .fb-avatar-wrap {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid #ffffff;
+      background: #ffffff;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+
+    .fb-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .fb-avatar-cam-btn {
+      position: absolute;
+      right: 2px;
+      bottom: 4px;
+      background: #e4e6eb;
+      border: 2px solid #ffffff;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .fb-avatar-cam-btn img {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* სახელისა და სტატისტიკის ზონა */
+    .fb-page-meta {
+      padding: 10px 16px 4px 16px;
+    }
+
+    .fb-page-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .fb-page-name {
       font-size: 22px;
       font-weight: 800;
       color: #050505;
+      line-height: 1.2;
     }
 
-    .page-v-cat {
-      font-size: 14px;
-      color: #65676b;
-      margin-top: 2px;
+    .fb-verified-badge {
+      width: 18px;
+      height: 18px;
     }
 
-    .page-v-bio {
+    .fb-page-cat {
       font-size: 14.5px;
+      font-weight: 600;
+      color: #65676b;
+      margin-top: 4px;
+    }
+
+    .fb-page-stats {
+      font-size: 13.5px;
+      color: #65676b;
+      margin-top: 4px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .fb-page-stats strong {
+      color: #050505;
+    }
+
+    .fb-page-bio {
+      font-size: 14px;
+      line-height: 1.4;
       color: #050505;
       margin-top: 10px;
-      line-height: 1.4;
     }
 
-    /* მართვის ღილაკები */
-    .page-v-actions {
+    /* მოქმედების ღილაკები */
+    .fb-action-buttons {
+      padding: 12px 16px 4px 16px;
       display: flex;
-      gap: 10px;
-      padding: 16px;
-      border-bottom: 8px solid #f0f2f5;
+      gap: 8px;
     }
 
-    .page-v-btn {
+    .fb-btn {
       flex: 1;
-      padding: 10px;
-      border-radius: 8px;
+      height: 36px;
+      border-radius: 6px;
+      border: none;
       font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 12px;
+      transition: background 0.15s ease;
+    }
+
+    .fb-btn-blue {
+      background: #1877f2;
+      color: #ffffff;
+    }
+    .fb-btn-blue:active { background: #166fe5; }
+
+    .fb-btn-gray {
+      background: #e4e6eb;
+      color: #050505;
+    }
+    .fb-btn-gray:active { background: #d8dadf; }
+
+    .fb-btn-icon-only {
+      width: 44px;
+      flex: 0 0 44px;
+      background: #e4e6eb;
+      padding: 0;
+    }
+
+    /* ჰორიზონტალური ტაბები */
+    .fb-tabs-row {
+      display: flex;
+      background: #ffffff;
+      padding: 0 8px;
+      border-bottom: 1px solid #dadde1;
+      overflow-x: auto;
+    }
+    .fb-tabs-row::-webkit-scrollbar { display: none; }
+
+    .fb-tab-item {
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #65676b;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+    }
+
+    .fb-tab-item.active {
+      color: #1877f2;
+      border-bottom-color: #1877f2;
+    }
+
+    /* ბარათები (შესახებ, დეტალები) */
+    .fb-card-box {
+      background: #ffffff;
+      margin-top: 10px;
+      padding: 14px 16px;
+      border-top: 1px solid #dadde1;
+      border-bottom: 1px solid #dadde1;
+    }
+
+    .fb-card-title {
+      font-size: 17px;
       font-weight: 700;
+      color: #050505;
+      margin-bottom: 12px;
+    }
+
+    .fb-detail-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: #050505;
+      margin-bottom: 10px;
+    }
+
+    .fb-detail-row img {
+      width: 18px;
+      height: 18px;
+      opacity: 0.65;
+    }
+
+    /* პოსტის დაწერის ზოლი */
+    .fb-create-post-box {
+      background: #ffffff;
+      margin-top: 10px;
+      padding: 12px 16px;
+      border-top: 1px solid #dadde1;
+      border-bottom: 1px solid #dadde1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .fb-create-post-ava {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .fb-create-post-input {
+      flex: 1;
+      background: #f0f2f5;
+      border-radius: 20px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #65676b;
+      cursor: pointer;
+    }
+
+    .fb-post-photo-btn {
+      background: none;
       border: none;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .fb-post-photo-btn img {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* პოსტების ლენტა */
+    .fb-feed-container {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .fb-post-card {
+      background: #ffffff;
+      border-top: 1px solid #dadde1;
+      border-bottom: 1px solid #dadde1;
+    }
+
+    .fb-post-header {
+      padding: 12px 16px 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .fb-post-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .fb-post-author-ava {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .fb-post-author-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .fb-post-time {
+      font-size: 12px;
+      color: #65676b;
+    }
+
+    .fb-post-body-text {
+      padding: 4px 16px 10px 16px;
+      font-size: 14.5px;
+      line-height: 1.4;
+      color: #050505;
+      word-break: break-word;
+    }
+
+    .fb-post-media-wrap {
+      width: 100%;
+      background: #000000;
+      max-height: 450px;
+      overflow: hidden;
+    }
+
+    .fb-post-media-wrap img,
+    .fb-post-media-wrap video {
+      width: 100%;
+      height: auto;
+      max-height: 450px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .fb-post-actions-bar {
+      display: flex;
+      border-top: 1px solid #dadde1;
+      padding: 4px 0;
+    }
+
+    .fb-feed-action-btn {
+      flex: 1;
+      padding: 8px;
+      background: none;
+      border: none;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-    }
-
-    .page-v-btn.primary {
-      background: #1877f2;
-      color: #ffffff;
-    }
-
-    .page-v-btn.secondary {
-      background: #e4e6eb;
-      color: #050505;
-    }
-
-    /* პოსტის შექმნის ზოლი გვერდისთვის */
-    .page-v-create-post {
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 8px solid #f0f2f5;
-    }
-
-    .page-v-post-input {
-      flex: 1;
-      padding: 10px 14px;
-      background: #f0f2f5;
-      border-radius: 20px;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
       color: #65676b;
       cursor: pointer;
     }
 
-    .page-v-feed {
-      padding: 20px 16px;
-      text-align: center;
-      color: #65676b;
-      font-size: 14px;
+    .fb-feed-action-btn img {
+      width: 18px;
+      height: 18px;
     }
+
+    /* ფარული ფაილის ინპუტები */
+    input[type="file"] { display: none; }
   </style>
 </head>
 <body>
 
-  <header class="page-v-header">
-    <button class="page-v-back" onclick="window.location.href='pages.html'">‹</button>
-    <span class="page-v-top-title" id="topPageName">გვერდი</span>
+  <!-- ზედა ჰედერი -->
+  <header class="fb-page-header">
+    <div class="fb-header-left">
+      <button class="fb-back-btn" onclick="window.location.href='pages.html'" aria-label="უკან">‹</button>
+      <span class="fb-header-title" id="topHeaderTitle">გვერდი</span>
+    </div>
+    <div class="fb-header-actions">
+      <button class="fb-icon-btn" onclick="alert('ძებნა ამ გვერდზე')">
+        <img src="icons/search.svg" class="post-action-icon" alt="ძებნა">
+      </button>
+      <button class="fb-icon-btn" onclick="shareCurrentPage()">
+        <img src="icons/undo-2.svg" class="post-action-icon" style="transform: scaleX(-1);" alt="გაზიარება">
+      </button>
+    </div>
   </header>
 
-  <div class="page-v-cover-wrap">
-    <div class="page-v-avatar-wrap">
-      <img src="icons/flag.svg" class="post-action-icon" alt="Avatar">
+  <!-- გმირი ბლოკი (ქავერი + ავატარი + სათაური) -->
+  <section class="fb-profile-hero">
+    <!-- ქავერი -->
+    <div class="fb-cover-container" id="coverContainer">
+      <img src="" id="pageCoverImg" class="fb-cover-img" style="display: none;" alt="Cover">
+      <button class="fb-cover-cam-btn" id="coverUploadBtn" onclick="document.getElementById('coverInput').click()" style="display: none;">
+        <img src="icons/camera.svg" alt="cam">
+        <span>ქავერის შეცვლა</span>
+      </button>
+      <input type="file" id="coverInput" accept="image/*" onchange="uploadPageImage(event, 'cover')">
     </div>
+
+    <!-- ავატარი -->
+    <div class="fb-avatar-container">
+      <div class="fb-avatar-wrap">
+        <img src="icons/flag.svg" id="pageAvatarImg" class="fb-avatar-img" alt="Page Logo">
+      </div>
+      <button class="fb-avatar-cam-btn" id="avatarUploadBtn" onclick="document.getElementById('avatarInput').click()" style="display: none;">
+        <img src="icons/camera.svg" class="post-action-icon" alt="cam">
+      </button>
+      <input type="file" id="avatarInput" accept="image/*" onchange="uploadPageImage(event, 'avatar')">
+    </div>
+
+    <!-- მეტა ინფორმაცია -->
+    <div class="fb-page-meta">
+      <div class="fb-page-name-row">
+        <h1 class="fb-page-name" id="pageNameDisplay">იტვირთება...</h1>
+        <svg class="fb-verified-badge" viewBox="0 0 24 24" fill="#1877f2">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      </div>
+
+      <div class="fb-page-cat" id="pageCategoryDisplay">კატეგორია</div>
+
+      <div class="fb-page-stats">
+        <span><strong id="likesCountText">0</strong> მოწონება</span>
+        <span>•</span>
+        <span><strong id="followersCountText">0</strong> გამომწერი</span>
+      </div>
+
+      <div class="fb-page-bio" id="pageBioDisplay"></div>
+    </div>
+
+    <!-- მოქმედების ღილაკები (დინამიკურად შეიცვლება: მფლობელია თუ სტუმარი) -->
+    <div class="fb-action-buttons" id="actionButtonsContainer">
+      <!-- ჩაიტვირთება JS-ით -->
+    </div>
+  </section>
+
+  <!-- ტაბები -->
+  <div class="fb-tabs-row">
+    <div class="fb-tab-item active" onclick="switchTab('feed', this)">მთავარი</div>
+    <div class="fb-tab-item" onclick="switchTab('about', this)">შესახებ</div>
+    <div class="fb-tab-item" onclick="switchTab('photos', this)">ფოტოები</div>
+    <div class="fb-tab-item" onclick="switchTab('videos', this)">ვიდეოები</div>
   </div>
 
-  <div class="page-v-info-box">
-    <h1 class="page-v-title" id="pageTitleDisplay">...</h1>
-    <div class="page-v-cat" id="pageCategoryDisplay">...</div>
-    <div class="page-v-bio" id="pageBioDisplay"></div>
+  <!-- ტაბი 1: პოსტები (მთავარი) -->
+  <div id="tabContentFeed">
+    <!-- პოსტის დაწერის ბლოკი (მხოლოდ ადმინისთვის) -->
+    <div class="fb-create-post-box" id="adminCreatePostBox" style="display: none;">
+      <img src="icons/flag.svg" id="createPostAuthorAva" class="fb-create-post-ava" alt="author">
+      <div class="fb-create-post-input" onclick="openCreatePostPrompt()">დაწერეთ რამე თქვენი გვერდის სახელით...</div>
+      <button class="fb-post-photo-btn" onclick="openCreatePostPrompt()">
+        <img src="icons/image.svg" class="post-action-icon" alt="ფოტო">
+      </button>
+    </div>
+
+    <!-- პოსტების სია -->
+    <main class="fb-feed-container" id="pagePostsContainer">
+      <div style="text-align: center; color: #65676b; padding: 40px 16px;">პოსტები იტვირთება...</div>
+    </main>
   </div>
 
-  <div class="page-v-actions">
-    <button class="page-v-btn primary" onclick="alert('მართვის პანელი მალე დაემატება')">+ სიუჟეტის დამატება</button>
-    <button class="page-v-btn secondary" onclick="alert('პარამეტრები')">გვერდის მართვა</button>
-  </div>
-
-  <div class="page-v-create-post">
-    <div class="page-v-post-input" onclick="createPagePost()">რაზე ფიქრობთ? (გვერდის სახელით პოსტი)</div>
-  </div>
-
-  <div class="page-v-feed" id="pageFeed">
-    ამ გვერდზე პოსტები ჯერ არ არის.
+  <!-- ტაბი 2: დეტალური ინფორმაცია -->
+  <div id="tabContentAbout" style="display: none;">
+    <div class="fb-card-box">
+      <h3 class="fb-card-title">გვერდის შესახებ</h3>
+      <div class="fb-detail-row">
+        <img src="icons/info.svg" class="post-action-icon" onerror="this.src='icons/flag.svg'" alt="info">
+        <span id="aboutBioText">აღწერა არ არის მითითებული</span>
+      </div>
+      <div class="fb-detail-row">
+        <img src="icons/flag.svg" class="post-action-icon" alt="category">
+        <span id="aboutCatText">კატეგორია</span>
+      </div>
+      <div class="fb-detail-row">
+        <img src="icons/clock-4.svg" class="post-action-icon" alt="date">
+        <span id="aboutDateText">შექმნილია Emigrantbook-ზე</span>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -209,36 +592,304 @@
     };
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
     const urlParams = new URLSearchParams(window.location.search);
-    const currentPageId = urlParams.get('id');
+    const pageId = urlParams.get('id');
 
-    if (!currentPageId) {
+    let currentUser = null;
+    let pageData = null;
+    let isOwner = false;
+    let isFollowing = false;
+
+    if (!pageId) {
       window.location.href = "pages.html";
-    } else {
-      loadPageData(currentPageId);
     }
 
-    async function loadPageData(id) {
+    auth.onAuthStateChanged(user => {
+      currentUser = user;
+      loadPageProfile();
+    });
+
+    async function loadPageProfile() {
       try {
-        const doc = await db.collection('pages').doc(id).get();
-        if (doc.exists) {
-          const data = doc.data();
-          document.getElementById('topPageName').innerText = data.page_name || "გვერდი";
-          document.getElementById('pageTitleDisplay').innerText = data.page_name || "გვერდი";
-          document.getElementById('pageCategoryDisplay').innerText = data.category || "გვერდი";
-          document.getElementById('pageBioDisplay').innerText = data.bio || "";
+        const doc = await db.collection('pages').doc(pageId).get();
+        if (!doc.exists) {
+          alert("გვერდი ვერ მოიძებნა!");
+          window.location.href = "pages.html";
+          return;
         }
-      } catch (e) {
-        console.error("Error loading page:", e);
+
+        pageData = doc.data();
+        isOwner = currentUser && (currentUser.uid === pageData.owner_id);
+
+        // მონაცემების ასახვა UI-ში
+        document.getElementById('topHeaderTitle').innerText = pageData.page_name || "გვერდი";
+        document.getElementById('pageNameDisplay').innerText = pageData.page_name || "გვერდი";
+        document.getElementById('pageCategoryDisplay').innerText = pageData.category || "გვერდი";
+        document.getElementById('pageBioDisplay').innerText = pageData.bio || "";
+        document.getElementById('aboutBioText').innerText = pageData.bio || "აღწერა არ არის მითითებული";
+        document.getElementById('aboutCatText').innerText = pageData.category || "ზოგადი";
+
+        document.getElementById('likesCountText').innerText = pageData.likes_count || 0;
+        document.getElementById('followersCountText').innerText = pageData.followers_count || 0;
+
+        // ავატარი და ქავერი
+        if (pageData.avatar_url && pageData.avatar_url !== 'icons/flag.svg') {
+          document.getElementById('pageAvatarImg').src = pageData.avatar_url;
+          document.getElementById('createPostAuthorAva').src = pageData.avatar_url;
+        }
+        if (pageData.cover_url) {
+          const cImg = document.getElementById('pageCoverImg');
+          cImg.src = pageData.cover_url;
+          cImg.style.display = 'block';
+        }
+
+        // თუ მფლობელია, ჩავურთოთ ფოტოების შეცვლისა და პოსტის დაწერის უფლება
+        if (isOwner) {
+          document.getElementById('coverUploadBtn').style.display = 'flex';
+          document.getElementById('avatarUploadBtn').style.display = 'flex';
+          document.getElementById('adminCreatePostBox').style.display = 'flex';
+          renderOwnerActions();
+        } else {
+          checkFollowStatus();
+        }
+
+        loadPagePosts();
+
+      } catch (err) {
+        console.error("Error loading page:", err);
       }
     }
 
-    function createPagePost() {
-      const txt = prompt("დაწერეთ პოსტი თქვენი გვერდის სახელით:");
-      if (!txt) return;
-      alert("პოსტი წარმატებით გამოქვეყნდა!");
+    // მფლობელის ღილაკები
+    function renderOwnerActions() {
+      const container = document.getElementById('actionButtonsContainer');
+      container.innerHTML = `
+        <button class="fb-btn fb-btn-blue" onclick="openCreatePostPrompt()">+ პოსტის შექმნა</button>
+        <button class="fb-btn fb-btn-gray" onclick="editPageBio()">რედაქტირება</button>
+        <button class="fb-btn fb-btn-icon-only fb-btn-gray" onclick="shareCurrentPage()">
+          <img src="icons/undo-2.svg" class="post-action-icon" style="transform: scaleX(-1); width: 16px; height: 16px;" alt="share">
+        </button>
+      `;
+    }
+
+    // სტუმრის ღილაკები (გამოწერა / მესენჯერი)
+    async function checkFollowStatus() {
+      if (!currentUser) {
+        renderVisitorActions(false);
+        return;
+      }
+
+      const followDoc = await db.collection('pages').doc(pageId).collection('followers').doc(currentUser.uid).get();
+      isFollowing = followDoc.exists;
+      renderVisitorActions(isFollowing);
+    }
+
+    function renderVisitorActions(following) {
+      const container = document.getElementById('actionButtonsContainer');
+      container.innerHTML = `
+        <button class="fb-btn ${following ? 'fb-btn-gray' : 'fb-btn-blue'}" onclick="toggleFollowPage()">
+          <img src="${following ? 'icons/check.svg' : 'icons/thumbs-up.svg'}" onerror="this.style.display='none'" style="width:16px; height:16px; filter: ${following ? 'none' : 'brightness(0) invert(1)'};" alt="icon">
+          <span>${following ? 'გამოწერილია' : 'გამოწერა'}</span>
+        </button>
+        <button class="fb-btn fb-btn-gray" onclick="alert('შეტყობინების ფუნქცია მალე დაემატება')">შეტყობინება</button>
+        <button class="fb-btn fb-btn-icon-only fb-btn-gray" onclick="shareCurrentPage()">
+          <img src="icons/undo-2.svg" class="post-action-icon" style="transform: scaleX(-1); width: 16px; height: 16px;" alt="share">
+        </button>
+      `;
+    }
+
+    // გამოწერის / მოწონების გადართვა ბაზაში
+    async function toggleFollowPage() {
+      if (!currentUser) {
+        alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+        return;
+      }
+
+      const followRef = db.collection('pages').doc(pageId).collection('followers').doc(currentUser.uid);
+      const pageRef = db.collection('pages').doc(pageId);
+
+      if (isFollowing) {
+        await followRef.delete();
+        await pageRef.update({
+          followers_count: firebase.firestore.FieldValue.increment(-1),
+          likes_count: firebase.firestore.FieldValue.increment(-1)
+        });
+        isFollowing = false;
+        updateStatsCount(-1);
+      } else {
+        await followRef.set({
+          user_id: currentUser.uid,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await pageRef.update({
+          followers_count: firebase.firestore.FieldValue.increment(1),
+          likes_count: firebase.firestore.FieldValue.increment(1)
+        });
+        isFollowing = true;
+        updateStatsCount(1);
+      }
+      renderVisitorActions(isFollowing);
+    }
+
+    function updateStatsCount(val) {
+      const fc = document.getElementById('followersCountText');
+      const lc = document.getElementById('likesCountText');
+      let curr = parseInt(fc.innerText) || 0;
+      fc.innerText = Math.max(0, curr + val);
+      lc.innerText = Math.max(0, curr + val);
+    }
+
+    // გვერდის მიერ გამოქვეყნებული პოსტები
+    async function loadPagePosts() {
+      const feed = document.getElementById('pagePostsContainer');
+
+      try {
+        const snap = await db.collection('posts')
+          .where('page_id', '==', pageId)
+          .orderBy('created_at', 'desc')
+          .get();
+
+        if (snap.empty) {
+          feed.innerHTML = `<div style="text-align: center; color: #65676b; padding: 40px 16px;">ამ გვერდს ჯერ პოსტები არ აქვს.</div>`;
+          return;
+        }
+
+        feed.innerHTML = "";
+        snap.forEach(doc => {
+          const p = doc.data();
+          const card = document.createElement('div');
+          card.className = 'fb-post-card';
+          card.innerHTML = `
+            <div class="fb-post-header">
+              <div class="fb-post-header-left">
+                <img src="${pageData.avatar_url || 'icons/flag.svg'}" class="fb-post-author-ava" alt="ava">
+                <div>
+                  <div class="fb-post-author-name">${pageData.page_name}</div>
+                  <div class="fb-post-time">გვერდის პოსტი</div>
+                </div>
+              </div>
+            </div>
+            ${p.content ? `<div class="fb-post-body-text">${p.content}</div>` : ''}
+            ${p.media_url ? `
+              <div class="fb-post-media-wrap">
+                ${p.media_type === 'video' ? `<video src="${p.media_url}" controls playsinline></video>` : `<img src="${p.media_url}" alt="media">`}
+              </div>
+            ` : ''}
+            <div class="fb-post-actions-bar">
+              <button class="fb-feed-action-btn">
+                <img src="icons/thumbs-up.svg" class="post-action-icon" alt="like">
+                <span>მოწონება</span>
+              </button>
+              <button class="fb-feed-action-btn">
+                <img src="icons/message-circle-more.svg" class="post-action-icon" alt="comment">
+                <span>კომენტარი</span>
+              </button>
+              <button class="fb-feed-action-btn">
+                <img src="icons/undo-2.svg" class="post-action-icon" style="transform: scaleX(-1);" alt="share">
+                <span>გაზიარება</span>
+              </button>
+            </div>
+          `;
+          feed.appendChild(card);
+        });
+
+      } catch (e) {
+        console.error("Posts error:", e);
+        feed.innerHTML = `<div style="text-align: center; color: #65676b; padding: 40px 16px;">ამ გვერდს ჯერ პოსტები არ აქვს.</div>`;
+      }
+    }
+
+    // გვერდის სახელით ახალი პოსტის დადება
+    function openCreatePostPrompt() {
+      const text = prompt("დაწერეთ პოსტი თქვენი გვერდის სახელით:");
+      if (!text || !text.trim()) return;
+
+      db.collection('posts').add({
+        page_id: pageId,
+        author_name: pageData.page_name,
+        author_avatar: pageData.avatar_url || 'icons/flag.svg',
+        content: text.trim(),
+        likes_count: 0,
+        comments_count: 0,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert("პოსტი გამოქვეყნდა თქვენი გვერდის სახელით!");
+        loadPagePosts();
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+      });
+    }
+
+    // ბიოს რედაქტირება
+    function editPageBio() {
+      const newBio = prompt("შეიყვანეთ ახალი მოკლე აღწერა / ბიოგრაფია:", pageData.bio || "");
+      if (newBio === null) return;
+
+      db.collection('pages').doc(pageId).update({
+        bio: newBio.trim()
+      }).then(() => {
+        document.getElementById('pageBioDisplay').innerText = newBio.trim();
+        document.getElementById('aboutBioText').innerText = newBio.trim();
+      });
+    }
+
+    // ტაბების გადართვა
+    function switchTab(tab, el) {
+      document.querySelectorAll('.fb-tab-item').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+
+      const feed = document.getElementById('tabContentFeed');
+      const about = document.getElementById('tabContentAbout');
+
+      if (tab === 'feed') {
+        feed.style.display = 'block';
+        about.style.display = 'none';
+      } else if (tab === 'about') {
+        feed.style.display = 'none';
+        about.style.display = 'block';
+      } else {
+        alert(tab + " მალე დაემატება");
+      }
+    }
+
+    // გაზიარება
+    function shareCurrentPage() {
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: pageData.page_name, url: url }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(url).then(() => alert("გვერდის ბმული დაკოპირებულია!"));
+      }
+    }
+
+    // ავატარისა და ქავერის ატვირთვა
+    function uploadPageImage(event, type) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64 = e.target.result;
+        const updateObj = {};
+
+        if (type === 'cover') {
+          updateObj.cover_url = base64;
+          const cImg = document.getElementById('pageCoverImg');
+          cImg.src = base64;
+          cImg.style.display = 'block';
+        } else {
+          updateObj.avatar_url = base64;
+          document.getElementById('pageAvatarImg').src = base64;
+        }
+
+        db.collection('pages').doc(pageId).update(updateObj).then(() => {
+          alert("სურათი განახლდა!");
+        });
+      };
+      reader.readAsDataURL(file);
     }
   </script>
 </body>
