@@ -9194,18 +9194,73 @@ async function handleGlobalSearch(query) {
 
 
 <!-- სრული ეკრანის ძიების ფანჯარა -->
-<div id="globalSearchOverlay" class="search-overlay" style="display: none;">
-  <div class="search-overlay-header">
-    <button class="search-back-btn" onclick="closeSearchOverlay()">‹</button>
-    <div class="search-input-wrap">
-      <img src="icons/search.svg" class="search-icon-inside" alt="ძებნა">
-      <input type="text" id="globalSearchInput" placeholder="მოძებნეთ გვერდები ან ხალხი..." oninput="handleGlobalSearch(this.value)">
+<!-- Facebook-ის ორიგინალი ძიების სრული ეკრანი -->
+<div id="globalSearchOverlay" class="fb-search-screen" style="display: none;">
+  <!-- ზედა ზოლი -->
+  <div class="fb-search-topbar">
+    <button class="fb-search-back-arrow" onclick="closeSearchOverlay()" aria-label="უკან">‹</button>
+    <div class="fb-search-pill-box">
+      <input type="text" id="globalSearchInput" class="fb-search-real-input" placeholder="ძიება" oninput="handleGlobalSearch(this.value)">
     </div>
   </div>
-  <div class="search-results-list" id="globalSearchResults">
-    <div class="search-hint-text">ჩაწერეთ სახელი მოსაძებნად...</div>
+
+  <!-- ბოლოდროინდელების ჰედერი -->
+  <div class="fb-search-subhead" id="recentSearchSubhead">
+    <span class="fb-search-subhead-title">ბოლოდროინდელი</span>
+    <button class="fb-search-see-all-btn" onclick="clearAllSearchHistory()">ყველას ნახვა</button>
+  </div>
+
+  <!-- შედეგების / ისტორიის სია -->
+  <div class="fb-search-content-list" id="globalSearchResults">
+    <!-- დინამიკურად შეივსება JS-ით -->
+  </div>
+
+  <!-- ქვემოდან ამომხტარი მენიუ (Bottom Sheet) -->
+  <div class="fb-sheet-backdrop" id="searchActionSheet" onclick="closeSearchSheet()">
+    <div class="fb-sheet-panel" onclick="event.stopPropagation()">
+      <div class="fb-sheet-handle"></div>
+      
+      <!-- არჩეული ერთეულის თავსართი -->
+      <div class="fb-sheet-header-item">
+        <div class="fb-sheet-ava-box" id="sheetTargetAva">
+          <img src="icons/clock-4.svg" class="post-action-icon" alt="icon">
+        </div>
+        <span class="fb-sheet-target-name" id="sheetTargetName">...</span>
+      </div>
+
+      <div class="fb-sheet-divider"></div>
+
+      <!-- მოქმედება 1: წაშლა -->
+      <div class="fb-sheet-row" onclick="deleteHistoryItem()">
+        <div class="fb-sheet-row-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#050505" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </div>
+        <div class="fb-sheet-row-texts">
+          <div class="fb-sheet-row-title">წაშლა</div>
+          <div class="fb-sheet-row-desc">ამის ამოშლა ძიების ისტორიიდან.</div>
+        </div>
+      </div>
+
+      <!-- მოქმედება 2: ჩამაგრება -->
+      <div class="fb-sheet-row" onclick="pinHistoryItem()">
+        <div class="fb-sheet-row-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#050505" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="17" x2="12" y2="22"></line>
+            <path d="M5 17h14v-2l-2-3V6a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v6l-2 3v2z"></path>
+          </svg>
+        </div>
+        <div class="fb-sheet-row-texts">
+          <div class="fb-sheet-row-title">ამ ძიების ჩამაგრება</div>
+          <div class="fb-sheet-row-desc">ერთდროულად შესაძლებელია მხოლოდ 3 ძიების ჩამაგრება.</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+<!-- აწ მთავრდება -->
 
   
   
