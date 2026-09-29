@@ -403,135 +403,126 @@
     });
 
     // მხოლოდ რეალურად შენახული მასალების წამოღება
-        async function loadRealSavedItems(uid) {
-      const grid = document.getElementById('savedItemsGrid');
+    async function loadRealSavedItems(uid) {
+  const grid = document.getElementById('savedItemsGrid');
+
+  try {
+    // წამოვიღოთ შენახულები ინდექსის შეცდომის თავიდან ასაცილებლად
+    const snap = await db.collection('saved_posts')
+      .where('user_id', '==', uid)
+      .get();
+
+    if (snap.empty) {
+      grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.<br>შეინახეთ პოსტები ან ვიდეოები და აქ გამოჩნდება.</div>`;
+      return;
+    }
+
+    // დავალაგოთ კლიენტის მხარეს დროით
+    const docs = snap.docs.sort((a, b) => {
+      const tA = a.data().saved_at ? (a.data().saved_at.seconds || 0) : 0;
+      const tB = b.data().saved_at ? (b.data().saved_at.seconds || 0) : 0;
+      return tB - tA;
+    });
+
+    const itemsPromises = docs.map(async (doc) => {
+      const sData = doc.data();
+      const targetId = sData.post_id || sData.reel_id;
+      if (!targetId) return null;
 
       try {
-        // წამოვიღოთ შენახულები ინდექსის შეცდომის თავიდან ასაცილებლად
-        const snap = await db.collection('saved_posts')
-          .where('user_id', '==', uid)
-          .get();
+        // ვამოწმებთ ჯერ reels კოლექციაში, შემდეგ posts-ში
+        let targetDoc = await db.collection('reels').doc(targetId).get();
+        let isReel = true;
 
-        if (snap.empty) {
-          grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.<br>შეინახეთ პოსტები ან ვიდეოები და აქ გამოჩნდება.</div>`;
-          return;
+        if (!targetDoc.exists) {
+          targetDoc = await db.collection('posts').doc(targetId).get();
+          isReel = false;
         }
 
-        // დავალაგოთ კლიენტის მხარეს დროით
-        const docs = snap.docs.sort((a, b) => {
-          const tA = a.data().saved_at ? (a.data().saved_at.seconds || 0) : 0;
-          const tB = b.data().saved_at ? (b.data().saved_at.seconds || 0) : 0;
-          return tB - tA;
-        });
+        if (targetDoc.exists) {
+          const data = targetDoc.data();
+          const media = data.video_url || data.media_url || data.video || "";
+          if (!media) return null;
 
-        const itemsPromises = docs.map(async (doc) => {
-          const sData = doc.data();
-          const targetId = sData.post_id || sData.reel_id;
-          if (!targetId) return null;
-
-          // ვამოწმებთ ჯერ reels კოლექციაში, შემდეგ posts-ში
-          let targetDoc = await db.collection('reels').doc(targetId).get();
-          let isReel = true;
-
-          if (!targetDoc.exists) {
-            targetDoc = await db.collection('posts').doc(targetId).get();
-            isReel = false;
-          }
-
-          if (targetDoc.exists) {
-            const data = targetDoc.data();
-            return {
-              id: targetDoc.id,
-              type: isReel ? 'reel' : 'post',
-              content: data.content || data.caption || data.description || "ფირები",
-              media_url: data.video_url || data.media_url || data.video || "",
-              author_name: data.author_name || data.user_name || "მომხმარებელი",
-              author_photo: data.author_photo || data.user_avatar || "icons/circle-user-round.svg",
-              likes_count: data.likes_count || (data.likes ? data.likes.length : 0)
-            };
-          }
-          return null;
-        });
-
-        const results = await Promise.all(itemsPromises);
-        allSavedItems = results.filter(item => item !== null && item.media_url !== "");
-
-        if (allSavedItems.length === 0) {
-          grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.</div>`;
-          return;
+          return {
+            id: targetDoc.id,
+            type: (isReel || data.media_type === 'video' || media.includes('.mp4')) ? 'reel' : 'post',
+            content: data.content || data.caption || data.description || "ფირები",
+            media_url: media,
+            author_name: data.author_name || data.user_name || "მომხმარებელი",
+            author_photo: data.author_photo || data.author_avatar || data.user_avatar || "icons/circle-user-round.svg",
+            likes_count: data.likes_count || (data.likes ? data.likes.length : 0)
+          };
         }
-
-        renderSavedGrid(allSavedItems);
-
-      } catch (err) {
-        console.error("Saved load error:", err);
-        grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.</div>`;
+      } catch (e) {
+        console.warn("Item fetch error:", e);
       }
+      return null;
+    });
+
+    const results = await Promise.all(itemsPromises);
+    allSavedItems = results.filter(item => item !== null && item.media_url !== "");
+
+    if (allSavedItems.length === 0) {
+      grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.</div>`;
+      return;
     }
 
+    renderSavedGrid(allSavedItems);
 
-        const results = await Promise.all(itemsPromises);
-        allSavedItems = results.filter(item => item !== null && item.media_url !== "");
+  } catch (err) {
+    console.error("Saved load error:", err);
+    grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.</div>`;
+  }
+}
 
-        if (allSavedItems.length === 0) {
-          grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.</div>`;
-          return;
-        }
+function renderSavedGrid(items) {
+  const grid = document.getElementById('savedItemsGrid');
+  grid.innerHTML = "";
 
-        renderSavedGrid(allSavedItems);
+  if (!items || items.length === 0) {
+    grid.innerHTML = `<div class="saved-empty-box">ამ განყოფილებაში არაფერია შენახული.</div>`;
+    return;
+  }
 
-      } catch (err) {
-        console.error("Saved load error:", err);
-        grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.</div>`;
+  items.forEach(item => {
+    const isVideo = item.type === 'reel' || item.media_url.endsWith('.mp4') || item.media_url.includes('video');
+    const media = item.media_url.split(',')[0].trim();
+    const authorImg = item.author_photo || 'icons/circle-user-round.svg';
+
+    const card = document.createElement('div');
+    card.className = 'saved-item-card';
+    card.onclick = () => {
+      if (item.type === 'reel') {
+        window.location.href = `reels.html?id=${item.id}`;
+      } else {
+        window.location.href = `index.html`;
       }
-    }
+    };
 
-    function renderSavedGrid(items) {
-      const grid = document.getElementById('savedItemsGrid');
-      grid.innerHTML = "";
+    card.innerHTML = `
+      <div class="saved-item-thumb-box">
+        <div class="saved-item-author-overlay">
+          <img src="${authorImg}" class="saved-author-ava" onerror="this.src='icons/circle-user-round.svg'" alt="author">
+          <span class="saved-author-name-text">${item.author_name}</span>
+        </div>
+        ${isVideo ? `<video src="${media}#t=0.5" preload="metadata" muted playsinline></video>` : `<img src="${media}" alt="thumb">`}
+        ${isVideo ? `<div class="saved-reels-watermark">▶</div>` : ''}
+      </div>
+      <div class="saved-item-caption">${item.content}</div>
+      <div class="saved-item-stats-row">
+        <div class="saved-real-likes">
+          <img src="icons/thumbs-up.svg" class="saved-like-icon post-action-icon" alt="like">
+          <span class="saved-like-count">${item.likes_count}</span>
+        </div>
+        <img src="icons/undo-2.svg" class="saved-share-icon post-action-icon" alt="share">
+      </div>
+    `;
 
-      if (items.length === 0) {
-        grid.innerHTML = `<div class="saved-empty-box">ამ განყოფილებაში არაფერია შენახული.</div>`;
-        return;
-      }
-
-      items.forEach(item => {
-        const isVideo = item.type === 'reel' || item.media_url.endsWith('.mp4');
-        const media = item.media_url.split(',')[0].trim();
-        const authorImg = item.author_photo || 'icons/circle-user-round.svg';
-
-        const card = document.createElement('div');
-        card.className = 'saved-item-card';
-        card.onclick = () => {
-          if (item.type === 'reel') {
-            window.location.href = `reels.html?id=${item.id}`;
-          } else {
-            window.location.href = `index.html`;
-          }
-        };
-
-        card.innerHTML = `
-          <div class="saved-item-thumb-box">
-            <div class="saved-item-author-overlay">
-              <img src="${authorImg}" class="saved-author-ava" onerror="this.src='icons/circle-user-round.svg'" alt="author">
-              <span class="saved-author-name-text">${item.author_name}</span>
-            </div>
-            ${isVideo ? `<video src="${media}#t=0.5" preload="metadata" muted playsinline></video>` : `<img src="${media}" alt="thumb">`}
-            ${isVideo ? `<div class="saved-reels-watermark">▶</div>` : ''}
-          </div>
-          <div class="saved-item-caption">${item.content}</div>
-          <div class="saved-item-stats-row">
-            <div class="saved-real-likes">
-              <img src="icons/thumbs-up.svg" class="saved-like-icon post-action-icon" alt="like">
-              <span class="saved-like-count">${item.likes_count}</span>
-            </div>
-            <img src="icons/undo-2.svg" class="saved-share-icon post-action-icon" alt="share">
-          </div>
-        `;
-
-        grid.appendChild(card);
-      });
-    }
+    grid.appendChild(card);
+  });
+}
+    
 
     function filterSavedTab(tab, btn) {
       document.querySelectorAll('.saved-tab-pill').forEach(b => b.classList.remove('active'));
