@@ -80,7 +80,7 @@
       height: 20px;
     }
 
-    /* ჰორიზონტალური ტაბები */
+    /* ფილტრების ტაბები */
     .saved-tabs-row {
       display: flex;
       gap: 8px;
@@ -134,7 +134,7 @@
       line-height: 1.2;
     }
 
-    /* კოლექციების ჰორიზონტალური სქროლი */
+    /* კოლექციები */
     .saved-collections-scroll {
       display: flex;
       gap: 10px;
@@ -193,17 +193,17 @@
       opacity: 0.6;
     }
 
-    /* ახლახან შენახული - 2 სვეტიანი Grid */
+    /* 2 სვეტიანი Grid */
     .saved-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      padding: 4px 12px 30px 12px;
+      gap: 10px;
+      padding: 4px 14px 40px 14px;
     }
 
     .saved-item-card {
       background: #ffffff;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -213,9 +213,9 @@
     .saved-item-thumb-box {
       position: relative;
       width: 100%;
-      height: 250px;
-      background: #000000;
-      border-radius: 10px;
+      aspect-ratio: 9 / 14;
+      background: #18191a;
+      border-radius: 12px;
       overflow: hidden;
     }
 
@@ -224,9 +224,10 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
-    /* ზედა ავტორის ინფორმაცია თამბნეილზე */
+    /* ავტორი თამბნეილზე - ზუსტი ზომები */
     .saved-item-author-overlay {
       position: absolute;
       top: 8px;
@@ -235,28 +236,31 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      z-index: 2;
+      z-index: 5;
     }
 
     .saved-author-ava {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px !important;
+      max-width: 32px !important;
+      border-radius: 50% !important;
+      object-fit: cover !important;
+      border: 1.5px solid #ffffff !important;
+      background: #3a3b3c;
+      flex-shrink: 0;
     }
 
     .saved-author-name-text {
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
       color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    /* ქვედა Reels ნიშნული ვიდეოზე */
     .saved-reels-watermark {
       position: absolute;
       bottom: 8px;
@@ -264,88 +268,76 @@
       color: #ffffff;
       font-size: 13px;
       font-weight: bold;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
     }
 
-    /* ბარათის ტექსტი და რეაქციები */
     .saved-item-caption {
       font-size: 13px;
       font-weight: 600;
       color: #050505;
       padding: 6px 4px 4px 4px;
-      line-height: 1.3;
+      line-height: 1.35;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
+    /* რეალური ლაიქებისა და გაზიარების ზოლი */
     .saved-item-stats-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 2px 4px 8px 4px;
+      padding: 4px;
     }
 
-    .saved-reactions-pill {
+    .saved-real-likes {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
     }
 
-    .saved-reaction-dots {
-      display: flex;
-      align-items: center;
-    }
-
-    .reaction-circle {
+    .saved-like-icon {
       width: 14px;
       height: 14px;
-      border-radius: 50%;
-      border: 1px solid #ffffff;
-      margin-left: -3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8px;
-      color: #fff;
+      object-fit: contain;
     }
 
-    .reaction-circle:first-child { margin-left: 0; }
-    .reaction-circle.like { background: #1877f2; }
-    .reaction-circle.heart { background: #fa3e3e; }
-    .reaction-circle.care { background: #f7b125; }
-
-    .saved-reaction-count {
-      font-size: 11.5px;
+    .saved-like-count {
+      font-size: 12px;
       color: #65676b;
-      margin-left: 2px;
+      font-weight: 600;
     }
 
     .saved-share-icon {
-      width: 14px;
-      height: 14px;
-      opacity: 0.6;
-      transform: scaleX(-1);
+      width: 15px;
+      height: 15px;
+      object-fit: contain;
+      opacity: 0.7;
+    }
+
+    .saved-empty-box {
+      grid-column: span 2;
+      text-align: center;
+      color: #65676b;
+      padding: 60px 20px;
+      font-size: 14.5px;
     }
   </style>
 </head>
 <body>
 
-  <!-- ზედა ჰედერი -->
+  <!-- ჰედერი -->
   <header class="saved-header">
     <div class="saved-header-left">
       <button class="saved-back-btn" onclick="window.location.href='index.html'" aria-label="უკან">‹</button>
       <span class="saved-title">შენახული</span>
     </div>
-    <button class="saved-search-btn" onclick="alert('ძებნა')">
-      <img src="icons/search.svg" alt="ძებნა">
+    <button class="saved-search-btn" onclick="focusSearch()">
+      <img src="icons/search.svg" class="post-action-icon" alt="ძებნა">
     </button>
   </header>
 
-  <!-- ჰორიზონტალური ტაბები -->
+  <!-- ტაბები -->
   <div class="saved-tabs-row">
     <button class="saved-tab-pill active" onclick="filterSavedTab('all', this)">ყველა</button>
     <button class="saved-tab-pill" onclick="filterSavedTab('reels', this)">Reels</button>
@@ -353,7 +345,7 @@
     <button class="saved-tab-pill" onclick="filterSavedTab('marketplace', this)">Marketplace</button>
   </div>
 
-  <!-- სექცია: კოლექციები -->
+  <!-- კოლექციები -->
   <div id="savedCollectionsSection">
     <div class="saved-section-header">
       <span class="saved-section-title">კოლექციები</span>
@@ -361,52 +353,27 @@
     </div>
 
     <div class="saved-collections-scroll" id="collectionsContainer">
-      <!-- კოლექცია 1 -->
-      <div class="saved-col-card" onclick="alert('კოლექცია: პროდუქტები')">
+      <div class="saved-col-card" onclick="filterSavedTab('all', document.querySelectorAll('.saved-tab-pill')[0])">
         <div class="saved-col-cover">
-          <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&fit=crop" alt="პროდუქტები">
+          <img src="icons/bookmark.svg" class="post-action-icon" style="width: 40px; height: 40px; margin: 60px auto; display: block;" alt="ყველა">
         </div>
-        <div class="saved-col-name">პროდუქტები</div>
+        <div class="saved-col-name">ყველა შენახული</div>
         <div class="saved-col-privacy">
-          <img src="icons/lock.svg" alt="დაბლოკილი">
-          <span>მხოლოდ მე</span>
-        </div>
-      </div>
-
-      <!-- კოლექცია 2 -->
-      <div class="saved-col-card" onclick="alert('კოლექცია: ჩემი რჩეულები')">
-        <div class="saved-col-cover">
-          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&fit=crop" alt="ჩემი რჩეულები">
-        </div>
-        <div class="saved-col-name">ჩემი რჩეულები</div>
-        <div class="saved-col-privacy">
-          <img src="icons/lock.svg" alt="დაბლოკილი">
-          <span>მხოლოდ მე</span>
-        </div>
-      </div>
-
-      <!-- კოლექცია 3 -->
-      <div class="saved-col-card" onclick="alert('კოლექცია: ავტომობილები')">
-        <div class="saved-col-cover">
-          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=300&fit=crop" alt="ავტომობილები">
-        </div>
-        <div class="saved-col-name">ავტომობილები</div>
-        <div class="saved-col-privacy">
-          <img src="icons/lock.svg" alt="დაბლოკილი">
+          <img src="icons/lock.svg" class="post-action-icon" alt="მხოლოდ მე">
           <span>მხოლოდ მე</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- სექცია: ახლახან შენახული -->
+  <!-- ახლახან შენახული -->
   <div class="saved-section-header">
     <span class="saved-section-title">ახლახან შენახული</span>
   </div>
 
-  <!-- 2-სვეტიანი ბადე -->
+  <!-- ბადე -->
   <main class="saved-grid" id="savedItemsGrid">
-    <div style="grid-column: span 2; text-align: center; color: #65676b; padding: 40px 0;">შენახული მასალები იტვირთება...</div>
+    <div class="saved-empty-box">შენახული მასალები იტვირთება...</div>
   </main>
 
   <script>
@@ -429,74 +396,60 @@
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
-        loadSavedItems(user.uid);
+        loadRealSavedItems(user.uid);
       } else {
         window.location.href = "index.html";
       }
     });
 
-    async function loadSavedItems(uid) {
+    // მხოლოდ რეალურად შენახული მასალების წამოღება
+    async function loadRealSavedItems(uid) {
       const grid = document.getElementById('savedItemsGrid');
 
       try {
-        // მომხმარებლის შენახული პოსტები
         const snap = await db.collection('saved_posts')
           .where('user_id', '==', uid)
           .orderBy('saved_at', 'desc')
-          .limit(30)
           .get();
 
         if (snap.empty) {
-          // თუ ჯერ არაფერი აქვს შენახული, საჩვენებლად ჩავტვირთოთ საიტის ბოლო პოპულარული პოსტები
-          loadFallbackPopularPosts(grid);
+          grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.<br>შეინახეთ პოსტები ან ვიდეოები და აქ გამოჩნდება.</div>`;
           return;
         }
 
-        const postIds = [];
-        snap.forEach(doc => postIds.push(doc.data().post_id));
-
-        const postsPromises = postIds.map(id => db.collection('posts').doc(id).get());
-        const postDocs = await Promise.all(postsPromises);
-
-        allSavedItems = [];
-        postDocs.forEach(pDoc => {
-          if (pDoc.exists) {
-            allSavedItems.push(Object.assign({ id: pDoc.id }, pDoc.data()));
+        const itemsPromises = snap.docs.map(async (doc) => {
+          const sData = doc.data();
+          const targetCol = sData.type === 'reel' ? 'reels' : 'posts';
+          const targetDoc = await db.collection(targetCol).doc(sData.post_id).get();
+          
+          if (targetDoc.exists) {
+            const data = targetDoc.data();
+            return {
+              id: targetDoc.id,
+              type: sData.type || (data.video_url ? 'reel' : 'post'),
+              content: data.content || data.caption || data.description || "მასალა",
+              media_url: data.video_url || data.media_url || data.image_url || "",
+              author_name: data.author_name || data.user_name || "მომხმარებელი",
+              author_photo: data.author_photo || data.user_avatar || "icons/circle-user-round.svg",
+              likes_count: data.likes_count || (data.likes ? data.likes.length : 0)
+            };
           }
+          return null;
         });
+
+        const results = await Promise.all(itemsPromises);
+        allSavedItems = results.filter(item => item !== null && item.media_url !== "");
+
+        if (allSavedItems.length === 0) {
+          grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.</div>`;
+          return;
+        }
 
         renderSavedGrid(allSavedItems);
 
       } catch (err) {
-        console.error("Saved items load error:", err);
-        loadFallbackPopularPosts(grid);
-      }
-    }
-
-    // თუ ცარიელია, საიტის პოსტების ჩვენება დიზაინის შესავსებად
-    async function loadFallbackPopularPosts(grid) {
-      try {
-        const snap = await db.collection('posts')
-          .orderBy('created_at', 'desc')
-          .limit(10)
-          .get();
-
-        allSavedItems = [];
-        snap.forEach(doc => {
-          const d = doc.data();
-          if (d.media_url) {
-            allSavedItems.push(Object.assign({ id: doc.id }, d));
-          }
-        });
-
-        if (allSavedItems.length === 0) {
-          grid.innerHTML = `<div style="grid-column: span 2; text-align: center; color: #65676b; padding: 40px 0;">შენახული მასალები ჯერ არ გაქვთ.</div>`;
-          return;
-        }
-
-        renderSavedGrid(allSavedItems);
-      } catch (e) {
-        grid.innerHTML = `<div style="grid-column: span 2; text-align: center; color: #65676b; padding: 40px 0;">შენახული მასალები ცარიელია.</div>`;
+        console.error("Saved load error:", err);
+        grid.innerHTML = `<div class="saved-empty-box">შენახული მასალები ჯერ არ გაქვთ.</div>`;
       }
     }
 
@@ -505,41 +458,41 @@
       grid.innerHTML = "";
 
       if (items.length === 0) {
-        grid.innerHTML = `<div style="grid-column: span 2; text-align: center; color: #65676b; padding: 40px 0;">ამ კატეგორიაში არაფერია.</div>`;
+        grid.innerHTML = `<div class="saved-empty-box">ამ განყოფილებაში არაფერია შენახული.</div>`;
         return;
       }
 
       items.forEach(item => {
-        const media = item.media_url ? item.media_url.split(',')[0].trim() : 'logo2.png';
-        const isVideo = item.media_type === 'video';
-        const author = item.author_name || "Emigrantbook";
-        const caption = item.content || "მედია მასალა";
-        const likes = item.likes_count || 1;
+        const isVideo = item.type === 'reel' || item.media_url.endsWith('.mp4');
+        const media = item.media_url.split(',')[0].trim();
+        const authorImg = item.author_photo || 'icons/circle-user-round.svg';
 
         const card = document.createElement('div');
         card.className = 'saved-item-card';
-        card.onclick = () => window.location.href = `index.html`;
+        card.onclick = () => {
+          if (item.type === 'reel') {
+            window.location.href = `reels.html?id=${item.id}`;
+          } else {
+            window.location.href = `index.html`;
+          }
+        };
 
         card.innerHTML = `
           <div class="saved-item-thumb-box">
             <div class="saved-item-author-overlay">
-              <img src="icons/circle-user-round.svg" class="saved-author-ava" alt="author">
-              <span class="saved-author-name-text">${author}</span>
+              <img src="${authorImg}" class="saved-author-ava" onerror="this.src='icons/circle-user-round.svg'" alt="author">
+              <span class="saved-author-name-text">${item.author_name}</span>
             </div>
             ${isVideo ? `<video src="${media}#t=0.5" preload="metadata" muted playsinline></video>` : `<img src="${media}" alt="thumb">`}
-            ${isVideo ? `<div class="saved-reels-watermark"><span>▶</span></div>` : ''}
+            ${isVideo ? `<div class="saved-reels-watermark">▶</div>` : ''}
           </div>
-          <div class="saved-item-caption">${caption}</div>
+          <div class="saved-item-caption">${item.content}</div>
           <div class="saved-item-stats-row">
-            <div class="saved-reactions-pill">
-              <div class="saved-reaction-dots">
-                <div class="reaction-circle like">👍</div>
-                <div class="reaction-circle heart">♥</div>
-                <div class="reaction-circle care">😮</div>
-              </div>
-              <span class="saved-reaction-count">${formatNum(likes)}</span>
+            <div class="saved-real-likes">
+              <img src="icons/thumbs-up.svg" class="saved-like-icon post-action-icon" alt="like">
+              <span class="saved-like-count">${item.likes_count}</span>
             </div>
-            <img src="icons/undo-2.svg" class="saved-share-icon" alt="share">
+            <img src="icons/undo-2.svg" class="saved-share-icon post-action-icon" alt="share">
           </div>
         `;
 
@@ -547,14 +500,9 @@
       });
     }
 
-    function formatNum(num) {
-      if (num >= 1000) return (num / 1000).toFixed(1) + ' ათ.';
-      return num;
-    }
-
     function filterSavedTab(tab, btn) {
       document.querySelectorAll('.saved-tab-pill').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      if (btn) btn.classList.add('active');
 
       const colSection = document.getElementById('savedCollectionsSection');
       if (tab === 'all') {
@@ -562,10 +510,10 @@
         renderSavedGrid(allSavedItems);
       } else if (tab === 'reels') {
         if (colSection) colSection.style.display = 'none';
-        renderSavedGrid(allSavedItems.filter(i => i.media_type === 'video'));
+        renderSavedGrid(allSavedItems.filter(i => i.type === 'reel'));
       } else if (tab === 'posts') {
         if (colSection) colSection.style.display = 'none';
-        renderSavedGrid(allSavedItems.filter(i => i.media_type !== 'video'));
+        renderSavedGrid(allSavedItems.filter(i => i.type !== 'reel'));
       } else {
         if (colSection) colSection.style.display = 'none';
         renderSavedGrid([]);
@@ -576,6 +524,13 @@
       const name = prompt("შეიყვანეთ ახალი კოლექციის სახელი:");
       if (!name) return;
       alert(`კოლექცია "${name}" შეიქმნა!`);
+    }
+
+    function focusSearch() {
+      const q = prompt("შენახულებში ძებნა:");
+      if (!q) return;
+      const filtered = allSavedItems.filter(i => i.content.toLowerCase().includes(q.toLowerCase()) || i.author_name.toLowerCase().includes(q.toLowerCase()));
+      renderSavedGrid(filtered);
     }
   </script>
 </body>
