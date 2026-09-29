@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>დაბადების დღეები | Emigrantbook</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #050505;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* ჰედერი */
+    .bday-header {
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      height: 52px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f2f5;
+      z-index: 100;
+    }
+
+    .bday-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .bday-back-btn {
+      background: none;
+      border: none;
+      font-size: 26px;
+      color: #050505;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+    }
+
+    .bday-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .bday-header-right-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 4px;
+    }
+
+    .bday-header-right-btn img,
+    .bday-header-right-btn svg {
+      width: 24px;
+      height: 24px;
+      opacity: 0.8;
+    }
+
+    /* სექციის სათაურები */
+    .bday-section {
+      padding: 16px 16px 8px 16px;
+    }
+
+    .bday-section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #050505;
+      margin-bottom: 14px;
+    }
+
+    /* „ახლახან“ ბლოკი */
+    .bday-recent-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bday-user-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .bday-avatar-large {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #e4e6eb;
+      flex-shrink: 0;
+    }
+
+    .bday-user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .bday-user-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .bday-user-date {
+      font-size: 13.5px;
+      color: #65676b;
+    }
+
+    /* მილოცვის ინპუტი */
+    .bday-input-box {
+      width: 100%;
+      background: #f0f2f5;
+      border-radius: 20px;
+      padding: 10px 16px;
+      border: none;
+      outline: none;
+      font-size: 14.5px;
+      color: #050505;
+    }
+
+    .bday-input-box::placeholder {
+      color: #65676b;
+    }
+
+    /* პოსტის შექმნა + მესენჯერი ღილაკების ზოლი */
+    .bday-action-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bday-post-btn {
+      flex: 1;
+      height: 38px;
+      background: #1877f2;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .bday-post-btn:active {
+      background: #166fe5;
+    }
+
+    .bday-msg-btn-square {
+      width: 44px;
+      height: 38px;
+      background: #e4e6eb;
+      border: none;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s ease;
+    }
+
+    .bday-msg-btn-square:active {
+      background: #d8dadf;
+    }
+
+    .bday-msg-btn-square svg {
+      width: 18px;
+      height: 18px;
+      fill: #050505;
+    }
+
+    /* „მომავალი“ დაბადების დღეების სია */
+    .bday-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 6px;
+    }
+
+    .bday-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .bday-list-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .bday-avatar-medium {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #e4e6eb;
+      flex-shrink: 0;
+    }
+
+    .bday-item-name {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #050505;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bday-item-date {
+      font-size: 13.5px;
+      color: #65676b;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ზედა ჰედერი -->
+  <header class="bday-header">
+    <div class="bday-header-left">
+      <button class="bday-back-btn" onclick="window.history.back()" aria-label="უკან">‹</button>
+      <span class="bday-title">დაბადების დღეები</span>
+    </div>
+    <button class="bday-header-right-btn" onclick="alert('პარამეტრები')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </button>
+  </header>
+
+  <!-- სექცია 1: ახლახან -->
+  <section class="bday-section">
+    <h2 class="bday-section-title">ახლახან</h2>
+
+    <div class="bday-recent-card" id="recentBdayContainer">
+      <div class="bday-user-row" onclick="viewProfile('recent_user')">
+        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" class="bday-avatar-large" alt="Luiza">
+        <div class="bday-user-info">
+          <span class="bday-user-name">Luiza Kvaracxelia</span>
+          <span class="bday-user-date">გუშინ, 28 სექტემბერი</span>
+        </div>
+      </div>
+
+      <input type="text" class="bday-input-box" id="bdayPostInput" placeholder="დაწერეთ სადაბადებისდღეო პოსტი...">
+
+      <div class="bday-action-row">
+        <button class="bday-post-btn" onclick="publishBdayPost()">პოსტის შექმნა</button>
+        <button class="bday-msg-btn-square" onclick="window.location.href='messenger.html'" title="შეტყობინება">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- სექცია 2: მომავალი -->
+  <section class="bday-section" style="padding-top: 10px;">
+    <h2 class="bday-section-title">მომავალი</h2>
+
+    <div class="bday-list" id="upcomingBdayList">
+      <!-- 1 -->
+      <div class="bday-list-item">
+        <div class="bday-list-item-left" onclick="viewProfile('1')">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" class="bday-avatar-medium" alt="Kaxa">
+          <div class="bday-user-info">
+            <span class="bday-item-name">Kaxa Gvinjilia</span>
+            <span class="bday-item-date">შაბათი, 3 ოქტომბერი</span>
+          </div>
+        </div>
+        <button class="bday-msg-btn-square" onclick="window.location.href='messenger.html'">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 2 -->
+      <div class="bday-list-item">
+        <div class="bday-list-item-left" onclick="viewProfile('2')">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="bday-avatar-medium" alt="Rim">
+          <div class="bday-user-info">
+            <span class="bday-item-name">Rim Ma Gogohkia</span>
+            <span class="bday-item-date">შაბათი, 3 ოქტომბერი</span>
+          </div>
+        </div>
+        <button class="bday-msg-btn-square" onclick="window.location.href='messenger.html'">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 3 -->
+      <div class="bday-list-item">
+        <div class="bday-list-item-left" onclick="viewProfile('3')">
+          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80" class="bday-avatar-medium" alt="Nino">
+          <div class="bday-user-info">
+            <span class="bday-item-name">Nino Kajaia</span>
+            <span class="bday-item-date">კვირა, 4 ოქტომბერი</span>
+          </div>
+        </div>
+        <button class="bday-msg-btn-square" onclick="window.location.href='messenger.html'">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 4 -->
+      <div class="bday-list-item">
+        <div class="bday-list-item-left" onclick="viewProfile('4')">
+          <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&q=80" class="bday-avatar-medium" alt="Nano">
+          <div class="bday-user-info">
+            <span class="bday-item-name">ნანო გოგალაძე</span>
+            <span class="bday-item-date">სამშაბათი, 6 ოქტომბერი</span>
+          </div>
+        </div>
+        <button class="bday-msg-btn-square" onclick="window.location.href='messenger.html'">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 5 -->
+      <div class="bday-list-item">
+        <div class="bday-list-item-left" onclick="viewProfile('5')">
+          <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" class="bday-avatar-medium" alt="Nato">
+          <div class="bday-user-info">
+            <span class="bday-item-name">Nato Kashia</span>
+            <span class="bday-item-date">ოთხშაბათი, 7 ოქტომბერი</span>
+          </div>
+        </div>
+        <button class="bday-msg-btn-square" onclick="window.location.href='messenger.html'">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // დაბადების დღის მილოცვის პოსტი
+    function publishBdayPost() {
+      const input = document.getElementById('bdayPostInput');
+      const val = input.value.trim();
+
+      if (!val) {
+        alert("გთხოვთ ჩაწეროთ მილოცვის ტექსტი!");
+        return;
+      }
+
+      const user = auth.currentUser;
+      if (!user) {
+        alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+        return;
+      }
+
+      db.collection('posts').add({
+        user_id: user.uid,
+        content: `🎉 დაბადების დღეს გილოცავ! 🎂\n${val}`,
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+        likes_count: 0,
+        comments_count: 0
+      }).then(() => {
+        alert("სადაბადებისდღეო პოსტი წარმატებით გამოქვეყნდა!");
+        input.value = "";
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+      });
+    }
+
+    // პროფილზე გადასვლა
+    function viewProfile(uid) {
+      window.location.href = `index.html?profile_id=${uid}`;
+    }
+  </script>
+</body>
+</html>
