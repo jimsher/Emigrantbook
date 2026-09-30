@@ -963,7 +963,7 @@ var githubMusicLibrary = [
     title: "BIRDS OF A FEATHER",
     artist: "Billie Eilish",
     cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=150&auto=format&fit=crop&q=80",
-    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/birds-of-a-feather.mp3"
+    url: "https://github.com/jimsher/Emigrantbook/raw/refs/heads/main/music/%E1%83%90%E1%83%A0%20%E1%83%A8%E1%83%94%E1%83%9B%E1%83%98%E1%83%A7%E1%83%95%E1%83%90%E1%83%A0%E1%83%9D%20%E1%83%A5%E1%83%90%E1%83%A0%E1%83%9D.m4a"
   },
   {
     id: "gm3",
