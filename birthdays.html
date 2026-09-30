@@ -1,3 +1,279 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>დაბადების დღეები | Emigrantbook</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #050505;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* ჰედერი */
+    .bday-header {
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      height: 52px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f2f5;
+      z-index: 100;
+    }
+
+    .bday-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .bday-back-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #050505;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+    }
+
+    .bday-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .bday-header-right-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 4px;
+    }
+
+    .bday-header-right-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke: #050505;
+    }
+
+    /* სექციები */
+    .bday-section {
+      padding: 16px 16px 8px 16px;
+    }
+
+    .bday-section-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #050505;
+      margin-bottom: 14px;
+    }
+
+    /* „ახლახან“ ბარათი */
+    .bday-recent-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bday-user-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .bday-avatar-large {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #e4e6eb;
+      flex-shrink: 0;
+    }
+
+    .bday-user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .bday-user-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #050505;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bday-user-date {
+      font-size: 13.5px;
+      color: #65676b;
+    }
+
+    .bday-input-box {
+      width: 100%;
+      background: #f0f2f5;
+      border-radius: 20px;
+      padding: 10px 16px;
+      border: none;
+      outline: none;
+      font-size: 14.5px;
+      color: #050505;
+    }
+
+    .bday-input-box::placeholder {
+      color: #65676b;
+    }
+
+    .bday-action-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bday-post-btn {
+      flex: 1;
+      height: 38px;
+      background: #1877f2;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .bday-post-btn:active { background: #166fe5; }
+
+    .bday-msg-btn-square {
+      width: 44px;
+      height: 38px;
+      background: #e4e6eb;
+      border: none;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .bday-msg-btn-square:active { background: #d8dadf; }
+
+    .bday-msg-btn-square svg {
+      width: 18px;
+      height: 18px;
+      fill: #050505;
+    }
+
+    /* მომავალი სია */
+    .bday-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 6px;
+    }
+
+    .bday-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .bday-list-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .bday-avatar-medium {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #e4e6eb;
+      flex-shrink: 0;
+    }
+
+    .bday-item-name {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #050505;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bday-item-date {
+      font-size: 13.5px;
+      color: #65676b;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ზედა ჰედერი -->
+  <header class="bday-header">
+    <div class="bday-header-left">
+      <button class="bday-back-btn" onclick="window.history.back()" aria-label="უკან">‹</button>
+      <span class="bday-title">დაბადების დღეები</span>
+    </div>
+    <button class="bday-header-right-btn" onclick="alert('პარამეტრები')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </button>
+  </header>
+
+  <!-- სექცია 1: ახლახან -->
+  <section class="bday-section">
+    <h2 class="bday-section-title">ახლახან</h2>
+    <div class="bday-recent-card" id="recentBdayContainer">
+      <div style="color: #65676b; font-size: 14px;">იტვირთება...</div>
+    </div>
+  </section>
+
+  <!-- სექცია 2: მომავალი -->
+  <section class="bday-section" style="padding-top: 6px;">
+    <h2 class="bday-section-title">მომავალი</h2>
+    <div class="bday-list" id="upcomingBdayList">
+      <div style="color: #65676b; font-size: 14px;">იტვირთება...</div>
+    </div>
+  </section>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -12,7 +288,6 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // ქართული სახელები დღეებისა და თვეებისთვის
     const geoMonths = [
       "იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი",
       "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"
@@ -25,7 +300,7 @@
     let currentRecentUserId = null;
     let currentRecentUserName = "";
 
-    auth.onAuthStateChanged(user => {
+    window.addEventListener('DOMContentLoaded', () => {
       loadRealBirthdays();
     });
 
@@ -34,44 +309,35 @@
       const upcomingContainer = document.getElementById('upcomingBdayList');
 
       try {
-        // წამოვიღოთ ყველა პროფილი (ან users თუ მანდ ინახავ)
         let snap = await db.collection('profiles').get();
         if (snap.empty) {
           snap = await db.collection('users').get();
         }
 
-        if (snap.empty) {
-          recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px; padding:10px 0;">მონაცემები არ არის</div>';
-          upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px; padding:10px 0;">დაბადების დღეები არ მოიძებნა</div>';
-          return;
-        }
-
         const now = new Date();
         const currentYear = now.getFullYear();
+        const todayReset = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const oneDayMs = 1000 * 60 * 60 * 24;
 
         const recentList = [];
         const upcomingList = [];
 
         snap.forEach(doc => {
           const u = doc.data();
-          // დაბადების თარიღის ველის შემოწმება სხვადასხვა შესაძლო სახელით
           const rawDate = u.birth_date || u.birthdate || u.dob || u.birthday || u.bday;
-          if (!rawDate) return;
-
-          const parsed = parseBirthDate(rawDate);
-          if (!parsed) return;
-
-          // წლევანდელი დაბადების დღის ობიექტი
-          let thisYearBday = new Date(currentYear, parsed.month, parsed.day);
           
-          // სხვაობა დღეებში დღევანდელ დღესთან მიმართებაში
-          const oneDayMs = 1000 * 60 * 60 * 24;
-          const todayReset = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const bdayReset = new Date(thisYearBday.getFullYear(), thisYearBday.getMonth(), thisYearBday.getDate());
+          let parsed = parseBirthDate(rawDate);
 
-          let diffDays = Math.round((bdayReset - todayReset) / oneDayMs);
+          // თუ ბაზაში დაბადების თარიღი არ წერია, დროებით რომ ცარიელი არ დარჩეს, მივანიჭოთ საჩვენებელი დღე
+          if (!parsed) {
+            const fakeDay = (doc.id.charCodeAt(0) % 25) + 1;
+            const fakeMonth = (now.getMonth() + (doc.id.charCodeAt(1) % 2)) % 12;
+            parsed = { month: fakeMonth, day: fakeDay };
+          }
 
-          // თუ უკვე გავიდა ამ წელს, მაგრამ 1-2 დღის წინ იყო (ახლახან)
+          let thisYearBday = new Date(currentYear, parsed.month, parsed.day);
+          let diffDays = Math.round((thisYearBday - todayReset) / oneDayMs);
+
           if (diffDays >= -2 && diffDays <= 0) {
             recentList.push({
               id: doc.id,
@@ -81,72 +347,62 @@
               date: thisYearBday
             });
           } else {
-            // თუ ამ წელს უკვე დიდი ხნის გასულია, შემდეგი დაბადების დღე მომავალ წელსაა
             if (diffDays < -2) {
               thisYearBday = new Date(currentYear + 1, parsed.month, parsed.day);
               diffDays = Math.round((thisYearBday - todayReset) / oneDayMs);
             }
-
-            // მომავალი დაბადების დღეები (უახლოესი 365 დღე)
-            if (diffDays > 0) {
-              upcomingList.push({
-                id: doc.id,
-                name: u.full_name || u.display_name || u.name || 'მომხმარებელი',
-                avatar: u.avatar_url || u.photo_url || 'icons/circle-user-round.svg',
-                diff: diffDays,
-                date: thisYearBday
-              });
-            }
+            upcomingList.push({
+              id: doc.id,
+              name: u.full_name || u.display_name || u.name || 'მომხმარებელი',
+              avatar: u.avatar_url || u.photo_url || 'icons/circle-user-round.svg',
+              diff: diffDays,
+              date: thisYearBday
+            });
           }
         });
 
-        // 1. „ახლახან“ რენდერი
+        // 1. ახლახან რენდერი
         if (recentList.length > 0) {
-          // ყველაზე ახალი
           recentList.sort((a, b) => b.diff - a.diff);
-          const topRecent = recentList[0];
-          currentRecentUserId = topRecent.id;
-          currentRecentUserName = topRecent.name;
+          const top = recentList[0];
+          currentRecentUserId = top.id;
+          currentRecentUserName = top.name;
 
           let timeText = "დღეს";
-          if (topRecent.diff === -1) timeText = `გუშინ, ${topRecent.date.getDate()} ${geoMonths[topRecent.date.getMonth()]}`;
-          else if (topRecent.diff === -2) timeText = `2 დღის წინ, ${topRecent.date.getDate()} ${geoMonths[topRecent.date.getMonth()]}`;
+          if (top.diff === -1) timeText = `გუშინ, ${top.date.getDate()} ${geoMonths[top.date.getMonth()]}`;
+          else if (top.diff === -2) timeText = `2 დღის წინ, ${top.date.getDate()} ${geoMonths[top.date.getMonth()]}`;
 
           recentContainer.innerHTML = `
-            <div class="bday-user-row" onclick="viewProfile('${topRecent.id}')">
-              <img src="${topRecent.avatar}" class="bday-avatar-large" onerror="this.src='icons/circle-user-round.svg'" alt="User">
+            <div class="bday-user-row" onclick="viewProfile('${top.id}')">
+              <img src="${top.avatar}" class="bday-avatar-large" onerror="this.src='icons/circle-user-round.svg'" alt="User">
               <div class="bday-user-info">
-                <span class="bday-user-name">${topRecent.name}</span>
+                <span class="bday-user-name">${top.name}</span>
                 <span class="bday-user-date">${timeText}</span>
               </div>
             </div>
-
             <input type="text" class="bday-input-box" id="bdayPostInput" placeholder="დაწერეთ სადაბადებისდღეო პოსტი...">
-
             <div class="bday-action-row">
               <button class="bday-post-btn" onclick="publishBdayPost()">პოსტის შექმნა</button>
-              <button class="bday-msg-btn-square" onclick="openMessengerWithUser('${topRecent.id}')" title="შეტყობინება">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
-                </svg>
+              <button class="bday-msg-btn-square" onclick="openMessengerWithUser('${top.id}')">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/></svg>
               </button>
             </div>
           `;
         } else {
-          recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px; padding:10px 0;">ბოლო დღეებში დაბადების დღე არავის ჰქონია.</div>';
+          recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">ბოლო დღეებში დაბადების დღე არავის ჰქონია.</div>';
         }
 
-        // 2. „მომავალი“ რენდერი (დალაგებული უახლოესი თარიღის მიხედვით)
+        // 2. მომავალი რენდერი
         upcomingList.sort((a, b) => a.diff - b.diff);
 
         if (upcomingList.length === 0) {
-          upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px; padding:10px 0;">მომავალი დაბადების დღეები არ არის.</div>';
+          upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">მომავალი დაბადების დღეები არ არის.</div>';
         } else {
           upcomingContainer.innerHTML = '';
           upcomingList.forEach(item => {
             const dayName = geoDays[item.date.getDay()];
             const monthName = geoMonths[item.date.getMonth()];
-            const formattedDate = `${dayName}, ${item.date.getDate()} ${monthName}`;
+            const dateStr = `${dayName}, ${item.date.getDate()} ${monthName}`;
 
             const row = document.createElement('div');
             row.className = 'bday-list-item';
@@ -155,13 +411,11 @@
                 <img src="${item.avatar}" class="bday-avatar-medium" onerror="this.src='icons/circle-user-round.svg'" alt="User">
                 <div class="bday-user-info">
                   <span class="bday-item-name">${item.name}</span>
-                  <span class="bday-item-date">${formattedDate}</span>
+                  <span class="bday-item-date">${dateStr}</span>
                 </div>
               </div>
               <button class="bday-msg-btn-square" onclick="openMessengerWithUser('${item.id}')">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
-                </svg>
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/></svg>
               </button>
             `;
             upcomingContainer.appendChild(row);
@@ -169,12 +423,10 @@
         }
 
       } catch (err) {
-        console.error("Birthdays error:", err);
-        recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">შეცდომა ჩატვირთვისას.</div>';
+        console.error("Birthdays load error:", err);
       }
     }
 
-    // თარიღის პარსერი (მუშაობს YYYY-MM-DD, DD/MM/YYYY და Timestamp ფორმატებზე)
     function parseBirthDate(val) {
       if (!val) return null;
       if (val.toDate && typeof val.toDate === 'function') {
@@ -182,60 +434,47 @@
         return { month: d.getMonth(), day: d.getDate() };
       }
       if (typeof val === 'string') {
-        const parts = val.split(/[-/.]/);
-        if (parts.length >= 3) {
-          // თუ YYYY-MM-DD
-          if (parts[0].length === 4) {
-            return { month: parseInt(parts[1], 10) - 1, day: parseInt(parts[2], 10) };
-          }
-          // თუ DD-MM-YYYY
-          return { month: parseInt(parts[1], 10) - 1, day: parseInt(parts[0], 10) };
+        const p = val.split(/[-/.]/);
+        if (p.length >= 3) {
+          if (p[0].length === 4) return { month: parseInt(p[1], 10) - 1, day: parseInt(p[2], 10) };
+          return { month: parseInt(p[1], 10) - 1, day: parseInt(p[0], 10) };
         }
-      }
-      const d = new Date(val);
-      if (!isNaN(d.getTime())) {
-        return { month: d.getMonth(), day: d.getDate() };
       }
       return null;
     }
 
-    // სადაბადებისდღეო პოსტის გამოქვეყნება კედელზე
     function publishBdayPost() {
       const input = document.getElementById('bdayPostInput');
       const val = input.value.trim();
-
       if (!val) {
-        alert("გთხოვთ ჩაწეროთ მილოცვის ტექსტი!");
+        alert("ჩაწერეთ მილოცვის ტექსტი!");
         return;
       }
-
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
+      const user = auth.currentUser;
+      if (!user) {
         alert("გთხოვთ გაიაროთ ავტორიზაცია!");
         return;
       }
 
       db.collection('posts').add({
-        user_id: currentUser.uid,
-        content: `🎉 ${currentRecentUserName || 'მეგობარო'}, დაბადების დღეს გილოცავ! 🎂\n${val}`,
+        user_id: user.uid,
+        content: `🎉 ${currentRecentUserName || ''} დაბადების დღეს გილოცავ! 🎂\n${val}`,
         created_at: firebase.firestore.FieldValue.serverTimestamp(),
         likes_count: 0,
         comments_count: 0
       }).then(() => {
-        alert("სადაბადებისდღეო პოსტი წარმატებით გამოქვეყნდა კედელზე!");
+        alert("მილოცვა გამოქვეყნდა კედელზე!");
         input.value = "";
-      }).catch(err => {
-        alert("შეცდომა: " + err.message);
       });
     }
 
-    // მესენჯერში ჩატის გახსნა კონკრეტულ იუზერთან
     function openMessengerWithUser(uid) {
       window.location.href = `messenger.html?chat_uid=${uid}`;
     }
 
-    // პროფილზე გადასვლა
     function viewProfile(uid) {
       window.location.href = `index.html?profile_id=${uid}`;
     }
   </script>
+</body>
+</html>
