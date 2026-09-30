@@ -160,6 +160,18 @@
     }
     .creator-sticker-element { font-size: 54px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
 
+    /* 🏷️ მუსიკის მოძრავი სტიკერი */
+    .creator-music-sticker {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(14px);
+      padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+    .creator-music-sticker-icon { font-size: 16px; animation: bounceMusicNote 1s infinite alternate ease-in-out; }
+    @keyframes bounceMusicNote { 0% { transform: scale(0.9); } 100% { transform: scale(1.15); } }
+    .creator-music-sticker-title { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+    .creator-music-sticker-del { margin-left: 6px; font-size: 14px; color: #aaa; cursor: pointer; padding: 2px 6px; }
+
     /* TOOLS */
     .fb-creator-tools-bar {
       position: absolute; bottom: 78px; left: 0; right: 0;
@@ -203,7 +215,7 @@
 
     /* TOOL MODALS */
     .fb-sheet-modal {
-      position: absolute; bottom: 0; left: 0; right: 0; max-height: 65vh;
+      position: absolute; bottom: 0; left: 0; right: 0; max-height: 70vh;
       background: #18191a; border-radius: 20px 20px 0 0; z-index: 50;
       padding: 16px; display: none; flex-direction: column; gap: 12px;
       box-shadow: 0 -5px 25px rgba(0,0,0,0.8);
@@ -214,14 +226,58 @@
     }
     .fb-sheet-close { background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; }
     .fb-sheet-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-    .fb-music-item {
-      display: flex; align-items: center; gap: 12px; padding: 10px;
-      background: #242526; border-radius: 10px; cursor: pointer;
+
+    /* მუსიკის სია */
+    .fb-music-search-box {
+      display: flex; align-items: center; background: #2f3031;
+      border-radius: 20px; padding: 8px 14px; margin-bottom: 8px;
     }
-    .fb-music-item:hover { background: #3a3b3c; }
+    .fb-music-search-input {
+      width: 100%; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 14px; margin-left: 8px;
+    }
+    .fb-music-track-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; background: #242526; border-radius: 10px; cursor: pointer;
+    }
+    .fb-music-track-row:hover, .fb-music-track-row:active { background: #3a3b3c; }
+    .fb-music-track-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; }
     .fb-music-item-info { display: flex; flex-direction: column; color: #fff; font-size: 13.5px; }
     .fb-music-item-info span:last-child { font-size: 11px; color: #b0b3b8; }
+    .fb-music-play-btn {
+      width: 34px; height: 34px; border-radius: 50%; background: #3a3b3c;
+      border: none; color: #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-size: 13px;
+    }
     
+    /* ✂️ მუსიკის 15-წამიანი მონაკვეთის ასარჩევი Trimmer */
+    .fb-music-trimmer-box {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px);
+      padding: 16px 18px 24px 18px; border-radius: 16px 16px 0 0;
+      z-index: 70; display: none; flex-direction: column; gap: 12px;
+      box-shadow: 0 -8px 25px rgba(0,0,0,0.8);
+    }
+    .trimmer-top-row { display: flex; justify-content: space-between; align-items: center; color: #fff; }
+    .trimmer-title { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
+    .trimmer-duration-badge { background: #1877f2; color: #fff; font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 12px; }
+    .trimmer-slider-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .trimmer-slider {
+      width: 100%; -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 4px; background: #3a3b3c; outline: none;
+    }
+    .trimmer-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 22px; height: 22px;
+      border-radius: 50%; background: #fff; cursor: pointer;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5); border: 3px solid #1877f2;
+    }
+    .trimmer-time-labels { display: flex; justify-content: space-between; color: #b0b3b8; font-size: 12px; }
+    .trimmer-done-btn {
+      background: #1877f2; color: #fff; border: none; border-radius: 8px;
+      height: 40px; font-size: 14.5px; font-weight: 700; cursor: pointer;
+    }
+    .trimmer-done-btn:active { background: #166fe5; }
+
     .fb-stickers-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 10px 0; }
     .fb-sticker-btn { background: #242526; border: none; border-radius: 12px; font-size: 32px; padding: 10px; cursor: pointer; }
     .fb-sticker-btn:hover { background: #3a3b3c; }
@@ -232,7 +288,7 @@
       padding: 8px 16px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 13px;
     }
 
-        /* STORY BOTTOM ACTION SHEET */
+    /* STORY BOTTOM ACTION SHEET */
     .story-options-backdrop {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0, 0, 0, 0.6); z-index: 1000002;
@@ -284,7 +340,6 @@
     }
     .story-cancel-btn { background: #3a3b3c; color: #fff; }
     .story-danger-btn { background: #e41e3f; color: #fff; }
-
   `;
   const styleEl = document.createElement('style');
   styleEl.innerHTML = css;
@@ -308,7 +363,7 @@
             <div class="fb-music-icon">🎵</div>
             <div class="fb-music-texts">
               <span class="fb-music-title" id="creator-music-name">მუსიკის დამატება</span>
-              <span class="fb-music-sub">შემოთავაზებები</span>
+              <span class="fb-music-sub">GitHub ბიბლიოთეკა</span>
             </div>
           </div>
           <button class="fb-creator-icon-btn" onclick="resetStoryEdits()" title="გასუფთავება">✕</button>
@@ -358,29 +413,35 @@
           <button class="fb-creator-share-btn" id="story-publish-btn" onclick="publishCreatedStory()">გაზიარება</button>
         </div>
 
+        <!-- 🎵 მუსიკის არჩევის Facebook მოდალი -->
         <div id="sheet-music" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>მუსიკის არჩევა</span>
             <button class="fb-sheet-close" onclick="closeSheet('sheet-music')">✕</button>
           </div>
-          <div class="fb-sheet-list">
-            <div class="fb-music-item" onclick="selectMusic('Die With A Smile', 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/die-with-a-smile.mp3')">
-              <span>🎵</span>
-              <div class="fb-music-item-info"><span>Die With A Smile</span><span>Lady Gaga, Bruno Mars</span></div>
-            </div>
-            <div class="fb-music-item" onclick="selectMusic('BIRDS OF A FEATHER', 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/birds-of-a-feather.mp3')">
-              <span>🎵</span>
-              <div class="fb-music-item-info"><span>BIRDS OF A FEATHER</span><span>Billie Eilish</span></div>
-            </div>
-            <div class="fb-music-item" onclick="selectMusic('Espresso', 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/espresso.mp3')">
-              <span>🎵</span>
-              <div class="fb-music-item-info"><span>Espresso</span><span>Sabrina Carpenter</span></div>
-            </div>
-            <div class="fb-music-item" onclick="selectMusic('Blinding Lights', 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/blinding-lights.mp3')">
-              <span>🎵</span>
-              <div class="fb-music-item-info"><span>Blinding Lights</span><span>The Weeknd</span></div>
+          <div class="fb-music-search-box">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#b0b3b8" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" class="fb-music-search-input" id="musicSearchInput" placeholder="მოძებნეთ სიმღერა ან შემსრულებელი..." oninput="filterStoryMusic(this.value)">
+          </div>
+          <div class="fb-sheet-list" id="storyMusicTrackList">
+            <!-- ჩაიტვირთება დინამიკურად JS-ით -->
+          </div>
+        </div>
+
+        <!-- ✂️ მუსიკის დროის ასარჩევი Trimmer ბანერი -->
+        <div id="story-music-trimmer" class="fb-music-trimmer-box">
+          <div class="trimmer-top-row">
+            <span class="trimmer-title" id="trimmer-song-title">სიმღერის სახელი</span>
+            <span class="trimmer-duration-badge">15 წმ</span>
+          </div>
+          <div class="trimmer-slider-wrap">
+            <input type="range" id="musicRangeSlider" class="trimmer-slider" min="0" value="0" step="1" oninput="onMusicSliderChange(this.value)">
+            <div class="trimmer-time-labels">
+              <span id="trimmer-current-time">0:00</span>
+              <span id="trimmer-end-time">0:15</span>
             </div>
           </div>
+          <button class="trimmer-done-btn" onclick="saveMusicTrimSelection()">მზადაა</button>
         </div>
 
         <div id="sheet-stickers" class="fb-sheet-modal">
@@ -489,7 +550,6 @@
   if (document.body) document.body.appendChild(container);
 })();
 
-
 // 3. MULTI-STORY VIEWER LOGIC
 var activeUserStoryGroup = [];
 var activeStoryIndex = 0;
@@ -526,7 +586,6 @@ function renderProgressBarsUI() {
 }
 
 // კონკრეტული სთორის ჩვენება
- // კონკრეტული სთორის ჩვენება (დაბრუნებული Base64 poster-ით და ორიგინალი HTML-ით)
 function displayActiveStoryItem(username, avatarUrl) {
   var story = activeUserStoryGroup[activeStoryIndex];
   if (!story) {
@@ -585,7 +644,6 @@ function displayActiveStoryItem(username, avatarUrl) {
     `;
 
     if (story.media_type === 'video') {
-      // 100% ორიგინალი HTML Base64 poster-ით, autoplay-ით და preload-ით
       mediaContainer.innerHTML = tapZones + `<video id="active-story-video" src="${story.media_url}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline webkit-playsinline preload="auto" style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};"></video>`;
 
       var activeVid = document.getElementById('active-story-video');
@@ -593,7 +651,6 @@ function displayActiveStoryItem(username, avatarUrl) {
       if (activeVid) {
         activeVid.muted = false;
 
-        // ტაიმერი იწყება მაშინ, როცა ვიდეო თავის რეალურ ხანგრძლივობას გაიგებს
         activeVid.onloadedmetadata = function() {
           var durationMs = (activeVid.duration && !isNaN(activeVid.duration)) ? (activeVid.duration * 1000) : 12000;
           startStoryProgressBar(durationMs, username, avatarUrl);
@@ -606,13 +663,15 @@ function displayActiveStoryItem(username, avatarUrl) {
     } else {
       mediaContainer.innerHTML = tapZones + `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};">`;
 
+      // 🎯 მუსიკის დაკვრა არჩეული წამიდან
       if (story.music_url) {
         storyAudioPlayer.src = story.music_url;
-        storyAudioPlayer.currentTime = 0;
+        var startSec = Number(story.music_start_time) || 0;
+        storyAudioPlayer.currentTime = startSec;
         storyAudioPlayer.play().catch(function(){});
       }
 
-      startStoryProgressBar(6000, username, avatarUrl);
+      startStoryProgressBar(7000, username, avatarUrl);
     }
   }
 }           
@@ -667,7 +726,7 @@ function goToPrevStoryItem(event) {
   }
 }
 
-// ➕ სთორის ყურებისას პლიუსზე დაჭერა -> Viewer იხურება და იხსნება ფაილის არჩევა
+// ➕ სთორის ყურებისას პლიუსზე დაჭერა
 function addNewStoryFromViewer() {
   closeStoryViewer();
   triggerStoryUpload();
@@ -739,7 +798,7 @@ function sendStoryInteractionToMessenger(story, textContent) {
   });
 }
 
-// 1. სთორის რეაქცია (დაგულება / სმაილი)
+// 1. სთორის რეაქცია
 function reactToStoryFacebook(emoji) {
   var story = activeUserStoryGroup[activeStoryIndex];
   if (!story) return;
@@ -755,8 +814,6 @@ function reactToStoryFacebook(emoji) {
 
   var newLikes = (story.likes_count || 0) + 1;
   db.collection('stories').doc(story.id).update({ likes_count: newLikes }).catch(function(){});
-
-  // სთორის მინიატურისა და სმაილის გაგზავნა მესინჯერში
   sendStoryInteractionToMessenger(story, emoji);
 }
 
@@ -770,9 +827,7 @@ function handleStoryCommentKeyPress(event) {
     var text = input.value.trim();
     if (!text) return;
 
-    // სთორის მინიატურისა და ტექსტის გაგზავნა მესინჯერში
     sendStoryInteractionToMessenger(story, text);
-
     input.value = "";
     input.blur();
     resumeStoryTimer();
@@ -780,12 +835,54 @@ function handleStoryCommentKeyPress(event) {
   }
 }
 
-// 4. CREATOR LOGIC & MERGE
+// 4. CREATOR LOGIC, MUSIC & MERGE
 var selectedStoryFile = null;
 var selectedStoryMediaType = null;
 var storyAttachedMusic = "Original Audio";
 var selectedStoryMusicUrl = null;
 var currentAppliedFilter = "none";
+
+// 🎵 GITHUB MUSIC REPOSITORY ბიბლიოთეკა
+var githubMusicLibrary = [
+  {
+    id: "gm1",
+    title: "Die With A Smile",
+    artist: "Lady Gaga, Bruno Mars",
+    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/die-with-a-smile.mp3"
+  },
+  {
+    id: "gm2",
+    title: "BIRDS OF A FEATHER",
+    artist: "Billie Eilish",
+    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/birds-of-a-feather.mp3"
+  },
+  {
+    id: "gm3",
+    title: "Espresso",
+    artist: "Sabrina Carpenter",
+    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/espresso.mp3"
+  },
+  {
+    id: "gm4",
+    title: "Blinding Lights",
+    artist: "The Weeknd",
+    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/blinding-lights.mp3"
+  },
+  {
+    id: "gm5",
+    title: "Flowers",
+    artist: "Miley Cyrus",
+    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/flowers.mp3"
+  }
+];
+
+var previewAudioPlayer = new Audio();
+var currentlyPlayingTrackId = null;
+var activeTrimmingTrack = null;
+var selectedMusicStartTime = 0;
+var STORY_CLIP_MAX_SEC = 15;
+var trimmerAudioPlayer = new Audio();
+var trimmerLoopInterval = null;
 
 function triggerStoryUpload() {
   var fileInput = document.getElementById('story-file-input');
@@ -801,6 +898,7 @@ function handleStoryFileSelected(event) {
   currentAppliedFilter = "none";
   storyAttachedMusic = "Original Audio";
   selectedStoryMusicUrl = null;
+  selectedMusicStartTime = 0;
 
   var titleEl = document.getElementById('creator-music-name');
   if (titleEl) titleEl.innerText = "მუსიკის დამატება";
@@ -833,6 +931,7 @@ function closeStoryCreator() {
   selectedStoryFile = null;
   selectedStoryMediaType = null;
   closeAllSheets();
+  stopMusicPreviews();
 }
 
 function resetStoryEdits() {
@@ -841,8 +940,19 @@ function resetStoryEdits() {
   applyMediaFilter('none');
   storyAttachedMusic = "Original Audio";
   selectedStoryMusicUrl = null;
+  selectedMusicStartTime = 0;
   var titleEl = document.getElementById('creator-music-name');
   if (titleEl) titleEl.innerText = "მუსიკის დამატება";
+  stopMusicPreviews();
+}
+
+function stopMusicPreviews() {
+  previewAudioPlayer.pause();
+  previewAudioPlayer.src = "";
+  currentlyPlayingTrackId = null;
+  trimmerAudioPlayer.pause();
+  trimmerAudioPlayer.src = "";
+  clearInterval(trimmerLoopInterval);
 }
 
 function openStoryTool(toolType) {
@@ -852,7 +962,10 @@ function openStoryTool(toolType) {
     if (userText) makeDraggableText(userText);
   } else if (toolType === 'music') {
     var sheet = document.getElementById('sheet-music');
-    if (sheet) sheet.style.display = 'flex';
+    if (sheet) {
+      sheet.style.display = 'flex';
+      renderMusicTrackList(githubMusicLibrary);
+    }
   } else if (toolType === 'stickers') {
     var sheet = document.getElementById('sheet-stickers');
     if (sheet) sheet.style.display = 'flex';
@@ -866,20 +979,181 @@ function openStoryTool(toolType) {
 }
 
 function closeSheet(id) {
+  stopMusicPreviews();
   var sheet = document.getElementById(id);
   if (sheet) sheet.style.display = 'none';
 }
 
 function closeAllSheets() {
+  stopMusicPreviews();
   document.querySelectorAll('.fb-sheet-modal').forEach(el => el.style.display = 'none');
+  var trimmer = document.getElementById('story-music-trimmer');
+  if (trimmer) trimmer.style.display = 'none';
 }
 
-function selectMusic(title, musicUrl) {
-  storyAttachedMusic = title;
-  selectedStoryMusicUrl = musicUrl;
-  var titleEl = document.getElementById('creator-music-name');
-  if (titleEl) titleEl.innerText = title;
-  closeAllSheets();
+// 🎶 მუსიკის ძიება და რენდერი
+function renderMusicTrackList(tracks) {
+  var container = document.getElementById('storyMusicTrackList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (tracks.length === 0) {
+    container.innerHTML = '<div style="color:#b0b3b8; padding:15px; text-align:center;">მუსიკა ვერ მოიძებნა</div>';
+    return;
+  }
+
+  tracks.forEach(function(track) {
+    var isPlaying = currentlyPlayingTrackId === track.id;
+    var row = document.createElement('div');
+    row.className = 'fb-music-track-row';
+    row.innerHTML = `
+      <div class="fb-music-track-left" onclick="startTrimmingTrack('${track.id}')">
+        <span style="font-size: 20px;">🎵</span>
+        <div class="fb-music-item-info">
+          <span>${track.title}</span>
+          <span>${track.artist}</span>
+        </div>
+      </div>
+      <button class="fb-music-play-btn" onclick="toggleTrackPreview(event, '${track.id}', '${track.url}')">
+        ${isPlaying ? '⏸' : '▶'}
+      </button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function filterStoryMusic(query) {
+  var clean = (query || '').toLowerCase().trim();
+  var filtered = githubMusicLibrary.filter(function(t) {
+    return t.title.toLowerCase().includes(clean) || t.artist.toLowerCase().includes(clean);
+  });
+  renderMusicTrackList(filtered);
+}
+
+function toggleTrackPreview(event, trackId, url) {
+  event.stopPropagation();
+  if (currentlyPlayingTrackId === trackId) {
+    previewAudioPlayer.pause();
+    currentlyPlayingTrackId = null;
+  } else {
+    previewAudioPlayer.src = url;
+    previewAudioPlayer.currentTime = 0;
+    previewAudioPlayer.play().catch(function(){});
+    currentlyPlayingTrackId = trackId;
+  }
+  var query = document.getElementById('musicSearchInput') ? document.getElementById('musicSearchInput').value : '';
+  filterStoryMusic(query);
+}
+
+// ✂️ მუსიკის მონაკვეთის არჩევა (Trimmer)
+function startTrimmingTrack(trackId) {
+  stopMusicPreviews();
+  closeSheet('sheet-music');
+
+  var track = githubMusicLibrary.find(t => t.id === trackId);
+  if (!track) return;
+  activeTrimmingTrack = track;
+
+  trimmerAudioPlayer.src = track.url;
+  trimmerAudioPlayer.load();
+
+  trimmerAudioPlayer.onloadedmetadata = function() {
+    var totalSec = Math.floor(trimmerAudioPlayer.duration) || 60;
+    var slider = document.getElementById('musicRangeSlider');
+    slider.max = Math.max(0, totalSec - STORY_CLIP_MAX_SEC);
+    slider.value = 0;
+    selectedMusicStartTime = 0;
+
+    document.getElementById('trimmer-song-title').innerText = track.title + " - " + track.artist;
+    updateTrimmerTimeLabels(0);
+
+    var trimmer = document.getElementById('story-music-trimmer');
+    if (trimmer) trimmer.style.display = 'flex';
+
+    playTrimLoop(0);
+  };
+
+  trimmerAudioPlayer.onerror = function() {
+    alert("მუსიკის ჩატვირთვა ვერ მოხერხდა GitHub-იდან.");
+  };
+}
+
+function onMusicSliderChange(val) {
+  selectedMusicStartTime = parseInt(val, 10);
+  updateTrimmerTimeLabels(selectedMusicStartTime);
+  playTrimLoop(selectedMusicStartTime);
+}
+
+function updateTrimmerTimeLabels(sec) {
+  var endSec = sec + STORY_CLIP_MAX_SEC;
+  document.getElementById('trimmer-current-time').innerText = formatTrimmerTime(sec);
+  document.getElementById('trimmer-end-time').innerText = formatTrimmerTime(endSec);
+}
+
+function formatTrimmerTime(sec) {
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+function playTrimLoop(startSec) {
+  trimmerAudioPlayer.currentTime = startSec;
+  trimmerAudioPlayer.play().catch(function(){});
+
+  clearInterval(trimmerLoopInterval);
+  trimmerLoopInterval = setInterval(function() {
+    if (trimmerAudioPlayer.currentTime >= startSec + STORY_CLIP_MAX_SEC) {
+      trimmerAudioPlayer.currentTime = startSec;
+      trimmerAudioPlayer.play().catch(function(){});
+    }
+  }, 400);
+}
+
+// 🎯 „მზადაა“ -> მუსიკის დამახსოვრება და მოძრავი სტიკერის განთავსება
+function saveMusicTrimSelection() {
+  stopMusicPreviews();
+  var trimmer = document.getElementById('story-music-trimmer');
+  if (trimmer) trimmer.style.display = 'none';
+
+  if (!activeTrimmingTrack) return;
+
+  storyAttachedMusic = activeTrimmingTrack.title + " • " + activeTrimmingTrack.artist;
+  selectedStoryMusicUrl = activeTrimmingTrack.url;
+
+  var topMusicName = document.getElementById('creator-music-name');
+  if (topMusicName) topMusicName.innerText = activeTrimmingTrack.title;
+
+  var overlayLayer = document.getElementById('creator-overlay-layer');
+  if (overlayLayer) {
+    var old = overlayLayer.querySelector('.creator-music-sticker');
+    if (old) old.remove();
+
+    var sticker = document.createElement('div');
+    sticker.className = 'creator-movable-element creator-music-sticker';
+    sticker.style.top = '22%';
+    sticker.style.left = '16%';
+    sticker.innerHTML = `
+      <span class="creator-music-sticker-icon">🎵</span>
+      <span class="creator-music-sticker-title">${activeTrimmingTrack.title}</span>
+      <span class="creator-music-sticker-del" onclick="removeAttachedStoryMusic(event)">✕</span>
+    `;
+    overlayLayer.appendChild(sticker);
+    makeElementDraggable(sticker);
+  }
+}
+
+function removeAttachedStoryMusic(event) {
+  if (event) event.stopPropagation();
+  var overlayLayer = document.getElementById('creator-overlay-layer');
+  if (overlayLayer) {
+    var sticker = overlayLayer.querySelector('.creator-music-sticker');
+    if (sticker) sticker.remove();
+  }
+  storyAttachedMusic = "Original Audio";
+  selectedStoryMusicUrl = null;
+  selectedMusicStartTime = 0;
+  var topMusicName = document.getElementById('creator-music-name');
+  if (topMusicName) topMusicName.innerText = "მუსიკის დამატება";
 }
 
 function addSticker(emoji) {
@@ -961,7 +1235,7 @@ function makeElementDraggable(elmnt) {
   }
 }
 
-// 5. გაერთიანება და Cloudflare R2-ში გამოქვეყნება (Full Cover Canvas)
+// 5. გაერთიანება და Cloudflare R2-ში გამოქვეყნება
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ აირჩიოთ ფაილი და გაიაროთ ავტორიზაცია');
@@ -1011,7 +1285,6 @@ function processStoryImageWithOverlays(callback) {
       ctx.filter = currentAppliedFilter;
     }
 
-    // Cover ალგორითმი სრული ეკრანისთვის
     var ratio = Math.max(canvas.width / img.width, canvas.height / img.height);
     var renderWidth = img.width * ratio;
     var renderHeight = img.height * ratio;
@@ -1048,6 +1321,18 @@ function processStoryImageWithOverlays(callback) {
         ctx.fillStyle = "#ffffff";
         ctx.fillText(el.innerText, relX, relY);
         ctx.shadowColor = "transparent";
+      } else if (el.classList.contains('creator-music-sticker')) {
+        // მუსიკის სტიკერის დატანა ფოტოზე
+        var txt = el.querySelector('.creator-music-sticker-title').innerText;
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.beginPath();
+        ctx.roundRect(relX, relY, 260 * scaleX, 44 * scaleY, 20 * scaleX);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `bold ${14 * scaleX}px sans-serif`;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText("🎵 " + txt, relX + (12 * scaleX), relY + (22 * scaleY));
       }
     });
 
@@ -1099,6 +1384,7 @@ function uploadStoryToR2(fileBlob, isVideo, btn) {
       media_type: isVideo ? "video" : "image",
       music_title: storyAttachedMusic || "Original Audio",
       music_url: selectedStoryMusicUrl || null,
+      music_start_time: selectedMusicStartTime || 0, // 🎯 საწყისი წამი
       filter: currentAppliedFilter || "none",
       likes_count: 0,
       created_at: firebase.firestore.FieldValue.serverTimestamp()
@@ -1195,7 +1481,6 @@ function fetchStoriesForUsers(userIdsList, listDiv) {
     });
 }
 
-
 // 📱 სთორის ქვედა პარამეტრების მენიუს გახსნა
 function openStoryActionSheet(event) {
   if (event) event.stopPropagation();
@@ -1214,7 +1499,6 @@ function openStoryActionSheet(event) {
   var html = '';
 
   if (isMyStory) {
-    // თუ ჩემი სთორია: წაშლა
     html += `
       <div class="story-sheet-action-row delete-action" onclick="showStoryDeleteConfirm()">
         <div class="story-sheet-icon">
@@ -1227,7 +1511,6 @@ function openStoryActionSheet(event) {
       </div>
     `;
   } else {
-    // თუ სხვისი სთორია
     html += `
       <div class="story-sheet-action-row" onclick="copyStoryLink()">
         <div class="story-sheet-icon">
@@ -1261,7 +1544,6 @@ function closeStoryActionSheet() {
   resumeStoryTimer();
 }
 
-// წაშლის დადასტურების ფანჯრის გახსნა
 function showStoryDeleteConfirm() {
   var sheetModal = document.getElementById('story-options-modal');
   if (sheetModal) sheetModal.style.display = 'none';
@@ -1276,7 +1558,6 @@ function closeStoryDeleteConfirm() {
   resumeStoryTimer();
 }
 
-// 🔥 სთორის წაშლის შესრულება Firestore-იდან
 function confirmDeleteActiveStory() {
   var currentStory = activeUserStoryGroup[activeStoryIndex];
   if (!currentStory || !currentStory.id) return;
@@ -1286,7 +1567,6 @@ function confirmDeleteActiveStory() {
   db.collection('stories').doc(currentStory.id).delete().then(function() {
     if (confirmModal) confirmModal.style.display = 'none';
 
-    // ამოვშალოთ მიმდინარე მასივიდან
     activeUserStoryGroup.splice(activeStoryIndex, 1);
 
     if (activeUserStoryGroup.length > 0) {
@@ -1302,7 +1582,6 @@ function confirmDeleteActiveStory() {
       closeStoryViewer();
     }
 
-    // კედელზე სიის განახლება
     if (typeof loadStories === 'function') {
       loadStories();
     } else {
