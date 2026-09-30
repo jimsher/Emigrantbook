@@ -250,7 +250,7 @@
       cursor: pointer; flex-shrink: 0; font-size: 13px;
     }
     
-    /* ✂️ მუსიკის 15-წამიანი მონაკვეთის ასარჩევი Trimmer */
+    /* ✂️ მუსიკის 30-წამიანი მონაკვეთის ასარჩევი Trimmer */
     .fb-music-trimmer-box {
       position: absolute; bottom: 0; left: 0; right: 0;
       background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px);
@@ -428,17 +428,17 @@
           </div>
         </div>
 
-        <!-- ✂️ მუსიკის დროის ასარჩევი Trimmer ბანერი -->
+        <!-- ✂️️ მუსიკის დროის ასარჩევი Trimmer ბანერი (30 წამი) -->
         <div id="story-music-trimmer" class="fb-music-trimmer-box">
           <div class="trimmer-top-row">
             <span class="trimmer-title" id="trimmer-song-title">სიმღერის სახელი</span>
-            <span class="trimmer-duration-badge">15 წმ</span>
+            <span class="trimmer-duration-badge">30 წმ</span>
           </div>
           <div class="trimmer-slider-wrap">
             <input type="range" id="musicRangeSlider" class="trimmer-slider" min="0" value="0" step="1" oninput="onMusicSliderChange(this.value)">
             <div class="trimmer-time-labels">
               <span id="trimmer-current-time">0:00</span>
-              <span id="trimmer-end-time">0:15</span>
+              <span id="trimmer-end-time">0:30</span>
             </div>
           </div>
           <button class="trimmer-done-btn" onclick="saveMusicTrimSelection()">მზადაა</button>
@@ -663,15 +663,17 @@ function displayActiveStoryItem(username, avatarUrl) {
     } else {
       mediaContainer.innerHTML = tapZones + `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};">`;
 
-      // 🎯 მუსიკის დაკვრა არჩეული წამიდან
+      // 🎯 მუსიკის დაკვრა არჩეული წამიდან და 30 წამიანი სინქრონიზაცია
+      var photoDuration = 7000;
       if (story.music_url) {
+        photoDuration = 30000; // 30 წამი მუსიკიანი სთორისთვის
         storyAudioPlayer.src = story.music_url;
         var startSec = Number(story.music_start_time) || 0;
         storyAudioPlayer.currentTime = startSec;
         storyAudioPlayer.play().catch(function(){});
       }
 
-      startStoryProgressBar(7000, username, avatarUrl);
+      startStoryProgressBar(photoDuration, username, avatarUrl);
     }
   }
 }           
@@ -846,8 +848,8 @@ var currentAppliedFilter = "none";
 var githubMusicLibrary = [
   {
     id: "gm1",
-    title: "Die With A Smile",
-    artist: "Lady Gaga, Bruno Mars",
+    title: "Мелодия души",
+    artist: "Новая песня 2025",
     url: "https://github.com/jimsher/Emigrantbook/raw/refs/heads/main/music/%F0%9F%92%96%20%D0%9C%D0%95%D0%9B%D0%9E%D0%94%D0%98%D0%AF%20%D0%94%D0%A3%D0%A8%D0%98%20-%20%D0%9D%D0%9E%D0%92%D0%90%D0%AF%20%D0%9F%D0%95%D0%A1%D0%9D%D0%AF%202025%20%F0%9F%8E%B5%20(160k)_1767641969628.oga"
   },
   {
@@ -880,7 +882,7 @@ var previewAudioPlayer = new Audio();
 var currentlyPlayingTrackId = null;
 var activeTrimmingTrack = null;
 var selectedMusicStartTime = 0;
-var STORY_CLIP_MAX_SEC = 15;
+var STORY_CLIP_MAX_SEC = 30; // 🎯 30 წამიანი მონაკვეთი
 var trimmerAudioPlayer = new Audio();
 var trimmerLoopInterval = null;
 
@@ -1322,7 +1324,6 @@ function processStoryImageWithOverlays(callback) {
         ctx.fillText(el.innerText, relX, relY);
         ctx.shadowColor = "transparent";
       } else if (el.classList.contains('creator-music-sticker')) {
-        // მუსიკის სტიკერის დატანა ფოტოზე
         var txt = el.querySelector('.creator-music-sticker-title').innerText;
         ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.beginPath();
@@ -1384,7 +1385,7 @@ function uploadStoryToR2(fileBlob, isVideo, btn) {
       media_type: isVideo ? "video" : "image",
       music_title: storyAttachedMusic || "Original Audio",
       music_url: selectedStoryMusicUrl || null,
-      music_start_time: selectedMusicStartTime || 0, // 🎯 საწყისი წამი
+      music_start_time: selectedMusicStartTime || 0,
       filter: currentAppliedFilter || "none",
       likes_count: 0,
       created_at: firebase.firestore.FieldValue.serverTimestamp()
