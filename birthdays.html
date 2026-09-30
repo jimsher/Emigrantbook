@@ -274,7 +274,7 @@
     </div>
   </section>
 
-  <script>
+        <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -314,6 +314,12 @@
           snap = await db.collection('users').get();
         }
 
+        if (snap.empty) {
+          recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">მომხმარებლები არ მოიძებნა.</div>';
+          upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">დაბადების დღეები არ არის.</div>';
+          return;
+        }
+
         const now = new Date();
         const currentYear = now.getFullYear();
         const todayReset = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -324,20 +330,17 @@
 
         snap.forEach(doc => {
           const u = doc.data();
-          const rawDate = u.birth_date || u.birthdate || u.dob || u.birthday || u.bday;
-          
-          let parsed = parseBirthDate(rawDate);
 
-          // თუ ბაზაში დაბადების თარიღი არ წერია, დროებით რომ ცარიელი არ დარჩეს, მივანიჭოთ საჩვენებელი დღე
-          if (!parsed) {
-            const fakeDay = (doc.id.charCodeAt(0) % 25) + 1;
-            const fakeMonth = (now.getMonth() + (doc.id.charCodeAt(1) % 2)) % 12;
-            parsed = { month: fakeMonth, day: fakeDay };
-          }
+          // რეალური თარიღის ამოღება Firestore-იდან
+          const parsed = extractUserBirthDate(u);
+          
+          // თუ ბაზაში თარიღი არ წერია, ამ მომხმარებელს საერთოდ გამოვტოვებთ!
+          if (!parsed) return;
 
           let thisYearBday = new Date(currentYear, parsed.month, parsed.day);
           let diffDays = Math.round((thisYearBday - todayReset) / oneDayMs);
 
+          // ახლახან: ბოლო 2 დღე ან დღეს
           if (diffDays >= -2 && diffDays <= 0) {
             recentList.push({
               id: doc.id,
@@ -347,10 +350,12 @@
               date: thisYearBday
             });
           } else {
+            // თუ წელს უკვე ჩაიარა, მომავალი დაბადების დღე შემდეგ წელსაა
             if (diffDays < -2) {
               thisYearBday = new Date(currentYear + 1, parsed.month, parsed.day);
               diffDays = Math.round((thisYearBday - todayReset) / oneDayMs);
             }
+
             upcomingList.push({
               id: doc.id,
               name: u.full_name || u.display_name || u.name || 'მომხმარებელი',
@@ -361,7 +366,7 @@
           }
         });
 
-        // 1. ახლახან რენდერი
+        // 1. სექცია „ახლახან“
         if (recentList.length > 0) {
           recentList.sort((a, b) => b.diff - a.diff);
           const top = recentList[0];
@@ -392,11 +397,11 @@
           recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">ბოლო დღეებში დაბადების დღე არავის ჰქონია.</div>';
         }
 
-        // 2. მომავალი რენდერი
+        // 2. სექცია „მომავალი“ (უახლოესი თარიღების მიხედვით ზრდადი)
         upcomingList.sort((a, b) => a.diff - b.diff);
 
         if (upcomingList.length === 0) {
-          upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">მომავალი დაბადების დღეები არ არის.</div>';
+          upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">მომავალი დაბადების დღეები არ არის მითითებული.</div>';
         } else {
           upcomingContainer.innerHTML = '';
           upcomingList.forEach(item => {
@@ -427,19 +432,46 @@
       }
     }
 
-    function parseBirthDate(val) {
-      if (!val) return null;
-      if (val.toDate && typeof val.toDate === 'function') {
-        const d = val.toDate();
+    // ბაზიდან რეალური თარიღის ამოღების ზუსტი ფუნქცია
+    function extractUserBirthDate(userData) {
+      if (!userData) return null;
+
+      // 1. თუ ცალკე ველებად წერია (მაგ. birth_day და birth_month)
+      if (userData.birth_day && userData.birth_month) {
+        return {
+          month: parseInt(userData.birth_month, 10) - 1,
+          day: parseInt(userData.birth_day, 10)
+        };
+      }
+
+      // 2. ერთიანი ველი
+      const raw = userData.birth_date || userData.birthdate || userData.birthday || userData.dob || userData.bday || userData.date_of_birth;
+      if (!raw) return null;
+
+      // Firestore Timestamp
+      if (raw.toDate && typeof raw.toDate === 'function') {
+        const d = raw.toDate();
         return { month: d.getMonth(), day: d.getDate() };
       }
-      if (typeof val === 'string') {
-        const p = val.split(/[-/.]/);
-        if (p.length >= 3) {
-          if (p[0].length === 4) return { month: parseInt(p[1], 10) - 1, day: parseInt(p[2], 10) };
-          return { month: parseInt(p[1], 10) - 1, day: parseInt(p[0], 10) };
+
+      // ტექსტური თარიღი: YYYY-MM-DD ან DD/MM/YYYY ან DD-MM-YYYY
+      if (typeof raw === 'string') {
+        const parts = raw.split(/[-/.]/);
+        if (parts.length >= 3) {
+          if (parts[0].length === 4) { // YYYY-MM-DD
+            return { month: parseInt(parts[1], 10) - 1, day: parseInt(parts[2], 10) };
+          } else { // DD-MM-YYYY
+            return { month: parseInt(parts[1], 10) - 1, day: parseInt(parts[0], 10) };
+          }
         }
       }
+
+      // სტანდარტული Date ობიექტი ან ISO სტრინგი
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        return { month: d.getMonth(), day: d.getDate() };
+      }
+
       return null;
     }
 
@@ -476,5 +508,6 @@
       window.location.href = `index.html?profile_id=${uid}`;
     }
   </script>
+            
 </body>
 </html>
