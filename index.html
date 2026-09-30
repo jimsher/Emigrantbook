@@ -8964,18 +8964,20 @@ function toggleFbMoreItems(btn) {
 
   if (!moreContent) return;
 
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
   const isHidden = (moreContent.style.display === 'none' || moreContent.style.display === '');
 
   if (isHidden) {
     moreContent.style.display = 'flex';
-    if (btnText) btnText.innerText = 'ნაკლების ჩვენება';
+    if (btnText) btnText.innerText = t.drawerSeeLess || 'ნაკლების ჩვენება';
     if (btnArrow) btnArrow.innerText = '▲';
   } else {
     moreContent.style.display = 'none';
-    if (btnText) btnText.innerText = 'მეტის ჩვენება';
+    if (btnText) btnText.innerText = t.drawerSeeMore || 'მეტის ჩვენება';
     if (btnArrow) btnArrow.innerText = '▼';
   }
 }
+
 
 
 
