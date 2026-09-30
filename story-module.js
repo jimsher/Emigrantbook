@@ -231,6 +231,60 @@
       background: #242526; color: #fff; border: 1px solid #444;
       padding: 8px 16px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 13px;
     }
+
+        /* STORY BOTTOM ACTION SHEET */
+    .story-options-backdrop {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.6); z-index: 1000002;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .story-options-sheet {
+      width: 100%; max-width: 440px; background: #242526;
+      border-radius: 16px 16px 0 0; padding: 12px 16px 24px 16px;
+      display: flex; flex-direction: column; gap: 8px;
+      animation: storySheetUp 0.2s ease-out; box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
+    }
+    @keyframes storySheetUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .story-sheet-drag-bar {
+      width: 40px; height: 4px; background: #555;
+      border-radius: 4px; margin: 0 auto 8px auto;
+    }
+    .story-sheet-action-row {
+      display: flex; align-items: center; gap: 14px; padding: 12px 8px;
+      border-radius: 8px; cursor: pointer; color: #e4e6eb; font-size: 15px; font-weight: 600;
+    }
+    .story-sheet-action-row:active { background: #3a3b3c; }
+    .story-sheet-action-row.delete-action { color: #ff4d4f; }
+    .story-sheet-icon {
+      width: 36px; height: 36px; border-radius: 50%; background: #3a3b3c;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .story-sheet-action-row.delete-action .story-sheet-icon { background: rgba(255, 77, 79, 0.15); }
+    .story-sheet-action-row.delete-action svg { stroke: #ff4d4f; }
+
+    /* CONFIRM DIALOG */
+    .story-confirm-modal {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.7); z-index: 1000003;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .story-confirm-box {
+      width: 100%; max-width: 320px; background: #242526; border-radius: 14px;
+      padding: 20px; text-align: center; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .story-confirm-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .story-confirm-desc { font-size: 13.5px; color: #b0b3b8; margin-bottom: 20px; line-height: 1.4; }
+    .story-confirm-btns { display: flex; gap: 10px; }
+    .story-confirm-btn {
+      flex: 1; padding: 10px; border-radius: 8px; border: none;
+      font-size: 14.5px; font-weight: 600; cursor: pointer;
+    }
+    .story-cancel-btn { background: #3a3b3c; color: #fff; }
+    .story-danger-btn { background: #e41e3f; color: #fff; }
+
   `;
   const styleEl = document.createElement('style');
   styleEl.innerHTML = css;
