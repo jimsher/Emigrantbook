@@ -410,10 +410,31 @@
         </div>
       </div>
     </div>
+
+    <!-- სთორის პარამეტრების ქვედა ბანერი (Bottom Sheet) -->
+    <div id="story-options-modal" class="story-options-backdrop" style="display: none;" onclick="closeStoryActionSheet()">
+      <div class="story-options-sheet" onclick="event.stopPropagation()">
+        <div class="story-sheet-drag-bar"></div>
+        <div id="story-sheet-content"></div>
+      </div>
+    </div>
+
+    <!-- წაშლის დადასტურების მოდალი -->
+    <div id="story-delete-confirm-modal" class="story-confirm-modal" style="display: none;">
+      <div class="story-confirm-box">
+        <div class="story-confirm-title">სთორის წაშლა?</div>
+        <div class="story-confirm-desc">ნამდვილად გსურთ ამ სთორის წაშლა? ამ მოქმედების გაუქმება შეუძლებელია.</div>
+        <div class="story-confirm-btns">
+          <button class="story-confirm-btn story-cancel-btn" onclick="closeStoryDeleteConfirm()">გაუქმება</button>
+          <button class="story-confirm-btn story-danger-btn" onclick="confirmDeleteActiveStory()">წაშლა</button>
+        </div>
+      </div>
+    </div>
   `;
   document.addEventListener('DOMContentLoaded', () => document.body.appendChild(container));
   if (document.body) document.body.appendChild(container);
 })();
+
 
 // 3. MULTI-STORY VIEWER LOGIC
 var activeUserStoryGroup = [];
