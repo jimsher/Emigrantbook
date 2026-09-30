@@ -381,7 +381,7 @@
           </div>
           <div class="fb-story-actions-right">
             <button class="fb-story-head-btn" onclick="closeStoryViewer()" title="Close">✕</button>
-            <button class="fb-story-head-btn" onclick="alert('Options')" title="More">•••</button>
+            <button class="fb-story-head-btn" onclick="openStoryActionSheet(event)" title="More">•••</button>
           </div>
         </div>
 
