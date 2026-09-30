@@ -848,7 +848,7 @@ var githubMusicLibrary = [
     id: "gm1",
     title: "Die With A Smile",
     artist: "Lady Gaga, Bruno Mars",
-    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/die-with-a-smile.mp3"
+    url: "https://github.com/jimsher/Emigrantbook/raw/refs/heads/main/music/%F0%9F%92%96%20%D0%9C%D0%95%D0%9B%D0%9E%D0%94%D0%98%D0%AF%20%D0%94%D0%A3%D0%A8%D0%98%20-%20%D0%9D%D0%9E%D0%92%D0%90%D0%AF%20%D0%9F%D0%95%D0%A1%D0%9D%D0%AF%202025%20%F0%9F%8E%B5%20(160k)_1767641969628.oga"
   },
   {
     id: "gm2",
