@@ -974,17 +974,17 @@ var githubMusicLibrary = [
   },
   {
     id: "gm4",
-    title: "Blinding Lights",
+    title: "ბოლომდე აუწიეთ",
     artist: "The Weeknd",
     cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&auto=format&fit=crop&q=80",
-    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/blinding-lights.mp3"
+    url: "https://github.com/jimsher/Emigrantbook/raw/refs/heads/main/music/%E1%83%91%E1%83%9D%E1%83%9A%E1%83%9D%E1%83%9B%E1%83%93%E1%83%94%20%E1%83%90%E1%83%A3%E1%83%AC%E1%83%98%E1%83%94%E1%83%97.m4a"
   },
   {
     id: "gm5",
-    title: "Flowers",
+    title: "ლადო კუჭუხიძე",
     artist: "Miley Cyrus",
     cover: "https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=150&auto=format&fit=crop&q=80",
-    url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/flowers.mp3"
+    url: "https://github.com/jimsher/Emigrantbook/raw/refs/heads/main/music/%E1%83%9A%E1%83%90%E1%83%93%E1%83%9D%20%E1%83%99%E1%83%A3%E1%83%AD%E1%83%A3%E1%83%AE%E1%83%98%E1%83%AB%E1%83%94.m4a"
   }
 ];
 
