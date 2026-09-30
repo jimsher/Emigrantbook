@@ -160,17 +160,90 @@
     }
     .creator-sticker-element { font-size: 54px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
 
-    /* 🏷️ მუსიკის მოძრავი სტიკერი */
+    /* 🏷️ მუსიკის მრავალფეროვანი სტიკერები (INSTAGRAM/FB STYLES) */
     .creator-music-sticker {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(14px);
-      padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      padding: 0 !important;
+      cursor: move;
+      user-select: none;
+      filter: drop-shadow(0 8px 25px rgba(0,0,0,0.65));
+      transition: transform 0.15s ease;
     }
-    .creator-music-sticker-icon { font-size: 16px; animation: bounceMusicNote 1s infinite alternate ease-in-out; }
-    @keyframes bounceMusicNote { 0% { transform: scale(0.9); } 100% { transform: scale(1.15); } }
-    .creator-music-sticker-title { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-    .creator-music-sticker-del { margin-left: 6px; font-size: 14px; color: #aaa; cursor: pointer; padding: 2px 6px; }
+    .creator-music-sticker:active { transform: scale(0.97); }
+
+    /* Style 1: Big Cover Card */
+    .music-sticker-card {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(20, 20, 20, 0.75); backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px; padding: 10px 14px; max-width: 290px;
+    }
+    .music-sticker-card-cover {
+      width: 48px; height: 48px; border-radius: 10px; object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4); flex-shrink: 0;
+    }
+    .music-sticker-card-meta {
+      display: flex; flex-direction: column; overflow: hidden; flex: 1;
+    }
+    .music-sticker-card-title {
+      font-size: 14.5px; font-weight: 800; color: #fff; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .music-sticker-card-artist {
+      font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, 0.75);
+      margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .music-wave-bars {
+      display: flex; align-items: flex-end; gap: 2.5px; height: 16px; margin-left: 4px; flex-shrink: 0;
+    }
+    .music-wave-bar {
+      width: 3px; background: #fff; border-radius: 2px;
+      animation: soundWaveAnim 1s infinite alternate ease-in-out;
+    }
+    .music-wave-bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+    .music-wave-bar:nth-child(2) { height: 16px; animation-delay: 0.3s; }
+    .music-wave-bar:nth-child(3) { height: 10px; animation-delay: 0.2s; }
+    .music-wave-bar:nth-child(4) { height: 14px; animation-delay: 0.4s; }
+    @keyframes soundWaveAnim {
+      0% { height: 4px; }
+      100% { height: 16px; }
+    }
+
+    /* Style 2: Compact Pill */
+    .music-sticker-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255, 255, 255, 0.95); color: #000;
+      border-radius: 24px; padding: 6px 14px 6px 8px; max-width: 250px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+    .music-sticker-pill-cover {
+      width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+    }
+    .music-sticker-pill-text {
+      font-size: 13px; font-weight: 700; color: #000; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Style 3: Vinyl Disc */
+    .music-sticker-vinyl {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px);
+      border-radius: 30px; padding: 6px 14px 6px 6px; border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .vinyl-disc {
+      width: 38px; height: 38px; border-radius: 50%; background: #111;
+      border: 3px solid #333; position: relative; display: flex;
+      align-items: center; justify-content: center;
+      animation: vinylSpin 3s linear infinite; flex-shrink: 0;
+    }
+    .vinyl-disc-img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+    @keyframes vinylSpin { 100% { transform: rotate(360deg); } }
+
+    .music-sticker-del-btn {
+      position: absolute; top: -8px; right: -8px; width: 22px; height: 22px;
+      background: #ff3b30; color: #fff; border-radius: 50%; border: 2px solid #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 11px;
+      font-weight: bold; cursor: pointer; z-index: 10;
+    }
 
     /* TOOLS */
     .fb-creator-tools-bar {
@@ -238,43 +311,66 @@
     }
     .fb-music-track-row {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 10px; background: #242526; border-radius: 10px; cursor: pointer;
+      padding: 8px 10px; background: #242526; border-radius: 12px; cursor: pointer;
+      transition: background 0.15s;
     }
     .fb-music-track-row:hover, .fb-music-track-row:active { background: #3a3b3c; }
     .fb-music-track-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; }
-    .fb-music-item-info { display: flex; flex-direction: column; color: #fff; font-size: 13.5px; }
-    .fb-music-item-info span:last-child { font-size: 11px; color: #b0b3b8; }
+    .fb-track-list-cover {
+      width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #333; flex-shrink: 0;
+    }
+    .fb-music-item-info { display: flex; flex-direction: column; color: #fff; font-size: 13.5px; overflow: hidden; }
+    .fb-music-item-info span:first-child { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fb-music-item-info span:last-child { font-size: 11.5px; color: #b0b3b8; margin-top: 2px; }
     .fb-music-play-btn {
-      width: 34px; height: 34px; border-radius: 50%; background: #3a3b3c;
+      width: 36px; height: 36px; border-radius: 50%; background: #3a3b3c;
       border: none; color: #fff; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; flex-shrink: 0; font-size: 13px;
+      cursor: pointer; flex-shrink: 0; font-size: 14px;
     }
     
-    /* ✂️ მუსიკის 30-წამიანი მონაკვეთის ასარჩევი Trimmer */
+    /* ✂️ თანამედროვე FB/IG WAVEFORM TRIMMER (30 წმ) */
     .fb-music-trimmer-box {
       position: absolute; bottom: 0; left: 0; right: 0;
-      background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px);
-      padding: 16px 18px 24px 18px; border-radius: 16px 16px 0 0;
-      z-index: 70; display: none; flex-direction: column; gap: 12px;
-      box-shadow: 0 -8px 25px rgba(0,0,0,0.8);
+      background: rgba(18, 18, 18, 0.96); backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px); padding: 18px 20px 24px 20px;
+      border-radius: 20px 20px 0 0; z-index: 70; display: none; flex-direction: column; gap: 14px;
+      box-shadow: 0 -10px 35px rgba(0,0,0,0.85);
     }
     .trimmer-top-row { display: flex; justify-content: space-between; align-items: center; color: #fff; }
-    .trimmer-title { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
-    .trimmer-duration-badge { background: #1877f2; color: #fff; font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 12px; }
-    .trimmer-slider-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .trimmer-title-box { display: flex; align-items: center; gap: 10px; max-width: 75%; }
+    .trimmer-cover-small { width: 34px; height: 34px; border-radius: 6px; object-fit: cover; }
+    .trimmer-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trimmer-duration-badge {
+      background: linear-gradient(135deg, #1877f2, #00c6ff);
+      color: #fff; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 12px;
+    }
+
+    /* Waveform visual */
+    .trimmer-wave-visual {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 38px; gap: 2px; padding: 0 4px; opacity: 0.85;
+    }
+    .trim-wave-bar {
+      flex: 1; background: #555; border-radius: 3px; min-height: 4px;
+      transition: background 0.15s, height 0.15s;
+    }
+    .trim-wave-bar.active-zone { background: #1877f2; }
+
+    .trimmer-slider-wrap { display: flex; flex-direction: column; gap: 8px; }
     .trimmer-slider {
       width: 100%; -webkit-appearance: none; appearance: none;
-      height: 6px; border-radius: 4px; background: #3a3b3c; outline: none;
+      height: 6px; border-radius: 4px; background: #2f3031; outline: none;
     }
     .trimmer-slider::-webkit-slider-thumb {
       -webkit-appearance: none; appearance: none; width: 22px; height: 22px;
       border-radius: 50%; background: #fff; cursor: pointer;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5); border: 3px solid #1877f2;
+      box-shadow: 0 0 12px rgba(24, 119, 242, 0.8); border: 3px solid #1877f2;
     }
-    .trimmer-time-labels { display: flex; justify-content: space-between; color: #b0b3b8; font-size: 12px; }
+    .trimmer-time-labels { display: flex; justify-content: space-between; color: #b0b3b8; font-size: 12px; font-weight: 600; }
     .trimmer-done-btn {
-      background: #1877f2; color: #fff; border: none; border-radius: 8px;
-      height: 40px; font-size: 14.5px; font-weight: 700; cursor: pointer;
+      background: #1877f2; color: #fff; border: none; border-radius: 10px;
+      height: 42px; font-size: 15px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(24, 119, 242, 0.4);
     }
     .trimmer-done-btn:active { background: #166fe5; }
 
@@ -428,12 +524,19 @@
           </div>
         </div>
 
-        <!-- ✂️️ მუსიკის დროის ასარჩევი Trimmer ბანერი (30 წამი) -->
+        <!-- ✂️ FB/IG WAVEFORM TRIMMER ბანერი -->
         <div id="story-music-trimmer" class="fb-music-trimmer-box">
           <div class="trimmer-top-row">
-            <span class="trimmer-title" id="trimmer-song-title">სიმღერის სახელი</span>
+            <div class="trimmer-title-box">
+              <img id="trimmer-cover-img" src="" class="trimmer-cover-small" alt="cover">
+              <span class="trimmer-title" id="trimmer-song-title">სიმღერის სახელი</span>
+            </div>
             <span class="trimmer-duration-badge">30 წმ</span>
           </div>
+
+          <!-- Waveform ანიმაცია -->
+          <div class="trimmer-wave-visual" id="trimmerWaveBars"></div>
+
           <div class="trimmer-slider-wrap">
             <input type="range" id="musicRangeSlider" class="trimmer-slider" min="0" value="0" step="1" oninput="onMusicSliderChange(this.value)">
             <div class="trimmer-time-labels">
@@ -666,7 +769,7 @@ function displayActiveStoryItem(username, avatarUrl) {
       // 🎯 მუსიკის დაკვრა არჩეული წამიდან და 30 წამიანი სინქრონიზაცია
       var photoDuration = 7000;
       if (story.music_url) {
-        photoDuration = 30000; // 30 წამი მუსიკიანი სთორისთვის
+        photoDuration = 30000;
         storyAudioPlayer.src = story.music_url;
         var startSec = Number(story.music_start_time) || 0;
         storyAudioPlayer.currentTime = startSec;
@@ -837,43 +940,50 @@ function handleStoryCommentKeyPress(event) {
   }
 }
 
-// 4. CREATOR LOGIC, MUSIC & MERGE
+// 4. CREATOR LOGIC, MUSIC, STYLES & MERGE
 var selectedStoryFile = null;
 var selectedStoryMediaType = null;
 var storyAttachedMusic = "Original Audio";
 var selectedStoryMusicUrl = null;
+var selectedStoryMusicCover = null;
 var currentAppliedFilter = "none";
+var currentMusicStickerStyle = 1; // 1: Card, 2: Pill, 3: Vinyl
 
-// 🎵 GITHUB MUSIC REPOSITORY ბიბლიოთეკა
+// 🎵 GITHUB MUSIC REPOSITORY ბიბლიოთეკა ალბომის ყდებით (Covers)
 var githubMusicLibrary = [
   {
     id: "gm1",
     title: "Мелодия души",
     artist: "Новая песня 2025",
+    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=150&auto=format&fit=crop&q=80",
     url: "https://github.com/jimsher/Emigrantbook/raw/refs/heads/main/music/%F0%9F%92%96%20%D0%9C%D0%95%D0%9B%D0%9E%D0%94%D0%98%D0%AF%20%D0%94%D0%A3%D0%A8%D0%98%20-%20%D0%9D%D0%9E%D0%92%D0%90%D0%AF%20%D0%9F%D0%95%D0%A1%D0%9D%D0%AF%202025%20%F0%9F%8E%B5%20(160k)_1767641969628.oga"
   },
   {
     id: "gm2",
     title: "BIRDS OF A FEATHER",
     artist: "Billie Eilish",
+    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=150&auto=format&fit=crop&q=80",
     url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/birds-of-a-feather.mp3"
   },
   {
     id: "gm3",
     title: "Espresso",
     artist: "Sabrina Carpenter",
+    cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=150&auto=format&fit=crop&q=80",
     url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/espresso.mp3"
   },
   {
     id: "gm4",
     title: "Blinding Lights",
     artist: "The Weeknd",
+    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&auto=format&fit=crop&q=80",
     url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/blinding-lights.mp3"
   },
   {
     id: "gm5",
     title: "Flowers",
     artist: "Miley Cyrus",
+    cover: "https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=150&auto=format&fit=crop&q=80",
     url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/flowers.mp3"
   }
 ];
@@ -882,7 +992,7 @@ var previewAudioPlayer = new Audio();
 var currentlyPlayingTrackId = null;
 var activeTrimmingTrack = null;
 var selectedMusicStartTime = 0;
-var STORY_CLIP_MAX_SEC = 30; // 🎯 30 წამიანი მონაკვეთი
+var STORY_CLIP_MAX_SEC = 30;
 var trimmerAudioPlayer = new Audio();
 var trimmerLoopInterval = null;
 
@@ -900,7 +1010,9 @@ function handleStoryFileSelected(event) {
   currentAppliedFilter = "none";
   storyAttachedMusic = "Original Audio";
   selectedStoryMusicUrl = null;
+  selectedStoryMusicCover = null;
   selectedMusicStartTime = 0;
+  currentMusicStickerStyle = 1;
 
   var titleEl = document.getElementById('creator-music-name');
   if (titleEl) titleEl.innerText = "მუსიკის დამატება";
@@ -942,7 +1054,9 @@ function resetStoryEdits() {
   applyMediaFilter('none');
   storyAttachedMusic = "Original Audio";
   selectedStoryMusicUrl = null;
+  selectedStoryMusicCover = null;
   selectedMusicStartTime = 0;
+  currentMusicStickerStyle = 1;
   var titleEl = document.getElementById('creator-music-name');
   if (titleEl) titleEl.innerText = "მუსიკის დამატება";
   stopMusicPreviews();
@@ -993,7 +1107,7 @@ function closeAllSheets() {
   if (trimmer) trimmer.style.display = 'none';
 }
 
-// 🎶 მუსიკის ძიება და რენდერი
+// 🎶 მუსიკის ძიება და რენდერი (ალბომის ყდებით)
 function renderMusicTrackList(tracks) {
   var container = document.getElementById('storyMusicTrackList');
   if (!container) return;
@@ -1008,9 +1122,11 @@ function renderMusicTrackList(tracks) {
     var isPlaying = currentlyPlayingTrackId === track.id;
     var row = document.createElement('div');
     row.className = 'fb-music-track-row';
+    var coverImg = track.cover || 'icons/circle-user-round.svg';
+
     row.innerHTML = `
       <div class="fb-music-track-left" onclick="startTrimmingTrack('${track.id}')">
-        <span style="font-size: 20px;">🎵</span>
+        <img src="${coverImg}" class="fb-track-list-cover" alt="cover">
         <div class="fb-music-item-info">
           <span>${track.title}</span>
           <span>${track.artist}</span>
@@ -1047,7 +1163,37 @@ function toggleTrackPreview(event, trackId, url) {
   filterStoryMusic(query);
 }
 
-// ✂️ მუსიკის მონაკვეთის არჩევა (Trimmer)
+// ✂️ Facebook/Instagram Waveform Trimmer
+function generateWaveformBars() {
+  var container = document.getElementById('trimmerWaveBars');
+  if (!container) return;
+  container.innerHTML = '';
+  // 35 ვიზუალური ტალღის ზოლი
+  for (var i = 0; i < 35; i++) {
+    var h = Math.floor(Math.random() * 26) + 8;
+    var bar = document.createElement('div');
+    bar.className = 'trim-wave-bar';
+    bar.style.height = h + 'px';
+    container.appendChild(bar);
+  }
+}
+
+function updateWaveformHighlight(currentSec, totalSec) {
+  var bars = document.querySelectorAll('.trim-wave-bar');
+  if (!bars || bars.length === 0) return;
+  var ratio = totalSec > 0 ? (currentSec / totalSec) : 0;
+  var startIdx = Math.floor(ratio * bars.length);
+  var activeLen = Math.floor((STORY_CLIP_MAX_SEC / (totalSec || 60)) * bars.length) || 8;
+
+  bars.forEach(function(bar, idx) {
+    if (idx >= startIdx && idx <= startIdx + activeLen) {
+      bar.classList.add('active-zone');
+    } else {
+      bar.classList.remove('active-zone');
+    }
+  });
+}
+
 function startTrimmingTrack(trackId) {
   stopMusicPreviews();
   closeSheet('sheet-music');
@@ -1066,7 +1212,12 @@ function startTrimmingTrack(trackId) {
     slider.value = 0;
     selectedMusicStartTime = 0;
 
-    document.getElementById('trimmer-song-title').innerText = track.title + " - " + track.artist;
+    document.getElementById('trimmer-song-title').innerText = track.title + " • " + track.artist;
+    var coverEl = document.getElementById('trimmer-cover-img');
+    if (coverEl) coverEl.src = track.cover || 'icons/circle-user-round.svg';
+
+    generateWaveformBars();
+    updateWaveformHighlight(0, totalSec);
     updateTrimmerTimeLabels(0);
 
     var trimmer = document.getElementById('story-music-trimmer');
@@ -1082,6 +1233,8 @@ function startTrimmingTrack(trackId) {
 
 function onMusicSliderChange(val) {
   selectedMusicStartTime = parseInt(val, 10);
+  var totalSec = Math.floor(trimmerAudioPlayer.duration) || 60;
+  updateWaveformHighlight(selectedMusicStartTime, totalSec);
   updateTrimmerTimeLabels(selectedMusicStartTime);
   playTrimLoop(selectedMusicStartTime);
 }
@@ -1121,27 +1274,83 @@ function saveMusicTrimSelection() {
 
   storyAttachedMusic = activeTrimmingTrack.title + " • " + activeTrimmingTrack.artist;
   selectedStoryMusicUrl = activeTrimmingTrack.url;
+  selectedStoryMusicCover = activeTrimmingTrack.cover || null;
 
   var topMusicName = document.getElementById('creator-music-name');
   if (topMusicName) topMusicName.innerText = activeTrimmingTrack.title;
 
-  var overlayLayer = document.getElementById('creator-overlay-layer');
-  if (overlayLayer) {
-    var old = overlayLayer.querySelector('.creator-music-sticker');
-    if (old) old.remove();
+  renderMusicStickerOnStory();
+}
 
-    var sticker = document.createElement('div');
-    sticker.className = 'creator-movable-element creator-music-sticker';
-    sticker.style.top = '22%';
-    sticker.style.left = '16%';
-    sticker.innerHTML = `
-      <span class="creator-music-sticker-icon">🎵</span>
-      <span class="creator-music-sticker-title">${activeTrimmingTrack.title}</span>
-      <span class="creator-music-sticker-del" onclick="removeAttachedStoryMusic(event)">✕</span>
+// 🎨 მუსიკის სტიკერის რენდერი (სტილის გადართვით)
+function renderMusicStickerOnStory() {
+  var overlayLayer = document.getElementById('creator-overlay-layer');
+  if (!overlayLayer || !activeTrimmingTrack) return;
+
+  var old = overlayLayer.querySelector('.creator-music-sticker');
+  var prevTop = old ? old.style.top : '22%';
+  var prevLeft = old ? old.style.left : '14%';
+  if (old) old.remove();
+
+  var sticker = document.createElement('div');
+  sticker.className = 'creator-movable-element creator-music-sticker';
+  sticker.style.top = prevTop;
+  sticker.style.left = prevLeft;
+  sticker.setAttribute('data-style', currentMusicStickerStyle);
+
+  var cover = activeTrimmingTrack.cover || 'icons/circle-user-round.svg';
+  var title = activeTrimmingTrack.title;
+  var artist = activeTrimmingTrack.artist;
+
+  var innerContent = '';
+
+  if (currentMusicStickerStyle === 1) {
+    // Style 1: Big Card with Album Cover & Sound Waves
+    innerContent = `
+      <div class="music-sticker-card" onclick="toggleMusicStickerStyle(event)">
+        <img src="${cover}" class="music-sticker-card-cover" alt="cover">
+        <div class="music-sticker-card-meta">
+          <span class="music-sticker-card-title">${title}</span>
+          <span class="music-sticker-card-artist">${artist}</span>
+        </div>
+        <div class="music-wave-bars">
+          <div class="music-wave-bar"></div>
+          <div class="music-wave-bar"></div>
+          <div class="music-wave-bar"></div>
+          <div class="music-wave-bar"></div>
+        </div>
+      </div>
     `;
-    overlayLayer.appendChild(sticker);
-    makeElementDraggable(sticker);
+  } else if (currentMusicStickerStyle === 2) {
+    // Style 2: Compact White Pill
+    innerContent = `
+      <div class="music-sticker-pill" onclick="toggleMusicStickerStyle(event)">
+        <img src="${cover}" class="music-sticker-pill-cover" alt="cover">
+        <span class="music-sticker-pill-text">${title} •${artist}</span>
+      </div>
+    `;
+  } else if (currentMusicStickerStyle === 3) {
+    // Style 3: Vinyl Disc Style
+    innerContent = `
+      <div class="music-sticker-vinyl" onclick="toggleMusicStickerStyle(event)">
+        <div class="vinyl-disc">
+          <img src="${cover}" class="vinyl-disc-img" alt="cover">
+        </div>
+        <span style="color:#fff; font-size:13px; font-weight:700;">${title}</span>
+      </div>
+    `;
   }
+
+  sticker.innerHTML = innerContent + `<div class="music-sticker-del-btn" onclick="removeAttachedStoryMusic(event)">✕</div>`;
+  overlayLayer.appendChild(sticker);
+  makeElementDraggable(sticker);
+}
+
+// სტიკერზე დაჭერით სტილის შეცვლა (1 -> 2 -> 3 -> 1)
+function toggleMusicStickerStyle(event) {
+  event.stopPropagation();
+  currentMusicStickerStyle = currentMusicStickerStyle >= 3 ? 1 : (currentMusicStickerStyle + 1);
+  renderMusicStickerOnStory();
 }
 
 function removeAttachedStoryMusic(event) {
@@ -1153,7 +1362,9 @@ function removeAttachedStoryMusic(event) {
   }
   storyAttachedMusic = "Original Audio";
   selectedStoryMusicUrl = null;
+  selectedStoryMusicCover = null;
   selectedMusicStartTime = 0;
+  activeTrimmingTrack = null;
   var topMusicName = document.getElementById('creator-music-name');
   if (topMusicName) topMusicName.innerText = "მუსიკის დამატება";
 }
@@ -1190,11 +1401,14 @@ function applyMediaFilter(filterValue) {
 
 function makeElementDraggable(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  var isMoved = false;
+
   elmnt.onmousedown = dragMouseDown;
   elmnt.ontouchstart = dragTouchStart;
 
   function dragMouseDown(e) {
-    e.preventDefault();
+    if (e.target.classList.contains('music-sticker-del-btn')) return;
+    isMoved = false;
     pos3 = e.clientX;
     pos4 = e.clientY;
     document.onmouseup = closeDragElement;
@@ -1203,6 +1417,7 @@ function makeElementDraggable(elmnt) {
 
   function elementDrag(e) {
     e.preventDefault();
+    isMoved = true;
     pos1 = pos3 - e.clientX;
     pos2 = pos4 - e.clientY;
     pos3 = e.clientX;
@@ -1212,6 +1427,8 @@ function makeElementDraggable(elmnt) {
   }
 
   function dragTouchStart(e) {
+    if (e.target.classList.contains('music-sticker-del-btn')) return;
+    isMoved = false;
     var touch = e.touches[0];
     pos3 = touch.clientX;
     pos4 = touch.clientY;
@@ -1220,6 +1437,7 @@ function makeElementDraggable(elmnt) {
   }
 
   function elementTouchDrag(e) {
+    isMoved = true;
     var touch = e.touches[0];
     pos1 = pos3 - touch.clientX;
     pos2 = pos4 - touch.clientY;
@@ -1237,7 +1455,7 @@ function makeElementDraggable(elmnt) {
   }
 }
 
-// 5. გაერთიანება და Cloudflare R2-ში გამოქვეყნება
+// 5. გაერთიანება და Cloudflare R2-ში გამოქვეყნება (Full Cover Canvas)
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ აირჩიოთ ფაილი და გაიაროთ ავტორიზაცია');
@@ -1300,10 +1518,24 @@ function processStoryImageWithOverlays(callback) {
     var scaleX = canvas.width / zoneWidth;
     var scaleY = canvas.height / zoneHeight;
 
+    // ასინქრონულად ვხატავთ სტიკერებს (ალბომის ყდიანად)
+    var pendingDraws = elements.length;
+
+    if (pendingDraws === 0) {
+      canvas.toBlob(b => callback(b), 'image/jpeg', 0.95);
+      return;
+    }
+
+    function checkFinished() {
+      pendingDraws--;
+      if (pendingDraws <= 0) {
+        canvas.toBlob(b => callback(b), 'image/jpeg', 0.95);
+      }
+    }
+
     elements.forEach(function(el) {
       var rect = el.getBoundingClientRect();
       var zoneRect = mediaZone.getBoundingClientRect();
-
       var relX = (rect.left - zoneRect.left) * scaleX;
       var relY = (rect.top - zoneRect.top) * scaleY;
 
@@ -1312,6 +1544,7 @@ function processStoryImageWithOverlays(callback) {
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
         ctx.fillText(el.innerText, relX, relY);
+        checkFinished();
       } else if (el.classList.contains('creator-text-element')) {
         ctx.font = `bold ${24 * scaleX}px sans-serif`;
         ctx.textAlign = "left";
@@ -1323,23 +1556,68 @@ function processStoryImageWithOverlays(callback) {
         ctx.fillStyle = "#ffffff";
         ctx.fillText(el.innerText, relX, relY);
         ctx.shadowColor = "transparent";
+        checkFinished();
       } else if (el.classList.contains('creator-music-sticker')) {
-        var txt = el.querySelector('.creator-music-sticker-title').innerText;
-        ctx.fillStyle = "rgba(0,0,0,0.7)";
-        ctx.beginPath();
-        ctx.roundRect(relX, relY, 260 * scaleX, 44 * scaleY, 20 * scaleX);
-        ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.font = `bold ${14 * scaleX}px sans-serif`;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText("🎵 " + txt, relX + (12 * scaleX), relY + (22 * scaleY));
+        // მუსიკის სტიკერის ხატვა Canvas-ზე
+        var coverImgEl = el.querySelector('img');
+        var title = activeTrimmingTrack ? activeTrimmingTrack.title : 'Music';
+        var artist = activeTrimmingTrack ? activeTrimmingTrack.artist : '';
+
+        var coverToDraw = new Image();
+        coverToDraw.crossOrigin = "anonymous";
+        coverToDraw.src = coverImgEl ? coverImgEl.src : (activeTrimmingTrack ? activeTrimmingTrack.cover : '');
+
+        coverToDraw.onload = function() {
+          if (currentMusicStickerStyle === 1) {
+            // Big Card
+            var cardW = 320 * scaleX;
+            var cardH = 76 * scaleY;
+            ctx.fillStyle = "rgba(20, 20, 20, 0.85)";
+            ctx.beginPath();
+            ctx.roundRect(relX, relY, cardW, cardH, 16 * scaleX);
+            ctx.fill();
+
+            // Cover
+            ctx.drawImage(coverToDraw, relX + (12 * scaleX), relY + (10 * scaleY), 56 * scaleX, 56 * scaleY);
+
+            // Title & Artist
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `bold ${16 * scaleX}px sans-serif`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText(title, relX + (80 * scaleX), relY + (16 * scaleY));
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+            ctx.font = `${13 * scaleX}px sans-serif`;
+            ctx.fillText(artist, relX + (80 * scaleX), relY + (40 * scaleY));
+          } else {
+            // Pill / Compact
+            var pillW = 280 * scaleX;
+            var pillH = 46 * scaleY;
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.roundRect(relX, relY, pillW, pillH, 23 * scaleX);
+            ctx.fill();
+
+            // Circle Cover
+            ctx.drawImage(coverToDraw, relX + (6 * scaleX), relY + (5 * scaleY), 36 * scaleX, 36 * scaleY);
+
+            ctx.fillStyle = "#000000";
+            ctx.font = `bold ${14 * scaleX}px sans-serif`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(title + " • " + artist, relX + (50 * scaleX), relY + (23 * scaleY));
+          }
+          checkFinished();
+        };
+
+        coverToDraw.onerror = function() {
+          checkFinished();
+        };
+      } else {
+        checkFinished();
       }
     });
-
-    canvas.toBlob(function(blob) {
-      callback(blob);
-    }, 'image/jpeg', 0.95);
   };
 }
 
@@ -1385,6 +1663,7 @@ function uploadStoryToR2(fileBlob, isVideo, btn) {
       media_type: isVideo ? "video" : "image",
       music_title: storyAttachedMusic || "Original Audio",
       music_url: selectedStoryMusicUrl || null,
+      music_cover: selectedStoryMusicCover || null,
       music_start_time: selectedMusicStartTime || 0,
       filter: currentAppliedFilter || "none",
       likes_count: 0,
