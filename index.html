@@ -9368,39 +9368,37 @@ function updateProfileModeLayout(isDigital, profileData) {
   if (isDigital) {
     mainCard.classList.add('is-digital-creator');
 
-    // შენი ორიგინალი ქალაქის ველი (ხაზი 4093-დან)
+    // 1. რეალური ქალაქის გამოტანა (რომელიც ქვედა დეტალებში წერია)
     var locEl = document.getElementById('pro-creator-location');
     if (locEl && profileData) {
-      locEl.innerText = profileData.current_city || profileData.city || 'Tbilisi';
+      locEl.innerText = profileData.current_city || profileData.city || profileData.country || 'Piza';
     }
 
-    // სტატისტიკის გადატანა ერთ ხაზზე
+    // 2. რეალური სტატისტიკის წამოღება DOM-იდან ან profileData-დან
+    var folVal = (profileData && profileData.followers_count !== undefined) 
+      ? profileData.followers_count 
+      : (document.getElementById('stat-followers-count') ? document.getElementById('stat-followers-count').innerText : '0');
+
+    var fingVal = (profileData && profileData.following_count !== undefined) 
+      ? profileData.following_count 
+      : (document.getElementById('stat-following-count') ? document.getElementById('stat-following-count').innerText : '0');
+
+    var postVal = (profileData && profileData.posts_count !== undefined) 
+      ? profileData.posts_count 
+      : (document.getElementById('stat-posts-count') ? document.getElementById('stat-posts-count').innerText : '0');
+
     var folEl = document.getElementById('pro-stat-followers-val');
     var fingEl = document.getElementById('pro-stat-following-val');
     var postEl = document.getElementById('pro-stat-posts-val');
 
-    var curFol = document.getElementById('stat-followers-count');
-    var curFing = document.getElementById('stat-following-count');
-    var curPost = document.getElementById('stat-posts-count');
-
-    if (folEl && curFol) folEl.innerText = curFol.innerText || '0';
-    if (fingEl && curFing) fingEl.innerText = curFing.innerText || '0';
-    if (postEl && curPost) postEl.innerText = curPost.innerText || '0';
+    if (folEl) folEl.innerText = folVal;
+    if (fingEl) fingEl.innerText = fingVal;
+    if (postEl) postEl.innerText = postVal;
 
   } else {
     mainCard.classList.remove('is-digital-creator');
   }
 }
-
-function switchProfilePillTab(tabName, btnEl) {
-  document.querySelectorAll('.pro-pill-btn').forEach(function(b) {
-    b.classList.remove('active');
-  });
-  if (btnEl) btnEl.classList.add('active');
-  switchProfileTab(tabName);
-}
-
-
 
   </script>
 
