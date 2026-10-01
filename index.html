@@ -1246,7 +1246,7 @@ body.light-mode .sponsored-cta-btn:hover {
 </div>
       
    <!-- აქ იწყება პროფილის სრული გვერდი -->     
-     <div id="profile-screen">
+  <div id="profile-screen">
     <div class="header profile-header-fix">
       <div class="nav-icons-center">
         <!-- 1. Home (მარცხნივ) -->
@@ -1256,22 +1256,25 @@ body.light-mode .sponsored-cta-btn:hover {
           </svg>
         </button>
 
-        <!-- 2. ჯგუფები -->
+        <!-- 2. ჯგუფები (გადატანილია მარჯვნივ, ფეხებთან) -->
         <button class="nav-icon-btn" id="groups-btn-header" onclick="window.location.href='groups.html'" title="ჯგუფები" style="display: inline-flex; position: relative; margin-left: auto; margin-right: 8px; background: transparent; border: none; cursor: pointer; align-items: center; justify-content: center; outline: none;">
           <div style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;">
             <img src="icons/users.svg" style="width: 20px; height: 20px; filter: brightness(0) invert(1);" alt="Groups">
           </div>
+          <!-- წითელი ციფრიანი ბეიჯი -->
           <span id="group-badge" style="display: none; position: absolute; top: -2px; right: -2px; background-color: #ff3b30; color: #fff; font-size: 10px; font-weight: bold; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; box-sizing: border-box; border: 1.5px solid #18191a;">0</span>
         </button>
-
-        <!-- 3. Profile Views -->
+        <!-- 3. Profile Views (ფეხები) -->
         <button class="nav-icon-btn" id="profile-views-btn-header" onclick="openProfileViewsFromHeader()" title="Profile Views" style="display: inline-flex; position: relative; margin-right: 8px; background: transparent; border: none; cursor: pointer; align-items: center; justify-content: center; outline: none;">
           <div id="views-header-icon-container" style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;">
             <img src="icons/footprints.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Profile Views">
           </div>
+          <!-- ლურჯი წერტილი ახალი მნახველისას -->
           <div id="views-unread-dot" style="display: none; position: absolute; top: 0px; right: 0px; width: 8px; height: 8px; background: #2e86de; border-radius: 50%; border: 1.5px solid #000;"></div>
         </button> 
 
+
+        
         <!-- 4. მენიუ -->
         <button class="burger-btn" id="profile-burger-btn" onclick="toggleSideMenu(event)">
           <div class="burger-line"></div>
@@ -1281,17 +1284,92 @@ body.light-mode .sponsored-cta-btn:hover {
       </div>
     </div>
     
+
     <div class="side-menu-overlay" id="side-menu-overlay" onclick="toggleSideMenu(event)"></div>
     <div class="side-menu-content" id="side-menu-content">
-      <div style="padding: 10px 20px 15px 20px; border-bottom: 1px solid #222222;">
-        <label style="color: #dcae36; font-weight: bold; font-size: 13px;" id="lbl-select-lang">🌐 ენის არჩევა / Select Language</label>
-        <button id="langSelectBtn" onclick="openLangModal()" style="margin-top: 8px; width: 100%; padding: 12px; background: #222222; border: 1px solid #dcae36; border-radius: 8px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; outline: none;">
-          <span id="currentLangDisplay">🇬🇧 English</span>
-          <span style="color: #dcae36; font-size: 12px;">▼</span>
-        </button>
+      
+
+    <div style="padding: 10px 20px 15px 20px; border-bottom: 1px solid #222222;">
+  <label style="color: #dcae36; font-weight: bold; font-size: 13px;" id="lbl-select-lang">🌐 ენის არჩევა / Select Language</label>
+  
+  <button id="langSelectBtn" onclick="openLangModal()" style="margin-top: 8px; width: 100%; padding: 12px; background: #222222; border: 1px solid #dcae36; border-radius: 8px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; outline: none;">
+    <span id="currentLangDisplay">🇬🇧 English</span>
+    <span style="color: #dcae36; font-size: 12px;">▼</span>
+  </button>
+</div>
+
+<div id="customLangModal" class="custom-lang-modal-overlay" onclick="closeLangModal()">
+  <div class="custom-lang-modal-box" onclick="event.stopPropagation()">
+    <div class="custom-lang-modal-header">
+      <span id="lbl-modal-lang-title">🌐 აირჩიეთ ენა / Select Language</span>
+      <button onclick="closeLangModal()" class="custom-lang-close-btn">&times;</button>
+    </div>
+    <div class="custom-lang-list">
+      <div class="lang-option-card" onclick="selectLangCustom('ka')">
+        <span>🇬🇪 ქართული (Georgian)</span>
+        <span class="lang-check" id="check-ka">✓</span>
       </div>
+      <div class="lang-option-card" onclick="selectLangCustom('en')">
+        <span>🇬🇧 English</span>
+        <span class="lang-check" id="check-en">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('el')">
+        <span>🇬🇷 Ελληνικά (Greek)</span>
+        <span class="lang-check" id="check-el">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('it')">
+        <span>🇮🇹 Italiano (Italian)</span>
+        <span class="lang-check" id="check-it">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('ru')">
+        <span>🇷🇺 Русский (Russian)</span>
+        <span class="lang-check" id="check-ru">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('fr')">
+        <span>🇫🇷 Français (French)</span>
+        <span class="lang-check" id="check-fr">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('de')">
+        <span>🇩🇪 Deutsch (German)</span>
+        <span class="lang-check" id="check-de">✓</span>
+      </div>
+    </div>
+  </div>
+</div>  
+
+<!-- ფეისბუქის ფერი ფონი -->
+ <div style="display: none !important; padding: 10px 20px 15px 20px; border-bottom: 1px solid #222222;">
+  <label style="color: #dcae36; font-weight: bold; font-size: 13px;">Theme</label>
+  <button onclick="openThemeModal()" style="margin-top: 8px; width: 100%; padding: 12px; background: #222222; border: 1px solid #dcae36; border-radius: 8px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; outline: none;">
+    <span id="currentThemeDisplay">Light Mode</span>
+    <span style="color: #dcae36; font-size: 12px;">▼</span>
+  </button>
+</div>
+
+<div id="customThemeModal" class="custom-lang-modal-overlay" onclick="closeThemeModal()" style="display:none;">
+  <div class="custom-lang-modal-box" onclick="event.stopPropagation()">
+    <div class="custom-lang-modal-header">
+      <span>Select Theme</span>
+      <button onclick="closeThemeModal()" class="custom-lang-close-btn">&times;</button>
+    </div>
+    <div class="custom-lang-list">
+      <div class="lang-option-card" onclick="setTheme('dark')">
+        <span>Dark Mode</span>
+        <span class="lang-check" id="check-dark">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="setTheme('light')">
+        <span>Light Mode</span>
+        <span class="lang-check" id="check-light">✓</span>
+      </div>
+    </div>
+  </div>
+</div>   
+<!-- აქ  მთავრდება -->
+      
+      
 
       <div class="menu-section-title">Resources</div>
+
       <button class="menu-item-row" onclick="window.location.href='balance.html'">
         <div class="menu-item-left">
           <img src="icons/circle-dollar-sign.svg" class="menu-svg-icon" alt="Balance">
@@ -1301,7 +1379,9 @@ body.light-mode .sponsored-cta-btn:hover {
       </button>
 
       <div class="menu-divider"></div>
+
       <div class="menu-section-title">Personal Tools</div>
+
       <button class="menu-item-row" onclick="window.location.href='activity.html'">
         <div class="menu-item-left">
           <img src="icons/chart-no-axes-combined.svg" class="menu-svg-icon" alt="Activity">
@@ -1319,7 +1399,20 @@ body.light-mode .sponsored-cta-btn:hover {
       </button>
 
       <div class="menu-divider"></div>
+
       <div class="menu-section-title">Tools for Creators & Business</div>
+
+      <!-- 🌍 ქვეყნების სტატისტიკა -->
+      <!--
+      <button class="menu-item-row" onclick="window.location.href='stats.html'">
+        <div class="menu-item-left">
+          <img src="icons/globe.svg" class="menu-svg-icon" alt="Stats">
+          <span class="menu-item-text">ქვეყნების სტატისტიკა</span>
+        </div>
+        <span class="menu-item-arrow">›</span>
+      </button>
+      -->
+
       <button class="menu-item-row" onclick="window.location.href='studio.html'">
         <div class="menu-item-left">
           <img src="icons/crown.svg" class="menu-svg-icon" alt="Studio">
@@ -1328,13 +1421,52 @@ body.light-mode .sponsored-cta-btn:hover {
         <span class="menu-item-arrow">›</span>
       </button>
 
+      <!--
+      <button class="menu-item-row" onclick="window.location.href='shop.html'">
+    <div class="menu-item-left">
+    <img src="icons/shopping-cart.svg" class="menu-svg-icon" alt="Shop">
+    <span class="menu-item-text">EmigrantShop</span>
+    </div>
+    <span class="menu-item-arrow">›</span>
+    </button>
+      
+
+      <button class="menu-item-row" onclick="window.location.href='marketplace.html'">
+  <div class="menu-item-left">
+    <img src="icons/store.svg" class="menu-svg-icon" alt="Marketplace">
+    <span class="menu-item-text">Marketplace</span>
+  </div>
+  <span class="menu-item-arrow">›</span>
+</button>
+-->
+
       <button class="menu-item-row" onclick="window.location.href='ads.html'">
+  <div class="menu-item-left">
+    <img src="icons/megaphone.svg" class="menu-svg-icon" alt="Ads" style="filter: invert(72%) sepia(50%) saturate(600%) hue-rotate(5deg) brightness(95%) contrast(90%);">
+    <span class="menu-item-text" style="color: #dcae36; font-weight: 700;">რეკლამის შეკვეთა</span>
+  </div>
+  <span class="menu-item-arrow" style="color: #dcae36;">›</span>
+    </button>
+      
+      <!--
+      <button class="menu-item-row" onclick="window.location.href='groups.html'">
+     <div class="menu-item-left">
+    <img src="icons/users.svg" class="menu-svg-icon" alt="Groups">
+    <span class="menu-item-text">ჯგუფები / Groups</span>
+     </div>
+      <span class="menu-item-arrow">›</span>
+     </button>
+      -->
+
+      <!--
+      <button class="menu-item-row" onclick="window.location.href='users.html'">
         <div class="menu-item-left">
-          <img src="icons/megaphone.svg" class="menu-svg-icon" alt="Ads" style="filter: invert(72%) sepia(50%) saturate(600%) hue-rotate(5deg) brightness(95%) contrast(90%);">
-          <span class="menu-item-text" style="color: #dcae36; font-weight: 700;">რეკლამის შეკვეთა</span>
+          <img src="icons/users.svg" class="menu-svg-icon" alt="Users">
+          <span class="menu-item-text">Site Users</span>
         </div>
-        <span class="menu-item-arrow" style="color: #dcae36;">›</span>
+        <span class="menu-item-arrow">›</span>
       </button>
+      -->
 
       <button class="menu-item-row" onclick="window.location.href='admin.html'">
         <div class="menu-item-left">
@@ -1344,7 +1476,18 @@ body.light-mode .sponsored-cta-btn:hover {
         <span class="menu-item-arrow">›</span>
       </button>
 
+      <!--
+      <button class="menu-item-row" onclick="window.location.href='numerissimi.html'">
+        <div class="menu-item-left">
+          <img src="icons/club.svg" class="menu-svg-icon" alt="Roulette">
+          <span class="menu-item-text">Ultra Numerissimi</span>
+        </div>
+        <span class="menu-item-arrow">›</span>
+      </button>
+      -->
+
       <div class="menu-divider"></div>
+
       <button class="menu-item-row" onclick="showPrivacySettings()">
         <div class="menu-item-left">
           <img src="icons/settings.svg" class="menu-svg-icon" alt="Settings">
@@ -1353,6 +1496,8 @@ body.light-mode .sponsored-cta-btn:hover {
         <span class="menu-item-arrow">›</span>
       </button>
 
+
+      <!-- 🔒 აი აქ ჩასვი ახალი ღილაკი -->
       <button class="menu-item-row" onclick="window.location.href='privacy.html'">
         <div class="menu-item-left">
           <img src="icons/lock.svg" class="menu-svg-icon" alt="Privacy Policy">
@@ -1362,18 +1507,30 @@ body.light-mode .sponsored-cta-btn:hover {
       </button>
 
       <button class="menu-item-row" onclick="window.location.href='terms-and-policies.html'">
-        <div class="menu-item-left">
-          <svg class="menu-svg-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          <span class="menu-item-text">წესები და პოლიტიკა</span>
-        </div>
-        <span class="menu-item-arrow">›</span>
-      </button>
+     <div class="menu-item-left">
+    <svg class="menu-svg-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="16" x2="12" y2="12"></line>
+      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+    <span class="menu-item-text">წესები და პოლიტიკა</span>
+  </div>
+  <span class="menu-item-arrow">›</span>
+</button>
+      
+     <!--  ტიკტოკ ლაივი -->
+      <!--
+     <button class="menu-item-row" onclick="window.location.href='live.html'">
+     <div class="menu-item-left">
+     <img src="icons/radio.svg" class="menu-svg-icon" alt="LIVE STUDIO">
+    <span class="menu-item-text">LIVE STUDIO</span>
+     </div>
+     <span class="menu-item-arrow">›</span>
+     </button>
+      -->
       
       <div class="menu-divider"></div>
+
       <button class="side-menu-logout-btn" id="lbl-logout-btn" onclick="logout()">Log Out</button>
     </div>
 
@@ -1385,87 +1542,43 @@ body.light-mode .sponsored-cta-btn:hover {
     </div>
         
     <div class="feed-container">
-      <div class="facebook-profile-container" id="main-profile-card">
-        <!-- ქავერი -->
-        <div class="profile-cover-wrapper" id="profile-cover-banner">
-          <button class="cover-camera-btn" id="cover-camera-btn" onclick="triggerCoverUpload()">
-            <img src="icons/camera.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Cover Camera">
+  <div class="facebook-profile-container">
+    <div class="profile-cover-wrapper" id="profile-cover-banner">
+      <button class="cover-camera-btn" id="cover-camera-btn" onclick="triggerCoverUpload()">
+        <img src="icons/camera.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Cover Camera">
+      </button>
+    </div>
+
+    <div class="profile-info-wrapper">
+      <div class="avatar-stats-row">
+        <div class="profile-avatar-holder">
+          <div class="profile-big-avatar" id="profile-big-avatar">
+            ?
+            <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
+          </div>
+          <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
+            <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
           </button>
         </div>
-
-        <div class="profile-info-wrapper">
-          <div class="avatar-stats-row">
-            <div class="profile-avatar-holder">
-              <!-- 🟢 ციფრული: სთორის ლურჯი წრე -->
-              <div class="pro-story-ring-box">
-                <div class="profile-big-avatar" id="profile-big-avatar">
-                  ?
-                  <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
-                </div>
-              </div>
-              <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
-                <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
-              </button>
-            </div>
-
-            <!-- ⚪ სტანდარტული: ძველი სტატისტიკის ბლოკი (უცვლელი) -->
-            <div class="profile-stats-block" id="standard-stats-block">
-              <div class="stat-item">
-                <span class="stat-value" id="stat-posts-count">0</span>
-                <span class="stat-label" id="lbl-stat-post">post</span>
-              </div>
-              <div class="stat-item" onclick="openConnectionsScreen('followers')">
-                <span class="stat-value" id="stat-followers-count">0</span>
-                <span class="stat-label" id="lbl-stat-followers">followers</span>
-              </div>
-              <div class="stat-item" onclick="openConnectionsScreen('following')">
-                <span class="stat-value" id="stat-following-count">0</span>
-                <span class="stat-label" id="lbl-stat-following">following</span>
-              </div>
-            </div>
+        <div class="profile-stats-block">
+          <div class="stat-item">
+            <span class="stat-value" id="stat-posts-count">0</span>
+            <span class="stat-label" id="lbl-stat-post">post</span>
           </div>
+          <div class="stat-item" onclick="openConnectionsScreen('followers')">
+            <span class="stat-value" id="stat-followers-count">0</span>
+            <span class="stat-label" id="lbl-stat-followers">followers</span>
+          </div>
+          <div class="stat-item" onclick="openConnectionsScreen('following')">
+            <span class="stat-value" id="stat-following-count">0</span>
+            <span class="stat-label" id="lbl-stat-following">following</span>
+          </div>
+        </div>
+      </div>
             
           <div class="profile-user-headline">
             <div class="profile-fb-name" id="profile-user-name">Loading...</div>
             <div class="profile-fb-subtitle" id="profile-user-subtitle">...</div>
-
-            <!-- ========================================== -->
-            <!-- 🟢 ციფრული: იწყება ციფრული შიგთავსის ბლოკი -->
-            <!-- ========================================== -->
-            <!-- ერთხაზიანი სტატისტიკა -->
-            <div class="pro-inline-stats" id="pro-inline-stats-row" style="display: none;">
-              <span id="pro-stat-followers-val">0</span> <span id="lbl-pro-stat-followers">გამომწერი</span> · 
-              <span id="pro-stat-following-val">0</span> <span id="lbl-pro-stat-following">გამოწერილია</span> · 
-              <span id="pro-stat-posts-val">0</span> <span id="lbl-pro-stat-posts">პოსტი</span>
-            </div>
-
-            <!-- კლაპერის აიქონით ციფრული შემქმნელი + ლოკაცია -->
-            <div class="pro-creator-meta-line" id="pro-creator-meta-line" style="display: none;">
-              <div class="pro-meta-item">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#050505" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
-                  <line x1="7" y1="2" x2="7" y2="22"></line>
-                  <line x1="17" y1="2" x2="17" y2="22"></line>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <line x1="2" y1="7" x2="7" y2="7"></line>
-                  <line x1="2" y1="17" x2="7" y2="17"></line>
-                  <line x1="17" y1="17" x2="22" y2="17"></line>
-                  <line x1="17" y1="7" x2="22" y2="7"></line>
-                </svg>
-                <span id="lbl-pro-creator-title">ციფრული შიგთავსის შემქმნელი</span>
-              </div>
-              <span class="pro-meta-dot">·</span>
-              <div class="pro-meta-item">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#050505" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-                <span id="pro-creator-location">Tbilisi</span>
-              </div>
-            </div>
-            <!-- ========================================== -->
-            <!-- 🛑 ციფრული: მთავრდება ციფრული შიგთავსის ბლოკი -->
-            <!-- ========================================== -->
           </div>
 
           <div class="profile-action-column" id="profile-action-panel">
@@ -1473,7 +1586,8 @@ body.light-mode .sponsored-cta-btn:hover {
           </div>
         </div>
 
-        <!-- LOCKED PROFILE BANNER (უცვლელი) -->
+        <!-- LOCKED PROFILE BANNER -->
+        <!-- LOCKED PROFILE BANNER -->
         <div id="private-profile-lock-msg" style="display: none; text-align: center; padding: 40px 20px; background: #141414; border-radius: 12px; border: 1px solid #222222; margin: 0 20px 20px 20px;">
           <div style="margin-bottom: 15px; display: flex; justify-content: center;">
             <img src="icons/lock.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Locked Profile">
@@ -1482,64 +1596,11 @@ body.light-mode .sponsored-cta-btn:hover {
           <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">Only friends can see this user's posts, photos, and videos.</div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- 🟢 ციფრული: იწყება მეგობრობის საიუბილეო ბარათი -->
-        <!-- ========================================== -->
-        <div class="pro-friendship-highlight-card" id="pro-friendship-box" style="display: none;">
-          <div class="pro-highlight-icon">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#050505" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-          </div>
-          <div class="pro-highlight-texts">
-            <span class="pro-highlight-sub" id="lbl-pro-highlight-sub">თქვენ და ამ მომხმარებელმა</span>
-            <span class="pro-highlight-main" id="lbl-pro-highlight-main">აღნიშნეთ მეგობრობა Emigrantbook-ზე!</span>
-          </div>
-        </div>
-        <!-- ========================================== -->
-        <!-- 🛑 ციფრული: მთავრდება მეგობრობის საიუბილეო ბარათი -->
-        <!-- ========================================== -->
-
-        <!-- ========================================== -->
-        <!-- 🟢 ციფრული: იწყება ოვალური ტაბები (Pills) -->
-        <!-- ========================================== -->
-        <div class="pro-pills-tabs-row" id="pro-pills-tabs-row" style="display: none;">
-          <button class="pro-pill-btn active" id="pill-btn-all" onclick="switchProfilePillTab('posts', this)">
-            <span id="lbl-pill-all">ყველა</span>
-          </button>
-          <button class="pro-pill-btn" id="pill-btn-reels" onclick="switchProfilePillTab('videos', this)">
-            <span>Reels</span>
-          </button>
-          <button class="pro-pill-btn" id="pill-btn-photos" onclick="switchProfilePillTab('photos', this)">
-            <span id="lbl-pill-photos">ფოტოები</span>
-          </button>
-        </div>
-        <!-- ========================================== -->
-        <!-- 🛑 ციფრული: მთავრდება ოვალური ტაბები -->
-        <!-- ========================================== -->
-
-        <!-- ⚪ სტანდარტული: ძველი ტაბები (უცვლელი) -->
-        <div class="profile-tabs" id="standard-profile-tabs">
-          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
-          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
-          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
-        </div>
-
-        <!-- 🟢 ციფრული: დეტალური ინფორმაციის სათაური -->
-        <div class="pro-details-header-title" id="pro-details-heading" style="display: none;">
-          <span id="lbl-pro-details-heading">პერსონალური დეტალური ინფორმაცია</span>
-        </div>
-
-        <!-- დეტალების ყუთი (უცვლელი) -->
         <div class="profile-details-box" id="profile-details-container">
           <div style="text-align:center; color:#aaaaaa; padding:10px;">Loading details...</div>
         </div>
 
-        <!-- მეგობრების პრევიუ (უცვლელი) -->
-        <div class="profile-friends-preview-box" id="standard-friends-preview-box">
+        <div class="profile-friends-preview-box">
           <div class="friends-preview-header">
             <div class="friends-preview-title-area" onclick="openConnectionsScreen('all')" style="cursor: pointer;">
               <span class="friends-preview-title" id="lbl-followers-title">Friends / Followers</span>
@@ -1549,7 +1610,13 @@ body.light-mode .sponsored-cta-btn:hover {
           </div>
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
         </div>
-      </div>
+
+       <div class="profile-tabs">
+          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
+          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
+          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
+        </div>
+      </div> <!-- პროფილის ნაცრისფერი ყუთი იხურება აქ! -->
 
       <div id="profile-posts-wall" style="margin-top: 16px;">
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading posts...</div>
@@ -1559,9 +1626,8 @@ body.light-mode .sponsored-cta-btn:hover {
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading photos...</div>
       </div>
     </div>
-  </div>
-   
-   <!-- აწ მთავრდება ფროფილის სრული გვერდი -->   
+  </div> 
+     <!-- აწ მთავრდება ფროფილის სრული გვერდი -->   
   
    <div id="edit-profile-screen">
     <div class="header">
