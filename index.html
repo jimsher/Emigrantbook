@@ -1759,15 +1759,37 @@ body.light-mode .sponsored-cta-btn:hover {
 </div>
   <!-- აქ მთავრდება -->
   
-  <div id="connections-screen">
+    <div id="connections-screen" style="display: none;">
     <div class="header">
       <div class="logo-text" id="lbl-back-to-profile-conn" onclick="showScreen('profile')">← Back to Profile</div>
     </div>
+
+    <!-- 3 ტაბი TikTok სტილში -->
+    <div class="conn-tiktok-tabs">
+      <button class="conn-tab-item" id="tab-btn-following" onclick="switchConnTabMode('following')">
+        <span id="lbl-tab-following">Following</span> <span id="count-tab-following">0</span>
+      </button>
+      <button class="conn-tab-item active" id="tab-btn-followers" onclick="switchConnTabMode('followers')">
+        <span id="lbl-tab-followers">Followers</span> <span id="count-tab-followers">0</span>
+      </button>
+      <button class="conn-tab-item" id="tab-btn-all" onclick="switchConnTabMode('all')">
+        <span id="lbl-tab-friends">Friends</span> <span id="count-tab-all">0</span>
+      </button>
+    </div>
+
+    <!-- საძიებო ველი -->
+    <div class="conn-search-bar-wrap">
+      <div class="conn-search-box">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#8a8d91" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="connections-live-search" placeholder="Search..." oninput="filterConnectionsLiveSearch(this.value)">
+      </div>
+    </div>
+
     <div class="feed-container">
       <div class="connections-container">
         <div class="connections-header">
           <span id="connections-title">Friends</span>
-          <span style="font-size: 14px; color: #aaaaaa;" id="connections-count">0 users</span>
+          <span id="connections-count">0 users</span>
         </div>
         <div class="connections-list" id="connections-list-wrapper">
           <div class="connections-empty" id="lbl-conn-loading">Loading...</div>
@@ -1775,6 +1797,7 @@ body.light-mode .sponsored-cta-btn:hover {
       </div>
     </div>
   </div>
+
 
   <!-- BLOCKED USERS SCREEN -->
   <div id="blocked-users-screen" style="display: none;">
