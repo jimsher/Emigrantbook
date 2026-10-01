@@ -6,32 +6,59 @@
   <title>Emigrant AI | Emigrantbook</title>
 
   <style>
+    :root {
+      --bg-main: #0a0c10;
+      --bg-card: rgba(22, 27, 34, 0.85);
+      --bg-bubble-bot: rgba(25, 30, 40, 0.95);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --primary-accent: #2563eb;
+      --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      --text-main: #f3f4f6;
+      --text-sub: #9ca3af;
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     body {
-      background-color: #f0f2f5;
-      color: #050505;
+      background-color: var(--bg-main);
+      color: var(--text-main);
       height: 100vh;
       height: 100dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      position: relative;
     }
 
+    /* Background Ambient Glows */
+    .ambient-glow {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient-glow.top { top: -60px; left: -60px; }
+    .ambient-glow.bottom { bottom: 50px; right: -60px; }
+
+    /* Header */
     .ai-header {
-      background: #ffffff;
-      padding: 12px 16px;
+      background: rgba(10, 12, 16, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 14px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #dadde1;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border-bottom: 1px solid var(--border-color);
       z-index: 10;
     }
 
@@ -42,50 +69,82 @@
     }
 
     .ai-back-btn {
-      background: none;
-      border: none;
-      font-size: 20px;
-      font-weight: bold;
-      color: #050505;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      color: var(--text-main);
       cursor: pointer;
       display: flex;
       align-items: center;
-      line-height: 1;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 18px;
+    }
+
+    .ai-back-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .ai-avatar-wrapper {
+      position: relative;
     }
 
     .ai-bot-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #1877f2;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--primary-gradient);
       display: flex;
       align-items: center;
       justify-content: center;
       color: #ffffff;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 800;
-      letter-spacing: 0.5px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .pulse-online {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 11px;
+      height: 11px;
+      background: #10b981;
+      border: 2px solid var(--bg-main);
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
     }
 
     .ai-bot-info h1 {
       font-size: 16px;
-      font-weight: 700;
-      color: #050505;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      color: #ffffff;
     }
 
     .ai-bot-info p {
       font-size: 11.5px;
-      color: #2ed573;
+      color: #10b981;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
+    /* Chat Container */
     .ai-chat-container {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 18px 16px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
+      z-index: 1;
+      scroll-behavior: smooth;
     }
 
     .ai-chat-container::-webkit-scrollbar {
@@ -95,8 +154,14 @@
     .msg-row {
       display: flex;
       align-items: flex-end;
-      gap: 8px;
-      max-width: 88%;
+      gap: 10px;
+      max-width: 90%;
+      animation: fadeInMsg 0.25s ease-out forwards;
+    }
+
+    @keyframes fadeInMsg {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .msg-row.bot {
@@ -109,53 +174,73 @@
     }
 
     .msg-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #1877f2;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
       color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       flex-shrink: 0;
+      border: 1px solid var(--border-color);
     }
 
     .msg-row.user .msg-avatar {
-      background: #050505;
+      background: var(--primary-gradient);
     }
 
     .msg-bubble {
-      padding: 12px 15px;
-      border-radius: 18px;
-      font-size: 14px;
-      line-height: 1.5;
+      padding: 13px 16px;
+      border-radius: 20px;
+      font-size: 14.5px;
+      line-height: 1.55;
       word-break: break-word;
+      letter-spacing: -0.15px;
     }
 
     .msg-row.bot .msg-bubble {
-      background: #ffffff;
-      color: #050505;
-      border-bottom-left-radius: 4px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-      border: 1px solid #e4e6eb;
+      background: var(--bg-bubble-bot);
+      color: var(--text-main);
+      border-bottom-left-radius: 6px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
     }
 
     .msg-row.user .msg-bubble {
-      background: #1877f2;
+      background: var(--primary-gradient);
       color: #ffffff;
-      border-bottom-right-radius: 4px;
+      border-bottom-right-radius: 6px;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
     }
 
+    .msg-bubble strong {
+      color: #60a5fa;
+      font-weight: 700;
+    }
+
+    .msg-bubble ul {
+      margin: 8px 0 4px 18px;
+    }
+
+    .msg-bubble li {
+      margin-bottom: 4px;
+    }
+
+    /* Quick Chips */
     .quick-chips-wrapper {
-      padding: 8px 16px;
-      background: #f0f2f5;
+      padding: 10px 16px;
+      background: rgba(10, 12, 16, 0.7);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
       overflow-x: auto;
       white-space: nowrap;
       display: flex;
       gap: 8px;
-      border-top: 1px solid #e4e6eb;
+      border-top: 1px solid var(--border-color);
+      z-index: 10;
     }
 
     .quick-chips-wrapper::-webkit-scrollbar {
@@ -163,42 +248,54 @@
     }
 
     .chip-btn {
-      background: #ffffff;
-      border: 1px solid #ccd0d5;
-      padding: 7px 14px;
-      border-radius: 18px;
-      font-size: 12.5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      padding: 8px 15px;
+      border-radius: 22px;
+      font-size: 13px;
       font-weight: 600;
-      color: #050505;
+      color: #e5e7eb;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      transition: all 0.15s ease;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       flex-shrink: 0;
     }
 
     .chip-btn:active {
       transform: scale(0.95);
-      background: #e4e6eb;
+      background: rgba(37, 99, 235, 0.25);
+      border-color: rgba(37, 99, 235, 0.5);
     }
 
+    /* Footer / Input */
     .ai-footer {
-      background: #ffffff;
-      padding: 10px 14px;
+      background: rgba(14, 17, 23, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 10px 14px max(14px, env(safe-area-inset-bottom));
       display: flex;
       align-items: center;
       gap: 10px;
-      border-top: 1px solid #dadde1;
+      border-top: 1px solid var(--border-color);
+      z-index: 10;
     }
 
     .ai-input-wrap {
       flex: 1;
-      background: #f0f2f5;
-      border: 1px solid #ccd0d5;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 24px;
-      padding: 8px 14px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
+      transition: border-color 0.2s ease;
+    }
+
+    .ai-input-wrap:focus-within {
+      border-color: #3b82f6;
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .ai-input-wrap input {
@@ -207,40 +304,52 @@
       border: none;
       outline: none;
       font-size: 14.5px;
-      color: #050505;
+      color: #ffffff;
+    }
+
+    .ai-input-wrap input::placeholder {
+      color: #6b7280;
     }
 
     .ai-send-btn {
-      padding: 8px 18px;
-      border-radius: 20px;
-      background: #1877f2;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--primary-gradient);
       border: none;
       color: #ffffff;
-      font-size: 13.5px;
-      font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.15s;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
       flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
     }
 
     .ai-send-btn:active {
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
 
+    .ai-send-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: #ffffff;
+      transform: translateX(1px);
+    }
+
+    /* Typing Animation */
     .typing-dots {
       display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
+      gap: 5px;
+      padding: 4px 6px;
     }
 
     .typing-dots span {
       width: 6px;
       height: 6px;
-      background: #65676b;
+      background: #60a5fa;
       border-radius: 50%;
       animation: blinkDots 1.4s infinite ease-in-out both;
     }
@@ -249,20 +358,26 @@
     .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
 
     @keyframes blinkDots {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1); }
+      0%, 80%, 100% { transform: scale(0.4); opacity: 0.4; }
+      40% { transform: scale(1.1); opacity: 1; }
     }
   </style>
 </head>
 <body>
 
+  <div class="ambient-glow top"></div>
+  <div class="ambient-glow bottom"></div>
+
   <header class="ai-header">
     <div class="ai-header-left">
-      <button class="ai-back-btn" onclick="window.location.href='index.html'" aria-label="უკან">უკან</button>
-      <div class="ai-bot-avatar">AI</div>
+      <button class="ai-back-btn" onclick="window.location.href='index.html'" aria-label="უკან">‹</button>
+      <div class="ai-avatar-wrapper">
+        <div class="ai-bot-avatar">AI</div>
+        <div class="pulse-online"></div>
+      </div>
       <div class="ai-bot-info">
         <h1>Emigrant AI</h1>
-        <p>ონლაინ ასისტენტი</p>
+        <p>● ონლაინ ასისტენტი</p>
       </div>
     </div>
   </header>
@@ -271,130 +386,208 @@
     <div class="msg-row bot">
       <div class="msg-avatar">AI</div>
       <div class="msg-bubble">
-        მოგესალმებით. მე ვარ Emigrant AI, Emigrantbook-ის საინფორმაციო სისტემა.<br><br>
-        შეგიძლიათ დამისვათ შეკითხვა Emigrantbook-ის ნებისმიერ ფუნქციაზე, ან ემიგრაციასთან დაკავშირებულ საკითხებზე (საბუთები, პერმესო, ჯანდაცვა, ბანკი, სამუშაო, ბინა, საელჩო).<br><br>
-        ჩაწერეთ თქვენი შეკითხვა ველში ან აირჩიეთ თემა ქვემოთ.
+        გამარჯობა! მე ვარ <strong>Emigrant AI</strong> — შენი ჭკვიანი გზამკვლევი.<br><br>
+        შემიძლია დაგეხმარო როგორც <strong>Emigrantbook-ის ფუნქციების</strong> გამოყენებაში, ასევე ევროპაში/აშშ-ში <strong>ემიგრაციის, საბუთების, უფასო ექიმის (STP), ბანკებისა და სამუშაოს</strong> საკითხებში.<br><br>
+        აირჩიე ქვემოთ მოცემული თემა ან პირდაპირ ჩამიწერე შეკითხვა. 🤝
       </div>
     </div>
   </main>
 
   <div class="quick-chips-wrapper">
-    <button class="chip-btn" onclick="handleQuickAsk('რა არის Akho და როგორ გამოვიყენო?')">რა არის Akho</button>
-    <button class="chip-btn" onclick="handleQuickAsk('როგორ მივიღო მონაწილეობა ლოტოში?')">ლოტო და გათამაშება</button>
-    <button class="chip-btn" onclick="handleQuickAsk('როგორ ავიღო პერმესო?')">პერმესო და საბუთები</button>
-    <button class="chip-btn" onclick="handleQuickAsk('როგორ ვისარგებლო ექიმით საბუთის გარეშე?')">STP და ექიმი</button>
-    <button class="chip-btn" onclick="handleQuickAsk('როგორ გავხსნა საბანკო ანგარიში?')">ბანკი და ბარათი</button>
-    <button class="chip-btn" onclick="handleQuickAsk('როგორ მუშაობს პირდაპირი ეთერი?')">ლაივ სტუდია</button>
+    <button class="chip-btn" onclick="handleQuickAsk('რა არის Akho და როგორ გამოვიყენო?')">🪙 რა არის Akho?</button>
+    <button class="chip-btn" onclick="handleQuickAsk('როგორ ავიღო პერმესო?')">📄 პერმესო და საბუთები</button>
+    <button class="chip-btn" onclick="handleQuickAsk('როგორ ვისარგებლო ექიმით საბუთის გარეშე?')">🏥 STP და უფასო ექიმი</button>
+    <button class="chip-btn" onclick="handleQuickAsk('როგორ გავხსნა საბანკო ანგარიში?')">💳 ბანკი და ბარათები</button>
+    <button class="chip-btn" onclick="handleQuickAsk('როგორ მივიღო მონაწილეობა ლოტოში?')">🎰 ლოტო და გათამაშება</button>
+    <button class="chip-btn" onclick="handleQuickAsk('როგორ მუშაობს პირდაპირი ეთერი?')">🔴 ლაივ სტუდია</button>
+    <button class="chip-btn" onclick="handleQuickAsk('როგორ ვიშოვო სამუშაო?')">💼 სამუშაო და უფლებები</button>
   </div>
 
   <footer class="ai-footer">
     <div class="ai-input-wrap">
-      <input type="text" id="userInput" placeholder="ჩაწერეთ შეკითხვა..." onkeypress="if(event.key==='Enter') sendUserQuestion()">
+      <input type="text" id="userInput" placeholder="ჰკითხე Emigrant AI-ს ნებისმიერ საკითხზე..." onkeypress="if(event.key==='Enter') sendUserQuestion()">
     </div>
-    <button class="ai-send-btn" onclick="sendUserQuestion()">გაგზავნა</button>
+    <button class="ai-send-btn" onclick="sendUserQuestion()" aria-label="გაგზავნა">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
   </footer>
 
   <script>
     const KNOWLEDGE_BASE = [
       {
-        topics: ['akho', 'ახო', 'მონეტა', 'ვალუტა', 'ბალანსი', 'ყიდვა', 'ფასი', 'კურსი'],
-        answer: '<strong>Akho-ს შესახებ:</strong><br><br>Akho წარმოადგენს Emigrantbook-ის შიდა ციფრულ ერთეულს.<br>ოფიციალური კურსი: 20 Akho უდრის 1 ევროს.<br>გამოყენების სფეროები: შოპინგი EmigrantShop-ში, ლოტოსა და გათამაშებებში მონაწილეობა, ლაივ სტრიმერებისთვის მხარდაჭერა და პოსტების რეკლამირება.<br>ბალანსის შევსება ხდება პროფილის გვერდითი მენიუდან (განყოფილება Balance).'
+        topics: ['akho', 'ახო', 'axo', 'moneta', 'მონეტა', 'ვალუტა', 'ბალანსი', 'balansi', 'ყიდვა', 'ფასი', 'კურსი'],
+        answer: '🪙 <strong>Akho-ს ციფრული მონეტა:</strong><br><br>' +
+                '• <strong>რა არის:</strong> Akho არის Emigrantbook-ის ოფიციალური შიდა ერთეული.<br>' +
+                '• <strong>კურსი:</strong> 20 Akho = 1 ევრო (€).<br>' +
+                '• <strong>რაში გამოიყენება:</strong> შოპინგი EmigrantShop-ში, ლოტოს ბილეთების შეძენა, ლაივ სტრიმერებისთვის საჩუქრების გაგზავნა და საკუთარი პოსტების რეკლამირება.<br>' +
+                '• <strong>როგორ შევავსო:</strong> გახსენით გვერდითა მენიუ ➔ <strong>Balance (ბალანსი)</strong> და აირჩიეთ სასურველი პაკეტი Stripe-ით.'
       },
       {
-        topics: ['ლოტო', 'ჯეკპოტი', 'lotto', 'wheel', 'ბორბალი', 'გათამაშება', 'მოგება', 'რულეტკა', 'numerissimi'],
-        answer: '<strong>ლოტო და გათამაშებები:</strong><br><br>Emigrantbook-ის მთავარ გვერდზე პერიოდულად ჩნდება პირდაპირი ეთერის ლოტოს ბარათი.<br>მონაწილეობის მისაღებად დააჭირეთ გათამაშების ღილაკს ან მენიუდან გახსენით Ultra Numerissimi.<br>გათამაშება მიმდინარეობს პირდაპირ ეთერში ავტომატურად და მოგებული თანხა მომენტალურად ირიცხება გამარჯვებულის პირად ბალანსზე.'
+        topics: ['ლოტო', 'loto', 'lotto', 'ჯეკპოტი', 'jackpot', 'wheel', 'ბორბალი', 'გათამაშება', 'gatamasheba', 'მოგება', 'mogeba', 'რულეტკა', 'numerissimi'],
+        answer: '🎰 <strong>Live ლოტო და გათამაშებები:</strong><br><br>' +
+                '• <strong>სად ვნახო:</strong> მთავარ გვერდზე პერიოდულად ჩნდება ლოტოს ოფიციალური ბარათი, ან შედით მენიუდან <strong>Ultra Numerissimi</strong>-ზე.<br>' +
+                '• <strong>როგორ მუშაობს:</strong> სისტემა ირჩევს გამარჯვებულს პირდაპირ ეთერში ავტომატური ალგორითმით.<br>' +
+                '• <strong>თანხის ჩარიცხვა:</strong> მოგებული ჯეკპოტი მომენტალურად ჯდება გამარჯვებულის პირად საფულეში.'
       },
       {
-        topics: ['ლაივი', 'live', 'ეთერი', 'სტუდია', 'ჩართვა', 'სტრიმი', 'tiktok live'],
-        answer: '<strong>პირდაპირი ეთერი (LIVE STUDIO):</strong><br><br>ეთერის დასაწყებად მთავარ გვერდზე დააჭირეთ LIVE ღილაკს ან გვერდითა მენიუში აირჩიეთ LIVE STUDIO.<br>მაუწყებლობისას მაყურებლებს შეუძლიათ მოგწერონ საჯარო ჩათში და გამოგიგზავნონ მხარდამჭერი შეტყობინებები.<br>ჰოსტს ასევე აქვს შესაძლებლობა ეთერში ერთდროულად ამოიყვანოს 2-მდე თანამასპინძელი (Co-Host).'
+        topics: ['ლაივი', 'live', 'laivi', 'ეთერი', 'სტუდია', 'ჩართვა', 'სტრიმი', 'tiktok live', 'stream'],
+        answer: '🔴 <strong>პირდაპირი ეთერი (LIVE STUDIO):</strong><br><br>' +
+                '• <strong>ჩართვა:</strong> მთავარ გვერდზე დააჭირეთ <strong>LIVE</strong> ღილაკს ან გვერდითა მენიუდან აირჩიეთ <strong>LIVE STUDIO</strong>.<br>' +
+                '• <strong>ფუნქციები:</strong> რეალური დროის საჯარო ჩატი, რეაქციები და მაყურებელთა რაოდენობის ჩვენება.<br>' +
+                '• <strong>Co-Host (ერთობლივი ლაივი):</strong> მასპინძელს შეუძლია ეთერში ერთდროულად ამოიყვანოს 2-მდე სტუმარი.'
       },
       {
-        topics: ['რილსი', 'reels', 'ფირები', 'ვიდეო', 'ვიდეოები', 'ატვირთვა'],
-        answer: '<strong>ფირები (Reels):</strong><br><br>ფირების სანახავად ქვედა მენიუში დააჭირეთ ვიდეოს ხატულას.<br>ვიდეოს ასატვირთად ფირების გვერდზე განთავსებულია ცენტრალური ატვირთვის ღილაკი.<br>სისტემა იღებს ვიდეო ფაილებს, რომელთა მაქსიმალური მოცულობა არ აღემატება 100 მეგაბაიტს.'
+        topics: ['რილსი', 'reels', 'ფირები', 'firebi', 'ვიდეო', 'video', 'ვიდეოები', 'ატვირთვა'],
+        answer: '🎬 <strong>ვიდეო ფირები (Reels):</strong><br><br>' +
+                '• <strong>ნახვა:</strong> ქვედა მენიუში დააჭირეთ ვიდეოს (კლაპერის) ხატულას.<br>' +
+                '• <strong>ატვირთვა:</strong> რილსების გვერდზე დააჭირეთ ცენტრალურ ღილაკს.<br>' +
+                '• <strong>ლიმიტი:</strong> სისტემა იღებს ვიდეოებს 100 მეგაბაიტამდე (მხარდაჭერილია MP4, MOV).'
       },
       {
-        topics: ['ჯგუფი', 'ჯგუფები', 'groups', 'სათვისტომო'],
-        answer: '<strong>ჯგუფები და სათვისტომოები:</strong><br><br>ჯგუფების სანახავად მენიუში აირჩიეთ ჯგუფები / Groups.<br>აქ თავმოყრილია ქართული გაერთიანებები ევროპისა და ამერიკის სხვადასხვა ქალაქების მიხედვით (რომი, ბარი, ათენი, ბერლინი, პარიზი და ა.შ.).<br>მომხმარებელს შეუძლია შევიდეს არსებულ ჯგუფში ან თავად შექმნას ახალი გაერთიანება.'
+        topics: ['ჯგუფი', 'jgufi', 'ჯგუფები', 'jgufebi', 'groups', 'სათვისტომო'],
+        answer: '👥 <strong>ემიგრანტული ჯგუფები და სათვისტომოები:</strong><br><br>' +
+                '• მენიუში გადადით <strong>ჯგუფები / Groups</strong> განყოფილებაში.<br>' +
+                '• მოიძიეთ თქვენი ქალაქის გაერთიანება (რომი, ბარი, მილანი, ათენი, ბერლინი, პარიზი, ნიუ-იორკი და სხვ.).<br>' +
+                '• შეგიძლიათ თავად შექმნათ ახალი საჯარო ან დახურული ჯგუფი.'
       },
       {
         topics: ['მარკეტი', 'მარკეტფლეისი', 'marketplace', 'მაღაზია', 'shop', 'გაყიდვა', 'ყიდვა', 'განცხადება'],
-        answer: '<strong>Marketplace და ვაჭრობა:</strong><br><br>მენიუდან გადადით Marketplace-ის განყოფილებაში.<br>მომხმარებელს შეუძლია სრულიად უფასოდ განათავსოს გასაყიდი ნივთი, ტექნიკა, ავეჯი ან საკუთარი მომსახურება.<br>დაინტერესებული პირი გამყიდველს უკავშირდება უშუალოდ მესინჯერის ან მითითებული საკონტაქტო ნომრის მეშვეობით.'
+        answer: '🛍️ <strong>Marketplace და განცხადებები:</strong><br><br>' +
+                '• Emigrantbook-ის მარკეტზე განცხადების განთავსება არის <strong>სრულიად უფასო</strong>.<br>' +
+                '• შეგიძლიათ განათავსოთ ნივთები, ავეჯი, ტექნიკა ან საკუთარი სერვისი.<br>' +
+                '• მყიდველი პირდაპირ გიკავშირდებათ მესინჯერში ან თქვენ მიერ მითითებულ საკონტაქტო ნომერზე.'
       },
       {
-        topics: ['მესინჯერი', 'messenger', 'ჩათი', 'წერილი', 'დარეკვა', 'ზარი', 'ვიდეოზარი'],
-        answer: '<strong>მესინჯერი და კომუნიკაცია:</strong><br><br>მესინჯერის გასახსნელად მთავარ გვერდზე ზედა მარჯვენა კუთხეში დააჭირეთ შეტყობინებების ღილაკს.<br>მესინჯერი საშუალებას გაძლევთ გააგზავნოთ ტექსტი, ფოტოები, ხმოვანი შეტყობინებები და განახორციელოთ პირდაპირი აუდიო-ვიდეო ზარები ბრაუზერიდანვე.'
+        topics: ['მესინჯერი', 'messenger', 'ჩათი', 'chati', 'წერილი', 'დარეკვა', 'ზარი', 'zari', 'ვიდეოზარი'],
+        answer: '💬 <strong>მესინჯერი და უფასო ზარები:</strong><br><br>' +
+                '• ზედა მარჯვენა კუთხეში დააჭირეთ მესინჯერის ხატულას.<br>' +
+                '• ხელმისაწვდომია: ტექსტური მიმოწერა, ფოტო/ვიდეოს გაგზავნა, ხმოვანი შეტყობინებები.<br>' +
+                '• <strong>HD ვიდეო და აუდიო ზარები:</strong> დარეკვა შეგიძლიათ პირდაპირ ბრაუზერიდან, ყოველგვარი დამატებითი აპლიკაციის გარეშე.'
       },
       {
-        topics: ['დაბლოკვა', 'ბლოკი', 'განბლოკვა', 'blocked'],
-        answer: '<strong>მომხმარებლის დაბლოკვა:</strong><br><br>კონკრეტული მომხმარებლის დასაბლოკად შედით მის პროფილზე, დააჭირეთ დამატებით პარამეტრებს (სამი წერტილი) და აირჩიეთ Block User.<br>დაბლოკვის შემდეგ ეს მომხმარებელი ვეღარ ნახავს თქვენს პროფილს, პოსტებს და ვერ გამოგიგზავნით პირად წერილებს.<br>დაბლოკილთა სიის მართვა ხდება მენიუდან Blocked Users.'
+        topics: ['დაბლოკვა', 'ბლოკი', 'block', 'განბლოკვა', 'blocked'],
+        answer: '🛡️ <strong>მომხმარებლის დაბლოკვა / უსაფრთხოება:</strong><br><br>' +
+                '• შედით მომხმარებლის პროფილზე ➔ დააჭირეთ სამ წერტილს (•••) ➔ აირჩიეთ <strong>Block User</strong>.<br>' +
+                '• დაბლოკილი პირი ვეღარ ნახავს თქვენს პროფილს, პოსტებს და ვერ გამოგიგზავნით პირად წერილებს.<br>' +
+                '• განბლოკვა შეგიძლიათ მენიუდან: <strong>Blocked Users</strong>.'
       },
       {
-        topics: ['პაროლი', 'აღდგენა', 'დამავიწყდა'],
-        answer: '<strong>პაროლის აღდგენა:</strong><br><br>თუ პაროლი დაგავიწყდათ, საიტზე შესვლის ეკრანზე დააჭირეთ წარწერას Forgot password.<br>მიუთითეთ თქვენი რეგისტრირებული ელექტრონული ფოსტის მისამართი და მიიღებთ ინსტრუქციას ახალი პაროლის დასაყენებლად.'
+        topics: ['პაროლი', 'paroli', 'აღდგენა', 'agdgena', 'დამავიწყდა', 'password'],
+        answer: '🔑 <strong>პაროლის აღდგენა:</strong><br><br>' +
+                '• ავტორიზაციის ეკრანზე დააჭირეთ <strong>Forgot password?</strong><br>' +
+                '• შეიყვანეთ თქვენი რეგისტრირებული ელ-ფოსტა.<br>' +
+                '• მეილზე მოგივათ ბმული, საიდანაც მარტივად დააყენებთ ახალ პაროლს.'
       },
       {
-        topics: ['პერმესო', 'permesso', 'საბუთი', 'საბუთები', 'ლეგალიზაცია', 'ფლუსი', 'სანაცია', 'კვოტა'],
-        answer: '<strong>საბუთები და ლეგალიზაცია:</strong><br><br>1. Decreto Flussi (სამუშაო კვოტები): მთავრობის მიერ გამოცხადებული ოფიციალური კვოტები, სადაც დამსაქმებელს შეაქვს განაცხადი მუშაკის სახელზე.<br>2. Sanatoria (სანაცია): პერიოდული ამნისტია უკვე ქვეყანაში მყოფი პირებისთვის (უმეტესად მომვლელებსა და საოჯახო დამხმარეებზე).<br>3. Protezione (თავშესაფარი): განცხადების შეტანა საიმიგრაციო პოლიციაში (Questura), რის საფუძველზეც გაიცემა დროებითი დოკუმენტი კომისიის გადაწყვეტილებამდე.<br>რჩევა: საბუთების შედგენისას რეკომენდებულია ოფიციალურ უფასო იურიდიულ სამსახურებთან (Patronato, CAF) თანამშრომლობა.'
+        topics: ['პერმესო', 'permesso', 'საბუთი', 'sabutebi', 'sabuti', 'ლეგალიზაცია', 'ფლუსი', 'flussi', 'სანაცია', 'sanatoria', 'კვოტა'],
+        answer: '📄 <strong>იტალიის პერმესო და ლეგალიზაციის გზები:</strong><br><br>' +
+                '1. <strong>Decreto Flussi:</strong> მთავრობის სამუშაო კვოტები — განაცხადი შეაქვს დამსაქმებელს.<br>' +
+                '2. <strong>Sanatoria (ამნისტია):</strong> კანონი ქვეყანაში უკვე მყოფი არალეგალების ლეგალიზებისთვის (ძირითადად მომვლელებსა და მშენებლებზე).<br>' +
+                '3. <strong>Protezione Internazionale (თავშესაფარი):</strong> განცხადების შეტანა საიმიგრაციო პოლიციაში (Questura).<br>' +
+                '💡 <em>რჩევა:</em> საბუთების საკითხებზე ყოველთვის მიმართეთ უფასო იურიდიულ სამსახურებს — <strong>Patronato</strong> და <strong>CAF</strong>.'
       },
       {
-        topics: ['ასილო', 'asilo', 'თავშესაფარი', 'კომისია', 'გასაუბრება'],
-        answer: '<strong>თავშესაფრის (ასილო) პროცედურა:</strong><br><br>საიმიგრაციო პოლიციაში განაცხადის შეტანის შემდეგ პირს გადაეცემა რეგისტრაციის ფურცელი (C3 ფორმა) და დროებითი საბუთი.<br>განაცხადის შეტანიდან 60 დღის გასვლის შემდეგ დოკუმენტი ანიჭებს ოფიციალური მუშაობის უფლებას.<br>შემდგომ ეტაპზე ტერიტორიული კომისია ნიშნავს გასაუბრებას თარჯიმნის თანდასწრებით.'
+        topics: ['ასილო', 'asilo', 'თავშესაფარი', 'კომისია', 'გასაუბრება', 'tavshesafari', 'c3'],
+        answer: '🏛️ <strong>თავშესაფარი (Asilo Politico / Protezione):</strong><br><br>' +
+                '• <strong>პირველი ნაბიჯი:</strong> Questura-ში შეტანის შემდეგ გაიცემა <strong>C3 ფორმა</strong> და დროებითი ქაღალდის საბუთი.<br>' +
+                '• <strong>მუშაობის უფლება:</strong> განაცხადის შეტანიდან 60 დღის შემდეგ დოკუმენტი გაძლევთ ოფიციალურად მუშაობის უფლებას.<br>' +
+                '• <strong>კომისია:</strong> გასაუბრებაზე ინიშნება ტერიტორიული კომისია, სადაც თქვენს ენაზე უზრუნველყოფილია უფასო თარჯიმანი.'
       },
       {
-        topics: ['დეპორტი', 'გაძევება', 'პოლიცია', 'დარღვევა', '90 დღე', 'შენგენი', 'ჯარიმა'],
-        answer: '<strong>90-დღიანი ვადის გადაცილება და დეპორტი:</strong><br><br>შენგენის ზონაში უვიზოდ ყოფნის ლიმიტია 90 დღე ნებისმიერ 180-დღიან მონაკვეთში.<br>ვადის გადაცილებისას საზღვარზე ფორმდება დარღვევა, რასაც შესაძლოა მოჰყვეს ფულადი ჯარიმა და შენგენის საინფორმაციო ბაზაში (SIS) შესვლის აკრძალვის დაფიქსირება.<br>ქვეყნის ტერიტორიაზე გაძევების ბრძანების (Foglio di Via) მიღების შემთხვევაში, გადაწყვეტილება საიმიგრაციო ადვოკატის მეშვეობით გასაჩივრებას ექვემდებარება დადგენილ ვადებში.'
+        topics: ['დეპორტი', 'deporti', 'გაძევება', 'პოლიცია', 'დარღვევა', '90 დღე', 'შენგენი', 'ჯარიმა', 'foglio di via'],
+        answer: '⚠️ <strong>90 დღის გადაცილება და დეპორტი:</strong><br><br>' +
+                '• შენგენში უვიზოდ ყოფნის ვადაა <strong>90 დღე 180 დღის განმავლობაში</strong>.<br>' +
+                '• ვადის გადაცილებისას საზღვარზე ფორმდება ჯარიმა და შესაძლოა ჩაიდოს შენგენში შესვლის აკრძალვა (SIS ბაზაში).<br>' +
+                '• ქვეყნის შიგნით გაძევების ბრძანების (<strong>Foglio di Via</strong>) მიღებისას, გაქვთ უფლება ის საიმიგრაციო ადვოკატის მეშვეობით გაასაჩივროთ დადგენილ ვადაში.'
       },
       {
-        topics: ['კოდიჩე', 'codice', 'fiscale', 'საგადასახადო'],
-        answer: '<strong>საგადასახადო კოდი (Codice Fiscale):</strong><br><br>წარმოადგენს პირად საიდენტიფიკაციო ნომერს, რომელიც აუცილებელია ბინის ქირაობისთვის, სამედიცინო მომსახურებისთვის, ბარათის ასაღებად და სამუშაო ხელშეკრულებისთვის.<br>გაცემა ხდება საგადასახადო სამსახურში (Agenzia delle Entrate) მოქმედი პასპორტის წარდგენით სრულიად უფასოდ.'
+        topics: ['კოდიჩე', 'kodiche', 'codice', 'fiscale', 'საგადასახადო'],
+        answer: '💳 <strong>Codice Fiscale (საგადასახადო კოდი):</strong><br><br>' +
+                '• აუცილებელია ბინის ქირაობისთვის, ბარათის ასაღებად, ექიმთან მისასვლელად და მუშაობისთვის.<br>' +
+                '• <strong>სად გაიცემა:</strong> საგადასახადო სამსახურში (<em>Agenzia delle Entrate</em>).<br>' +
+                '• <strong>რა სჭირდება:</strong> მხოლოდ მოქმედი პასპორტი. გაცემა <strong>სრულიად უფასოა</strong>.'
       },
       {
-        topics: ['ჯანდაცვა', 'ექიმი', 'ტესერა', 'tessera', 'sanitaria', 'საავადმყოფო', 'სასწრაფო', 'stp', 'უფასო ექიმი', 'მკურნალობა'],
-        answer: '<strong>სამედიცინო მომსახურება და უფასო ჯანდაცვა:</strong><br><br>1. STP კოდი (Straniero Temporaneamente Presente): არალეგალური სტატუსის მქონე პირებისთვის გაიცემა ადგილობრივ ჯანდაცვის სამსახურში (ASL). ის უფასოა და უზრუნველყოფს პირველად და გადაუდებელ სამედიცინო დახმარებას, ამბულატორიულ მომსახურებასა და ექიმის დანიშვნას.<br>2. გადაუდებელი დახმარება (Pronto Soccorso): სასწრაფო სამედიცინო მომსახურება გარანტირებულია ყველასთვის სტატუსის მიუხედავად. საავადმყოფოს არ აქვს უფლება პაციენტის შესახებ აცნობოს სამართალდამცავ ორგანოებს.<br>ევროპის ერთიანი საგანგებო ნომერია 112.'
+        topics: ['ჯანდაცვა', 'ექიმი', 'eqimi', 'ტესერა', 'tessera', 'sanitaria', 'საავადმყოფო', 'სასწრაფო', 'stp', 'უფასო ექიმი', 'მკურნალობა'],
+        answer: '🏥 <strong>უფასო სამედიცინო მომსახურება და STP:</strong><br><br>' +
+                '• <strong>STP კოდი:</strong> გაიცემა არალეგალური სტატუსის მქონე პირებზე ადგილობრივ ჯანდაცვის ცენტრში (<strong>ASL</strong>). უფასოა და გაძლევთ პირად ექიმს, წამლების ფასდაკლებასა და გამოკვლევებს.<br>' +
+                '• <strong>Pronto Soccorso (სასწრაფო/მიმღები):</strong> გადაუდებელი დახმარება გარანტირებულია ყველასთვის! <strong>საავადმყოფოს ეკრძალება პოლიციისთვის შეტყობინება.</strong><br>' +
+                '• ევროპის ერთიანი გადაუდებელი ნომერი: <strong>112</strong>.'
       },
       {
-        topics: ['ორსულობა', 'ბავშვი', 'მშობიარობა'],
-        answer: '<strong>ორსულობა და დედათა უფლებები:</strong><br><br>ევროკავშირის ქვეყნებში ორსული ქალის სამედიცინო მეთვალყურეობა და მშობიარობა უზრუნველყოფილია უფასოდ.<br>იტალიის კანონმდებლობით, ორსულობის პერიოდში და ბავშვის დაბადებიდან 6 თვემდე დედას ენიჭება სამედიცინო პერმესო, რა დროსაც ქვეყნიდან გაძევება კანონით დაუშვებელია.'
+        topics: ['ორსულობა', 'ბავშვი', 'მშობიარობა', 'orsuloba', 'bavshvi', 'mshobiaroba'],
+        answer: '👶 <strong>ორსულობა და დედათა უფლებები ემიგრაციაში:</strong><br><br>' +
+                '• ორსულობის მეთვალყურეობა და მშობიარობა ევროკავშირში არის <strong>100% უფასო</strong> სტატუსის მიუხედავად.<br>' +
+                '• იტალიაში ორსულობისას და ბავშვის დაბადებიდან 6 თვემდე დედას ენიჭება <strong>სამედიცინო პერმესო (Permesso per Cure Mediche)</strong>, რა დროსაც დეპორტი კანონით დაუშვებელია.'
       },
       {
-        topics: ['ბანკი', 'ბარათი', 'ანგარიში', 'postepay', 'revolut', 'iban', 'ხელფასი'],
-        answer: '<strong>საბანკო ანგარიშები და ბარათები:</strong><br><br>1. Revolut: რეგისტრაცია შესაძლებელია მობილური აპლიკაციით ქართული ბიომეტრიული პასპორტით, რაც გაძლევთ ევროპულ IBAN ანგარიშს.<br>2. Postepay Evolution: იტალიის ფოსტის (Poste Italiane) საგადახდო ბარათი IBAN-ით, რომლის ასაღებად ხშირად საკმარისია პასპორტი და Codice Fiscale.<br>ბარათები გამოსადეგია ხელფასის მისაღებად, სავაჭრო გადახდებისა და საქართველოში თანხის გადასარიცხად.'
+        topics: ['ბანკი', 'banki', 'ბარათი', 'barati', 'postepay', 'revolut', 'iban', 'ხელფასი'],
+        answer: '💳 <strong>საბანკო ბარათები ემიგრანტებისთვის:</strong><br><br>' +
+                '• <strong>Revolut:</strong> რეგისტრაცია შესაძლებელია ქართული ბიომეტრიული პასპორტით პირდაპირ ტელეფონით. გაძლევთ ევროპულ IBAN-ს.<br>' +
+                '• <strong>Postepay Evolution:</strong> იტალიის ფოსტის ბარათი IBAN-ით. ასაღებად ხშირად საკმარისია პასპორტი და Codice Fiscale.<br>' +
+                '• ორივე ბარათი იდეალურია ხელფასის მისაღებად და საქართველოში თანხის გადასარიცხად.'
       },
       {
-        topics: ['ფული', 'გაგზავნა', 'გადარიცხვა', 'რია', 'ria', 'western', 'moneygram', 'საკომისიო'],
-        answer: '<strong>თანხის გადარიცხვა საქართველოში:</strong><br><br>1. ონლაინ სერვისები: TBC Pay, BOG Pay, Remitly, TransferGo, Wise — გამოირჩევა დაბალი საკომისიო ტარიფებით და თანხა პირდაპირ ჯდება ქართულ საბანკო ბარათზე.<br>2. სწრაფი გზავნილები: Ria, Western Union, IntelExpress — მოსახერხებელია, როდესაც მიმღებს საქართველოში ნაღდი თანხის გატანა სურს პირადობის მოწმობით.'
+        topics: ['ფული', 'fuli', 'გაგზავნა', 'გადარიცხვა', 'gadarixva', 'რია', 'ria', 'western', 'moneygram', 'remitly', 'transfergo'],
+        answer: '💸 <strong>თანხის გადარიცხვა საქართველოში:</strong><br><br>' +
+                '• <strong>აპლიკაციები (დაბალი საკომისიო):</strong> Remitly, TransferGo, TBC Pay, BOG Pay — თანხა ჯდება წამებში ქართულ ბარათზე.<br>' +
+                '• <strong>სწრაფი გზავნილები (ნაღდი ფულით):</strong> Ria, Western Union, IntelExpress — მიმღები თანხას იღებს პირადობის მოწმობით ბანკში.'
       },
       {
-        topics: ['სამუშაო', 'სამსახური', 'ვაკანსია', 'ბადარი', 'მუშაობა', 'მომვლელი', 'მშენებლობა', 'ხელშეკრულება'],
-        answer: '<strong>დასაქმება და შრომითი ნორმები:</strong><br><br>ვაკანსიების მოსაძიებლად გამოიყენეთ Emigrantbook-ის ჯგუფები და განცხადებების კედელი.<br>მომვლელის (Badante) ან საოჯახო დამხმარის ხელშეკრულება განსაზღვრავს სამუშაო გრაფიკს, ყოველკვირეულ დასვენებას, კუთვნილ შვებულებას და მე-13 ხელფასს.<br>შრომითი დავის ან ხელფასის გადაუხდელობის შემთხვევაში, მომხმარებელს შეუძლია მიმართოს ადგილობრივ პროფკავშირულ გაერთიანებებს (მაგ. იტალიაში CGIL, CISL).'
+        topics: ['სამუშაო', 'samushao', 'სამსახური', 'samsaxuri', 'ვაკანსია', 'ბადარი', 'badante', 'მუშაობა', 'მომვლელი', 'ხელშეკრულება'],
+        answer: '💼 <strong>დასაქმება და შრომითი უფლებები:</strong><br><br>' +
+                '• ვაკანსიები შეგიძლიათ მოიძიოთ Emigrantbook-ის ჯგუფებში და კედელზე.<br>' +
+                '• <strong>Badante / Colf:</strong> ხელშეკრულებით გეკუთვნით ყოველკვირეული დასვენება (36 სთ), ანაზღაურებადი შვებულება და მე-13 ხელფასი (Tredicesima).<br>' +
+                '• შრომითი დავის დროს მიმართეთ პროფკავშირებს (<strong>CGIL, CISL</strong>).'
       },
       {
-        topics: ['ბინა', 'ქირა', 'ოთახი', 'სახლი', 'დაქირავება', 'კონტრაქტი', 'დეპოზიტი'],
-        answer: '<strong>ბინის და ოთახის დაქირავება:</strong><br><br>გაფრთხილება: არ გადარიცხოთ თანხა წინასწარ საბანკო ან ონლაინ გზით, სანამ საცხოვრებელს პირადად არ დაათვალიერებთ და ხელშეკრულების პირობებს არ გაეცნობით.<br>საცხოვრებლის დაქირავებისას მესაკუთრე ჩვეულებრივ ითხოვს 1 ან 2 თვის საგარანტიო დეპოზიტს (Caparra), რომელიც ქირავნობის ვადის ამოწურვისას ბრუნდება.<br>მოსაძიებლად გამოიყენეთ Emigrantbook-ის ჯგუფები და ადგილობრივი სერვისები.'
+        topics: ['ბინა', 'bina', 'ქირა', 'qira', 'ოთახი', 'otaxi', 'დაქირავება', 'კონტრაქტი', 'დეპოზიტი'],
+        answer: '🏠 <strong>ბინისა და ოთახის დაქირავება:</strong><br><br>' +
+                '• ⚠️️ <strong>გაფრთხილება:</strong> არასოდეს გადარიცხოთ თანხა წინასწარ, სანამ ბინას პირადად არ ნახავთ და გასაღებს არ ჩაიბარებთ!<br>' +
+                '• მეპატრონე ჩვეულებრივ ითხოვს 1-2 თვის დეპოზიტს (Caparra).<br>' +
+                '• განცხადებები შეგიძლიათ მოიძიოთ Emigrantbook-ის ჯგუფებში.'
       },
       {
-        topics: ['იტალია', 'italy', 'რომი', 'მილანი', 'ბარი', 'ნეაპოლი', 'ფლორენცია'],
-        answer: '<strong>იტალიაში მყოფთათვის:</strong><br><br>სამედიცინო კოდი საბუთის გარეშე: STP (ASL-ის ფილიალებში).<br>საგადასახადო კოდი: Codice Fiscale (Agenzia delle Entrate).<br>იურიდიული და საპენსიო დახმარება: Patronato და CAF.<br>საქართველოს საელჩო ქალაქ რომში: ტელეფონი +39 333 887 9123.'
+        topics: ['იტალია', 'italy', 'italia', 'რომი', 'მილანი', 'ბარი', 'ნეაპოლი'],
+        answer: '🇮🇹 <strong>იტალიაში მყოფთათვის:</strong><br><br>' +
+                '• ექიმი უსაბუთოდ: <strong>STP კოდი</strong> (ASL-ში).<br>' +
+                '• საგადასახადო კოდი: <strong>Codice Fiscale</strong>.<br>' +
+                '• იურიდიული დახმარება: <strong>Patronato</strong> და <strong>CAF</strong>.<br>' +
+                '• საქართველოს საელჩო რომში: <strong>+39 333 887 9123</strong>.'
       },
       {
-        topics: ['საბერძნეთი', 'greece', 'ათენი', 'სალონიკი'],
-        answer: '<strong>საბერძნეთში მყოფთათვის:</strong><br><br>საგადასახადო რეგისტრაციის ნომერი: AFM (ΑΦΜ).<br>სოციალური დაზღვევის ნომერი: AMKA (ΑΜΚΑ).<br>საქართველოს საელჩო ქალაქ ათენში: ტელეფონი +30 210 674 2186.'
+        topics: ['საბერძნეთი', 'greece', 'saberd細eti', 'ათენი', 'სალონიკი'],
+        answer: '🇬🇷 <strong>საბერძნეთში მყოფთათვის:</strong><br><br>' +
+                '• საგადასახადო ნომერი: <strong>AFM (ΑΦΜ)</strong>.<br>' +
+                '• დაზღვევის ნომერი: <strong>AMKA (ΑΜΚΑ)</strong>.<br>' +
+                '• საქართველოს საელჩო ათენში: <strong>+30 210 674 2186</strong>.'
       },
       {
-        topics: ['გერმანია', 'germany', 'ბერლინი', 'მიუნხენი', 'ფრანკფურტი'],
-        answer: '<strong>გერმანიაში მყოფთათვის:</strong><br><br>საცხოვრებელი ადგილის პირველადი რეგისტრაცია: Anmeldung (Bürgeramt-ში).<br>საგადასახადო ნომერი: Steuer-ID.<br>საქართველოს საელჩო ბერლინში: ტელეფონი +49 30 4849070.'
+        topics: ['გერმანია', 'germany', 'germania', 'ბერლინი', 'მიუნხენი'],
+        answer: '🇩🇪 <strong>გერმანიაში მყოფთათვის:</strong><br><br>' +
+                '• რეგისტრაცია: <strong>Anmeldung</strong> (Bürgeramt-ში).<br>' +
+                '• საგადასახადო: <strong>Steuer-ID</strong>.<br>' +
+                '• საქართველოს საელჩო ბერლინში: <strong>+49 30 4849070</strong>.'
       },
       {
-        topics: ['საფრანგეთი', 'france', 'პარიზი', 'ნიცა', 'სტრასბურგი'],
-        answer: '<strong>საფრანგეთში მყოფთათვის:</strong><br><br>სამედიცინო დაზღვევა არალეგალური სტატუსის დროს: AME (Aide Médicale de l\'État).<br>თავშესაფრის მაძიებელთა პირველადი მიღების ცენტრი: SPADA / OFII.<br>საქართველოს საელჩო პარიზში: ტელეფონი +33 1 45 02 16 16.'
+        topics: ['საფრანგეთი', 'france', 'safrangeti', 'პარიზი', 'ნიცა'],
+        answer: '🇫🇷 <strong>საფრანგეთში მყოფთათვის:</strong><br><br>' +
+                '• სამედიცინო დაზღვევა უსაბუთოდ: <strong>AME (Aide Médicale de l\'État)</strong>.<br>' +
+                '• თავშესაფრის მიღების ცენტრი: <strong>SPADA / OFII</strong>.<br>' +
+                '• საქართველოს საელჩო პარიზში: <strong>+33 1 45 02 16 16</strong>.'
       },
       {
-        topics: ['ამერიკა', 'აშშ', 'usa', 'ნიუ იორკი', 'საზღვარი'],
-        answer: '<strong>აშშ-ში მყოფთათვის:</strong><br><br>საგადასახადო საიდენტიფიკაციო ნომერი სტატუსის გარეშე: ITIN.<br>საიმიგრაციო სასამართლოს საქმის სტატუსის შემოწმების ცხელი ხაზი: 1-800-898-7180.<br>საქართველოს გენერალური საკონსულო ნიუ-იორკში: ტელეფონი +1 212 922 1722.'
+        topics: ['ამერიკა', 'აშშ', 'usa', 'amerika', 'ნიუ იორკი'],
+        answer: '🇺🇸 <strong>აშშ-ში მყოფთათვის:</strong><br><br>' +
+                '• საგადასახადო კოდი სტატუსის გარეშე: <strong>ITIN</strong>.<br>' +
+                '• საიმიგრაციო სასამართლოს ცხელი ხაზი: <strong>1-800-898-7180</strong>.<br>' +
+                '• გენერალური საკონსულო ნიუ-იორკში: <strong>+1 212 922 1722</strong>.'
       },
       {
-        topics: ['პასპორტი', 'ვადა', 'საკონსულო', 'საელჩო', 'ცნობა', 'დაკარგვა', 'დაბრუნება'],
-        answer: '<strong>საკონსულო მომსახურება:</strong><br><br>პასპორტის დაკარგვის ან ვადის გასვლის შემთხვევაში გაიცემა საქართველოში დასაბრუნებელი სამგზავრო მოწმობა.<br>ბიომეტრიული პასპორტის შეცვლა ან მინდობილობის გაფორმება შესაძლებელია საკონსულო პორტალზე (geoconsul.gov.ge) წინასწარი ჩაწერით.'
+        topics: ['პასპორტი', 'pasporti', 'საკონსულო', 'საელჩო', 'saelcho', 'დაკარგვა', 'ცნობა'],
+        answer: '🛂 <strong>საკონსულო და პასპორტის საკითხები:</strong><br><br>' +
+                '• პასპორტის დაკარგვისას გაიცემა <strong>საქართველოში დასაბრუნებელი მოწმობა</strong>.<br>' +
+                '• ახალი პასპორტის ასაღებად ჩაეწერეთ ოფიციალურ პორტალზე: <strong>geoconsul.gov.ge</strong>.'
       }
     ];
 
@@ -416,12 +609,12 @@
           const tLower = topic.toLowerCase();
 
           if (normalizedQuery.includes(tLower)) {
-            score += 8;
+            score += 10;
           }
 
           for (const word of words) {
             if (word === tLower) {
-              score += 5;
+              score += 6;
             } else if (word.length >= 4 && tLower.length >= 4) {
               if (word.includes(tLower) || tLower.includes(word)) {
                 score += 3;
@@ -436,11 +629,13 @@
         }
       }
 
-      if (bestMatch && maxScore >= 3) {
+      if (bestMatch && maxScore >= 4) {
         return bestMatch.answer;
       }
 
-      return 'თქვენ მიერ დასმულ შეკითხვაზე ზუსტი სტანდარტული ჩანაწერი არ მოიძებნა.<br><br>რეკომენდებულია აღნიშნული საკითხი განათავსოთ Emigrantbook-ის მთავარ კედელზე ან შესაბამისი ქალაქის ჯგუფში, რათა მიიღოთ უახლესი ინფორმაცია თანამემამულეებისგან.<br><br>ასევე შეგიძლიათ დასვათ შეკითხვა თემებზე: Akho, ლოტო, ლაივი, პერმესო, ჯანდაცვა, STP, ბანკი, სამუშაო, ბინა, დეპორტი ან საკონსულო.';
+      return 'ამ შეკითხვაზე ზუსტი პასუხი ჩემს ბაზაში ვერ მოიძებნა. 🧐<br><br>' +
+             '• გირჩევთ, კითხვა დასვათ <strong>Emigrantbook-ის მთავარ კედელზე</strong> ან თქვენი ქალაქის ჯგუფში, სადაც თანამემამულეები უცებ გიპასუხებენ.<br><br>' +
+             'ასევე შეგიძლიათ მკითხოთ თემებზე: <em>Akho, ლოტო, ლაივი, პერმესო, STP, უფასო ექიმი, ბანკის ბარათი, სამუშაო, ბინა ან საელჩო</em>.';
     }
 
     function appendMessage(sender, contentHtml) {
@@ -488,7 +683,7 @@
 
         const answer = searchKnowledgeBase(text);
         appendMessage('bot', answer);
-      }, 400);
+      }, 350);
     }
 
     function handleQuickAsk(text) {
