@@ -9353,7 +9353,52 @@ function clearAllSearchHistory() {
     renderSearchHistory();
   }
 }
-   
+
+
+
+
+
+    // 1. პროფილის ვიზუალის ავტომატური გადართვა (Digital vs Standard)
+function updateProfileModeLayout(isDigital, profileData) {
+  var mainCard = document.getElementById('main-profile-card');
+  if (!mainCard) return;
+
+  if (isDigital) {
+    // ჩაირთოს ციფრული რეჟიმის სტილები
+    mainCard.classList.add('is-digital-creator');
+
+    // ლოკაციის ჩასმა
+    var locEl = document.getElementById('pro-creator-location');
+    if (locEl) {
+      locEl.innerText = (profileData && profileData.city) ? profileData.city : 'Tbilisi';
+    }
+
+    // ციფრულ ერთხაზიან სტატისტიკაში ციფრების გადატანა
+    var folEl = document.getElementById('pro-stat-followers-val');
+    var fingEl = document.getElementById('pro-stat-following-val');
+    var postEl = document.getElementById('pro-stat-posts-val');
+
+    var curFol = document.getElementById('stat-followers-count');
+    var curFing = document.getElementById('stat-following-count');
+    var curPost = document.getElementById('stat-posts-count');
+
+    if (folEl && curFol) folEl.innerText = curFol.innerText || '0';
+    if (fingEl && curFing) fingEl.innerText = curFing.innerText || '0';
+    if (postEl && curPost) postEl.innerText = curPost.innerText || '0';
+
+  } else {
+    // დაბრუნდეს სტანდარტული პროფილი (ყველაფერი როგორც იყო)
+    mainCard.classList.remove('is-digital-creator');
+  }
+}
+
+// 2. ოვალური აბების გადართვის ფუნქცია (Pills Switcher)
+function switchProfilePillTab(tabName, btnEl) {
+  document.querySelectorAll('.pro-pill-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  switchProfileTab(tabName); // იძახებს შენს უკვე არსებულ ორიგინალ switchProfileTab-ს
+}
+
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
