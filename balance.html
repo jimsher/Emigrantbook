@@ -22,18 +22,19 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background-color: #08080b;
+      background-color: #090a0f;
       color: #ffffff;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       position: relative;
       overflow-x: hidden;
+      letter-spacing: -0.2px;
     }
 
     .bg-gradient {
@@ -42,8 +43,8 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-                  radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
+      background: radial-gradient(circle at 50% 0%, rgba(24, 119, 242, 0.08) 0%, transparent 60%),
+                  radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
       pointer-events: none;
       z-index: 0;
     }
@@ -54,7 +55,7 @@
       max-width: 480px;
       margin: 0 auto;
       width: 100%;
-      padding: 16px;
+      padding: 16px 18px 32px 18px;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -63,22 +64,23 @@
     /* Success Toast Notification */
     .toast-notification {
       position: fixed;
-      top: 20px;
+      top: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
-      background: #ffffff;
-      color: #08080b;
-      padding: 14px 22px;
-      border-radius: 30px;
-      font-size: 14px;
+      background: rgba(255, 255, 255, 0.98);
+      color: #090a0f;
+      padding: 14px 24px;
+      border-radius: 40px;
+      font-size: 13.5px;
       font-weight: 700;
-      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(20px);
       z-index: 10000;
       display: flex;
       align-items: center;
       gap: 10px;
       opacity: 0;
-      transition: all 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .toast-notification.show {
@@ -91,11 +93,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 0;
+      padding: 6px 0 10px 0;
     }
 
     .back-btn, .settings-btn {
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: #ffffff;
       font-size: 20px;
@@ -106,11 +108,12 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      backdrop-filter: blur(16px);
-      transition: background 0.2s;
+      backdrop-filter: blur(20px);
+      transition: transform 0.15s ease, background 0.15s ease;
     }
 
     .back-btn:active, .settings-btn:active {
+      transform: scale(0.92);
       background: rgba(255, 255, 255, 0.12);
     }
 
@@ -121,87 +124,101 @@
     .header-title {
       font-size: 17px;
       font-weight: 800;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.4px;
     }
 
     .header-subtitle {
       font-size: 11px;
-      color: #888888;
+      color: #8a8d93;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      margin-top: 2px;
+      gap: 5px;
+      margin-top: 3px;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      font-weight: 600;
+      letter-spacing: 0.8px;
+      font-weight: 700;
     }
 
     .header-subtitle svg {
       width: 12px;
       height: 12px;
-      fill: #888888;
+      fill: #2ed573;
     }
 
     /* Currency Switcher & Live Rate Bar */
     .currency-bar {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 6px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      backdrop-filter: blur(20px);
     }
 
     .curr-switch-group {
       display: flex;
       gap: 4px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 4px;
-      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px;
+      border-radius: 14px;
     }
 
     .curr-btn {
       background: transparent;
       border: none;
-      color: #888888;
-      padding: 6px 12px;
-      border-radius: 8px;
+      color: #8a8d93;
+      padding: 6px 14px;
+      border-radius: 11px;
       font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .curr-btn.active {
       background: #ffffff;
-      color: #08080b;
+      color: #090a0f;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .live-rate-display {
       font-size: 12px;
-      color: #aaaaaa;
+      color: #9a9ea7;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 6px;
+      padding-right: 4px;
     }
 
     .pulse-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       background: #2ed573;
       border-radius: 50%;
-      box-shadow: 0 0 6px #2ed573;
+      box-shadow: 0 0 10px #2ed573;
       display: inline-block;
+      animation: pulseAnim 2s infinite ease-in-out;
     }
 
-    /* Main Balance Section */
+    @keyframes pulseAnim {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Main Balance Section — Fintech Card */
     .balance-display-section {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      padding: 28px 20px 24px 20px;
       text-align: center;
-      margin-top: 6px;
-      margin-bottom: 4px;
+      position: relative;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(25px);
     }
 
     .balance-label-row {
@@ -209,137 +226,153 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      color: #777777;
-      font-size: 12px;
-      margin-bottom: 6px;
+      color: #8a8d93;
+      font-size: 11.5px;
+      margin-bottom: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.9px;
       font-weight: 700;
     }
 
     .balance-amount-row {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
       cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .balance-amount-row:active {
+      transform: scale(0.98);
     }
 
     .balance-currency-sym {
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 800;
-      color: #aaaaaa;
+      color: #9a9ea7;
+      margin-right: 2px;
     }
 
     .balance-amount {
-      font-size: 46px;
+      font-size: 52px;
       font-weight: 900;
-      letter-spacing: -1.5px;
+      letter-spacing: -2px;
       color: #ffffff;
+      line-height: 1;
     }
 
     .balance-arrow {
-      font-size: 22px;
-      color: #444444;
+      font-size: 24px;
+      color: #555861;
+      margin-left: 6px;
     }
 
     .secondary-converted-val {
-      font-size: 13px;
-      color: #777777;
+      font-size: 13.5px;
+      color: #8a8d93;
       font-weight: 600;
-      margin-top: 2px;
+      margin-top: 8px;
     }
 
     /* Pill Badge Card */
     .akho-pill-card {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 22px;
-      padding: 14px 20px;
+      padding: 14px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       backdrop-filter: blur(20px);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
     }
 
     .akho-pill-card:active {
-      background: rgba(255, 255, 255, 0.07);
-      border-color: rgba(255, 255, 255, 0.18);
+      transform: scale(0.98);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.16);
     }
 
     .akho-pill-left {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 700;
     }
 
     .akho-icon-badge {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       background: #ffffff;
       border-radius: 50%;
-      color: #08080b;
+      color: #090a0f;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 14px;
+      font-size: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
 
     .akho-pill-right {
-      color: #aaaaaa;
+      color: #ffffff;
       font-size: 13px;
       font-weight: 700;
       display: flex;
       align-items: center;
       gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 12px;
+      border-radius: 14px;
     }
 
     /* Section Cards */
     .section-card {
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 20px;
-      padding: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 22px;
+      padding: 18px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.07);
       backdrop-filter: blur(20px);
-      transition: all 0.2s ease;
+      transition: transform 0.15s ease, background 0.15s ease;
     }
 
     .section-card:active {
-      background: rgba(255, 255, 255, 0.07);
+      transform: scale(0.98);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .section-card-title {
       font-size: 15px;
       font-weight: 700;
+      letter-spacing: -0.2px;
     }
 
     .section-card-right {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: #666666;
+      color: #8a8d93;
       font-size: 13px;
       font-weight: 600;
     }
 
     /* Services Grid */
     .services-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
-      color: #666666;
-      margin-top: 5px;
+      color: #71757e;
+      margin-top: 4px;
       margin-bottom: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.9px;
+      padding-left: 4px;
     }
 
     .services-grid {
@@ -349,42 +382,43 @@
     }
 
     .service-card {
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 22px;
       padding: 16px 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      gap: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
       cursor: pointer;
-      min-height: 115px;
+      min-height: 120px;
       justify-content: center;
-      transition: all 0.2s ease;
+      transition: transform 0.15s ease, background 0.15s ease;
     }
 
     .service-card:active {
-      background: rgba(255, 255, 255, 0.07);
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .service-icon-box {
-      width: 44px;
-      height: 44px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 14px;
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
     }
 
     .service-label {
       font-size: 12px;
       font-weight: 600;
-      color: #cccccc;
-      line-height: 1.25;
+      color: #d1d4dc;
+      line-height: 1.3;
     }
 
     /* Fullscreen Overlay Modals */
@@ -394,13 +428,13 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: #08080b;
+      background: #090a0f;
       z-index: 9999;
       display: none;
       flex-direction: column;
       opacity: 0;
       transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
     }
 
     .tx-modal-overlay.active {
@@ -416,7 +450,7 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      padding: 16px;
+      padding: 16px 18px 24px 18px;
       position: relative;
     }
 
@@ -429,7 +463,7 @@
     }
 
     .tx-back-btn {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: #ffffff;
       font-size: 22px;
@@ -440,23 +474,24 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
+      transition: transform 0.15s ease;
     }
 
     .tx-back-btn:active {
-      background: rgba(255, 255, 255, 0.15);
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.14);
     }
 
     .tx-modal-title {
       font-size: 17px;
       font-weight: 800;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.4px;
     }
 
     .tx-filters {
       display: flex;
       gap: 8px;
-      padding: 16px 0;
+      padding: 14px 0;
       overflow-x: auto;
       scrollbar-width: none;
     }
@@ -466,22 +501,23 @@
     }
 
     .tx-filter-btn {
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #777777;
+      color: #8a8d93;
       padding: 8px 18px;
-      border-radius: 20px;
+      border-radius: 22px;
       font-size: 13px;
       font-weight: 700;
       white-space: nowrap;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .tx-filter-btn.active {
       background: #ffffff;
-      color: #08080b;
+      color: #090a0f;
       border-color: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     }
 
     .tx-list {
@@ -495,14 +531,14 @@
     }
 
     .tx-item {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 14px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(14px);
     }
 
     .tx-item-left {
@@ -512,18 +548,18 @@
     }
 
     .tx-icon-box {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 800;
       flex-shrink: 0;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.07);
       color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.09);
     }
 
     .tx-info {
@@ -540,7 +576,7 @@
 
     .tx-date {
       font-size: 12px;
-      color: #666666;
+      color: #71757e;
     }
 
     .tx-item-right {
@@ -551,14 +587,14 @@
     }
 
     .tx-amount {
-      font-size: 14px;
+      font-size: 14.5px;
       font-weight: 800;
       color: #ffffff;
     }
 
     .tx-status {
       font-size: 11px;
-      color: #777777;
+      color: #8a8d93;
       font-weight: 600;
     }
 
@@ -568,7 +604,7 @@
       align-items: center;
       justify-content: center;
       height: 60%;
-      color: #555555;
+      color: #60646d;
       gap: 12px;
       text-align: center;
       font-size: 14px;
@@ -576,32 +612,32 @@
     }
 
     .tx-empty-icon {
-      font-size: 40px;
-      opacity: 0.25;
+      font-size: 42px;
+      opacity: 0.35;
     }
 
     /* TOP UP UI */
     .wallet-sub-btn {
       width: 100%;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #ffffff;
       padding: 13px;
-      border-radius: 16px;
-      margin-top: 12px;
-      margin-bottom: 20px;
+      border-radius: 18px;
+      margin-top: 14px;
+      margin-bottom: 22px;
       cursor: pointer;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 13.5px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: all 0.2s ease;
+      transition: transform 0.15s ease, background 0.15s ease;
     }
 
     .wallet-sub-btn:active {
-      background: rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.1);
       transform: scale(0.98);
     }
 
@@ -613,67 +649,68 @@
     }
 
     .pkg-btn {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
+      border-radius: 22px;
       padding: 18px 16px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       cursor: pointer;
       position: relative;
-      transition: all 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
     .pkg-btn:active {
-      transform: scale(0.97);
+      transform: scale(0.96);
       border-color: #ffffff;
       background: rgba(255, 255, 255, 0.08);
     }
 
     .pkg-price {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
-      color: #888888;
+      color: #8a8d93;
     }
 
     .pkg-label {
-      font-size: 20px;
+      font-size: 21px;
       font-weight: 900;
       color: #ffffff;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.6px;
     }
 
     .pkg-vip-badge {
       position: absolute;
       top: -9px;
-      right: 12px;
+      right: 14px;
       background: #ffffff;
-      color: #08080b;
-      font-size: 9px;
+      color: #090a0f;
+      font-size: 9.5px;
       font-weight: 900;
-      padding: 3px 8px;
-      border-radius: 8px;
+      padding: 3px 9px;
+      border-radius: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
 
     /* Dynamic Cashout Box */
     .cashout-box {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
-      padding: 18px;
+      border-radius: 24px;
+      padding: 20px;
       margin-bottom: 20px;
-      transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .cashout-box.unlocked {
       border: 1px solid #2ed573;
-      background: rgba(46, 213, 115, 0.05);
-      box-shadow: 0 0 20px rgba(46, 213, 115, 0.15);
+      background: rgba(46, 213, 115, 0.06);
+      box-shadow: 0 8px 24px rgba(46, 213, 115, 0.15);
     }
 
     .cashout-header-row {
@@ -684,70 +721,71 @@
 
     .cashout-title {
       color: #ffffff;
-      font-size: 14px;
+      font-size: 14.5px;
       font-weight: 800;
     }
 
     .cashout-status-badge {
       font-size: 10px;
       font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 4px 9px;
+      border-radius: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
 
     .cashout-status-badge.locked {
       background: rgba(255, 255, 255, 0.08);
-      color: #777777;
+      color: #8a8d93;
     }
 
     .cashout-status-badge.unlocked {
       background: #2ed573;
-      color: #08080b;
+      color: #090a0f;
     }
 
     .cashout-desc {
       font-size: 12px;
-      color: #777777;
-      margin-top: 4px;
+      color: #8a8d93;
+      margin-top: 5px;
       font-weight: 500;
     }
 
     .auth-input {
       width: 100%;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #ffffff;
-      padding: 13px 16px;
-      border-radius: 14px;
-      font-size: 13px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      font-size: 13.5px;
       outline: none;
       margin-top: 12px;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s ease, background 0.2s ease;
     }
 
     .auth-input:focus {
       border-color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .withdraw-btn {
       width: 100%;
       background: #ffffff;
       border: none;
-      color: #08080b;
+      color: #090a0f;
       padding: 14px;
-      border-radius: 14px;
+      border-radius: 16px;
       font-weight: 800;
-      font-size: 13px;
+      font-size: 13.5px;
       margin-top: 10px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: transform 0.15s ease, background 0.15s ease;
     }
 
     .withdraw-btn:active {
       transform: scale(0.98);
-      background: #e0e0e0;
+      background: #e5e5e5;
     }
 
     .withdraw-btn:disabled {
@@ -756,339 +794,337 @@
     }
 
     .activity-log {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
-      padding: 18px;
+      border-radius: 24px;
+      padding: 20px;
       margin-bottom: 20px;
     }
 
-
     /* ==========================================================================
-   ☀️ EMIGRANTBOOK BALANCE & WALLET — LIGHT MODE (Facebook Clean Theme)
-   Dark Mode რჩება 100% ხელუხლებელი — ვრცელდება მხოლოდ body.light-mode-ზე
-   ========================================================================== */
-
-/* 1. ძირითადი ფონი და ტექსტი */
-body.light-mode {
-  background-color: #f0f2f5 !important;
-  color: #050505 !important;
-}
-
-body.light-mode .bg-gradient {
-  background: radial-gradient(circle at 50% -10%, rgba(0, 0, 0, 0.03) 0%, transparent 50%),
-              radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 0.02) 0%, transparent 40%) !important;
-}
-
-/* 2. ჰედერი და ღილაკები */
-body.light-mode .header-title {
-  color: #050505 !important;
-}
-
-body.light-mode .header-subtitle {
-  color: #65676b !important;
-}
-
-body.light-mode .header-subtitle svg {
-  fill: #65676b !important;
-}
-
-body.light-mode .back-btn,
-body.light-mode .settings-btn {
-  background: #ffffff !important;
-  border: 1px solid #dadde1 !important;
-  color: #050505 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
-}
-
-body.light-mode .back-btn:active,
-body.light-mode .settings-btn:active {
-  background: #e4e6eb !important;
-}
-
-/* 3. ვალუტის გადამრთველი და კურსის ზოლი */
-body.light-mode .currency-bar {
-  background: #ffffff !important;
-  border: 1px solid #dadde1 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-}
-
-body.light-mode .curr-switch-group {
-  background: #e4e6eb !important;
-}
-
-body.light-mode .curr-btn {
-  color: #65676b !important;
-}
-
-body.light-mode .curr-btn.active {
-  background: #ffffff !important;
-  color: #050505 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-}
-
-body.light-mode .live-rate-display {
-  color: #65676b !important;
-}
-
-body.light-mode #live-rate-tag {
-  color: #050505 !important;
-}
-
-/* 4. მთავარი ბალანსის გამოსახვა */
-body.light-mode .balance-label-row {
-  color: #65676b !important;
-}
-
-body.light-mode #curr-code-display {
-  color: #050505 !important;
-}
-
-body.light-mode .balance-currency-sym {
-  color: #65676b !important;
-}
-
-body.light-mode .balance-amount {
-  color: #050505 !important;
-}
-
-body.light-mode .balance-arrow {
-  color: #8a8d91 !important;
-}
-
-body.light-mode .secondary-converted-val {
-  color: #65676b !important;
-}
-
-/* 5. ბარათები (საფულე, ტრანზაქციები, სერვისები) */
-body.light-mode .akho-pill-card,
-body.light-mode .section-card,
-body.light-mode .service-card {
-  background: #ffffff !important;
-  border: 1px solid #dadde1 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
-}
-
-body.light-mode .akho-pill-card:active,
-body.light-mode .section-card:active,
-body.light-mode .service-card:active {
-  background: #f0f2f5 !important;
-}
-
-body.light-mode .akho-pill-left {
-  color: #050505 !important;
-}
-
-body.light-mode .akho-icon-badge {
-  background: #050505 !important;
-  color: #ffffff !important;
-}
-
-body.light-mode .akho-pill-right {
-  color: #65676b !important;
-}
-
-body.light-mode .section-card-title {
-  color: #050505 !important;
-}
-
-body.light-mode .section-card-right {
-  color: #8a8d91 !important;
-}
-
-body.light-mode .services-title {
-  color: #65676b !important;
-}
-
-body.light-mode .service-icon-box {
-  background: #f0f2f5 !important;
-  border: 1px solid #dadde1 !important;
-}
-
-body.light-mode .service-label {
-  color: #050505 !important;
-}
-
-/* 6. ტრანზაქციებისა და შევსების სრული ფანჯრები (Modals) */
-body.light-mode .tx-modal-overlay {
-  background: #ffffff !important;
-}
-
-body.light-mode .tx-header {
-  border-bottom: 1px solid #dadde1 !important;
-}
-
-body.light-mode .tx-modal-title {
-  color: #050505 !important;
-}
-
-body.light-mode .tx-back-btn {
-  background: #f0f2f5 !important;
-  border: 1px solid #ccd0d5 !important;
-  color: #050505 !important;
-}
-
-body.light-mode .tx-back-btn:active {
-  background: #e4e6eb !important;
-}
-
-body.light-mode .tx-filter-btn {
-  background: #f0f2f5 !important;
-  border: 1px solid #ccd0d5 !important;
-  color: #65676b !important;
-}
-
-body.light-mode .tx-filter-btn.active {
-  background: #050505 !important;
-  color: #ffffff !important;
-  border-color: #050505 !important;
-}
-
-body.light-mode .tx-item {
-  background: #ffffff !important;
-  border: 1px solid #dadde1 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-}
-
-body.light-mode .tx-icon-box {
-  background: #f0f2f5 !important;
-  color: #050505 !important;
-  border: 1px solid #ccd0d5 !important;
-}
-
-body.light-mode .tx-title {
-  color: #050505 !important;
-}
-
-body.light-mode .tx-date {
-  color: #8a8d91 !important;
-}
-
-body.light-mode .tx-amount {
-  color: #050505 !important;
-}
-
-body.light-mode .tx-status {
-  color: #65676b !important;
-}
-
-body.light-mode .tx-empty-state {
-  color: #8a8d91 !important;
-}
-
-/* 7. შევსების ბარათები (Stripe Packages) */
-body.light-mode #walletMain p[data-key="wallet_desc"] {
-  color: #65676b !important;
-}
-
-body.light-mode #walletMain p[data-key="how_it_works"] {
-  color: #1877f2 !important;
-}
-
-body.light-mode .wallet-sub-btn {
-  background: #f0f2f5 !important;
-  border: 1px solid #ccd0d5 !important;
-  color: #050505 !important;
-}
-
-body.light-mode .wallet-sub-btn:active {
-  background: #e4e6eb !important;
-}
-
-body.light-mode .pkg-btn {
-  background: #ffffff !important;
-  border: 1px solid #dadde1 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
-}
-
-body.light-mode .pkg-btn:active {
-  background: #f0f2f5 !important;
-  border-color: #050505 !important;
-}
-
-body.light-mode .pkg-price {
-  color: #65676b !important;
-}
-
-body.light-mode .pkg-label {
-  color: #050505 !important;
-}
-
-body.light-mode .pkg-vip-badge {
-  background: #050505 !important;
-  color: #ffffff !important;
-}
-
-/* 8. თანხის გატანის ბლოკი (Cashout) & აქტივობა */
-body.light-mode .cashout-box {
-  background: #ffffff !important;
-  border: 1px solid #dadde1 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
-}
-
-body.light-mode .cashout-box.unlocked {
-  border: 1px solid #2ed573 !important;
-  background: rgba(46, 213, 115, 0.06) !important;
-}
-
-body.light-mode .cashout-title {
-  color: #050505 !important;
-}
-
-body.light-mode .cashout-status-badge.locked {
-  background: #e4e6eb !important;
-  color: #65676b !important;
-}
-
-body.light-mode .cashout-desc {
-  color: #65676b !important;
-}
-
-body.light-mode .auth-input {
-  background: #f0f2f5 !important;
-  border: 1px solid #ccd0d5 !important;
-  color: #050505 !important;
-}
-
-body.light-mode .auth-input:focus {
-  border-color: #1877f2 !important;
-}
-
-body.light-mode .withdraw-btn {
-  background: #050505 !important;
-  color: #ffffff !important;
-}
-
-body.light-mode .withdraw-btn:active {
-  background: #333333 !important;
-}
-
-body.light-mode .activity-log {
-  background: #ffffff !important;
-  border: 1px solid #dadde1 !important;
-}
-
-body.light-mode .activity-log > div:first-child {
-  color: #050505 !important;
-}
-
-body.light-mode #logContent {
-  color: #65676b !important;
-}
-
-/* 9. Toast შეტყობინება */
-body.light-mode .toast-notification {
-  background: #050505 !important;
-  color: #ffffff !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
-}
+       ☀️ LIGHT THEME (Complete Clean Apple / Facebook Edition)
+       ========================================================================== */
+    body.light-mode {
+      background-color: #f0f2f5 !important;
+      color: #050505 !important;
+    }
+
+    body.light-mode .bg-gradient {
+      background: radial-gradient(circle at 50% 0%, rgba(24, 119, 242, 0.06) 0%, transparent 60%),
+                  radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 0.02) 0%, transparent 50%) !important;
+    }
+
+    body.light-mode .header-title {
+      color: #050505 !important;
+    }
+
+    body.light-mode .header-subtitle {
+      color: #65676b !important;
+    }
+
+    body.light-mode .header-subtitle svg {
+      fill: #2ed573 !important;
+    }
+
+    body.light-mode .back-btn,
+    body.light-mode .settings-btn {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      color: #050505 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    body.light-mode .back-btn:active,
+    body.light-mode .settings-btn:active {
+      background: #e4e6eb !important;
+    }
+
+    body.light-mode .currency-bar {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    body.light-mode .curr-switch-group {
+      background: #f0f2f5 !important;
+    }
+
+    body.light-mode .curr-btn {
+      color: #65676b !important;
+    }
+
+    body.light-mode .curr-btn.active {
+      background: #ffffff !important;
+      color: #050505 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    body.light-mode .live-rate-display {
+      color: #65676b !important;
+    }
+
+    body.light-mode #live-rate-tag {
+      color: #050505 !important;
+    }
+
+    body.light-mode .balance-display-section {
+      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%) !important;
+      border: 1px solid #dadde1 !important;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    body.light-mode .balance-label-row {
+      color: #65676b !important;
+    }
+
+    body.light-mode #curr-code-display {
+      color: #050505 !important;
+    }
+
+    body.light-mode .balance-currency-sym {
+      color: #65676b !important;
+    }
+
+    body.light-mode .balance-amount {
+      color: #050505 !important;
+    }
+
+    body.light-mode .balance-arrow {
+      color: #8a8d91 !important;
+    }
+
+    body.light-mode .secondary-converted-val {
+      color: #65676b !important;
+    }
+
+    body.light-mode .akho-pill-card,
+    body.light-mode .section-card,
+    body.light-mode .service-card {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    body.light-mode .akho-pill-card:active,
+    body.light-mode .section-card:active,
+    body.light-mode .service-card:active {
+      background: #f0f2f5 !important;
+    }
+
+    body.light-mode .akho-pill-left {
+      color: #050505 !important;
+    }
+
+    body.light-mode .akho-icon-badge {
+      background: #050505 !important;
+      color: #ffffff !important;
+    }
+
+    body.light-mode .akho-pill-right {
+      color: #050505 !important;
+      background: #f0f2f5 !important;
+    }
+
+    body.light-mode .section-card-title {
+      color: #050505 !important;
+    }
+
+    body.light-mode .section-card-right {
+      color: #8a8d91 !important;
+    }
+
+    body.light-mode .services-title {
+      color: #65676b !important;
+    }
+
+    body.light-mode .service-icon-box {
+      background: #f0f2f5 !important;
+      border: 1px solid #dadde1 !important;
+    }
+
+    body.light-mode .service-label {
+      color: #050505 !important;
+    }
+
+    body.light-mode .tx-modal-overlay {
+      background: #f0f2f5 !important;
+    }
+
+    body.light-mode .tx-header {
+      border-bottom: 1px solid #dadde1 !important;
+    }
+
+    body.light-mode .tx-modal-title {
+      color: #050505 !important;
+    }
+
+    body.light-mode .tx-back-btn {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      color: #050505 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    body.light-mode .tx-back-btn:active {
+      background: #e4e6eb !important;
+    }
+
+    body.light-mode .tx-filter-btn {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      color: #65676b !important;
+    }
+
+    body.light-mode .tx-filter-btn.active {
+      background: #050505 !important;
+      color: #ffffff !important;
+      border-color: #050505 !important;
+    }
+
+    body.light-mode .tx-item {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    body.light-mode .tx-icon-box {
+      background: #f0f2f5 !important;
+      color: #050505 !important;
+      border: 1px solid #dadde1 !important;
+    }
+
+    body.light-mode .tx-title {
+      color: #050505 !important;
+    }
+
+    body.light-mode .tx-date {
+      color: #8a8d91 !important;
+    }
+
+    body.light-mode .tx-amount {
+      color: #050505 !important;
+    }
+
+    body.light-mode .tx-status {
+      color: #65676b !important;
+    }
+
+    body.light-mode .tx-empty-state {
+      color: #8a8d91 !important;
+    }
+
+    body.light-mode #walletMain p[data-key="wallet_desc"] {
+      color: #65676b !important;
+    }
+
+    body.light-mode #walletMain p[data-key="how_it_works"] {
+      color: #1877f2 !important;
+    }
+
+    body.light-mode .wallet-sub-btn {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      color: #050505 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    body.light-mode .wallet-sub-btn:active {
+      background: #e4e6eb !important;
+    }
+
+    body.light-mode .pkg-btn {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    body.light-mode .pkg-btn:active {
+      background: #f0f2f5 !important;
+      border-color: #050505 !important;
+    }
+
+    body.light-mode .pkg-price {
+      color: #65676b !important;
+    }
+
+    body.light-mode .pkg-label {
+      color: #050505 !important;
+    }
+
+    body.light-mode .pkg-vip-badge {
+      background: #050505 !important;
+      color: #ffffff !important;
+    }
+
+    body.light-mode .cashout-box {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    body.light-mode .cashout-box.unlocked {
+      border: 1px solid #2ed573 !important;
+      background: rgba(46, 213, 115, 0.06) !important;
+    }
+
+    body.light-mode .cashout-title {
+      color: #050505 !important;
+    }
+
+    body.light-mode .cashout-status-badge.locked {
+      background: #e4e6eb !important;
+      color: #65676b !important;
+    }
+
+    body.light-mode .cashout-desc {
+      color: #65676b !important;
+    }
+
+    body.light-mode .auth-input {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      color: #050505 !important;
+    }
+
+    body.light-mode .auth-input:focus {
+      border-color: #1877f2 !important;
+    }
+
+    body.light-mode .withdraw-btn {
+      background: #050505 !important;
+      color: #ffffff !important;
+    }
+
+    body.light-mode .withdraw-btn:active {
+      background: #2a2a2a !important;
+    }
+
+    body.light-mode .activity-log {
+      background: #ffffff !important;
+      border: 1px solid #dadde1 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    body.light-mode .activity-log > div:first-child {
+      color: #050505 !important;
+    }
+
+    body.light-mode #logContent {
+      color: #65676b !important;
+    }
+
+    body.light-mode .toast-notification {
+      background: #050505 !important;
+      color: #ffffff !important;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25) !important;
+    }
   </style>
 </head>
 <body>
   <script>
     // საიტი ყველგან და ყოველთვის თეთრია
-  localStorage.setItem('eb_theme', 'light');
-  document.body.classList.add('light-mode');
+    localStorage.setItem('eb_theme', 'light');
+    document.body.classList.add('light-mode');
   </script>
   <div class="bg-gradient"></div>
 
@@ -1858,18 +1894,18 @@ body.light-mode .toast-notification {
         // აი აქ უნდა ჩასვა EmailJS კოდი:
         // ==========================================
         emailjs.send("service_hjiqge4", "template_50xhnnm", {
-    to_email: "jimsheri.gvinjilia1980@gmail.com",
-    user_email: user.email || "უცნობი",
-    user_name: user.email || user.uid,
-    amount: withdrawAmount.toFixed(2),
-    iban: iban,
-    bank_name: "Emigrantbook Platform"
-}, "DuQ8E4aqWLVUU6487")
-.then(function(response) {
-    alert("მეილი გაიგზავნა წარმატებით: " + response.status);
-}, function(error) {
-    alert("შეცდომა მეილზე: " + JSON.stringify(error));
-});
+          to_email: "jimsheri.gvinjilia1980@gmail.com",
+          user_email: user.email || "უცნობი",
+          user_name: user.email || user.uid,
+          amount: withdrawAmount.toFixed(2),
+          iban: iban,
+          bank_name: "Emigrantbook Platform"
+        }, "DuQ8E4aqWLVUU6487")
+        .then(function(response) {
+            alert("მეილი გაიგზავნა წარმატებით: " + response.status);
+        }, function(error) {
+            alert("შეცდომა მეილზე: " + JSON.stringify(error));
+        });
         // ==========================================
 
         showToast("გატანის მოთხოვნა მიღებულია! თანხა ჩამოიჭრა და გადამოწმდება 24 საათში.");
