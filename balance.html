@@ -22,19 +22,18 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Roboto, Helvetica, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background-color: #090a0f;
+      background-color: #0b0c10;
       color: #ffffff;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       position: relative;
       overflow-x: hidden;
-      letter-spacing: -0.2px;
     }
 
     .bg-gradient {
@@ -43,8 +42,10 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: radial-gradient(circle at 50% 0%, rgba(24, 119, 242, 0.08) 0%, transparent 60%),
-                  radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+      background: 
+        radial-gradient(circle at 20% 0%, rgba(30, 144, 255, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 80% 20%, rgba(220, 174, 54, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.02) 0%, transparent 60%);
       pointer-events: none;
       z-index: 0;
     }
@@ -52,29 +53,28 @@
     .container {
       position: relative;
       z-index: 1;
-      max-width: 480px;
+      max-width: 440px;
       margin: 0 auto;
       width: 100%;
-      padding: 16px 18px 32px 18px;
+      padding: 16px 18px 40px 18px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
     }
 
-    /* Success Toast Notification */
+    /* Toast Notification */
     .toast-notification {
       position: fixed;
       top: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
-      background: rgba(255, 255, 255, 0.98);
-      color: #090a0f;
+      background: #ffffff;
+      color: #000000;
       padding: 14px 24px;
-      border-radius: 40px;
+      border-radius: 30px;
       font-size: 13.5px;
       font-weight: 700;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
       z-index: 10000;
       display: flex;
       align-items: center;
@@ -88,33 +88,33 @@
       opacity: 1;
     }
 
-    /* Header */
+    /* Top Navigation Header */
     .balance-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 0 10px 0;
+      padding: 4px 0 8px 0;
     }
 
     .back-btn, .settings-btn {
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: #ffffff;
       font-size: 20px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
-      backdrop-filter: blur(20px);
-      transition: transform 0.15s ease, background 0.15s ease;
+      backdrop-filter: blur(16px);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .back-btn:active, .settings-btn:active {
-      transform: scale(0.92);
-      background: rgba(255, 255, 255, 0.12);
+      transform: scale(0.9);
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .header-title-container {
@@ -124,17 +124,17 @@
     .header-title {
       font-size: 17px;
       font-weight: 800;
-      letter-spacing: -0.4px;
+      letter-spacing: -0.3px;
     }
 
     .header-subtitle {
       font-size: 11px;
-      color: #8a8d93;
+      color: #2ed573;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 5px;
-      margin-top: 3px;
+      margin-top: 2px;
       text-transform: uppercase;
       letter-spacing: 0.8px;
       font-weight: 700;
@@ -146,52 +146,52 @@
       fill: #2ed573;
     }
 
-    /* Currency Switcher & Live Rate Bar */
+    /* Currency Switcher & Rate Pill */
     .currency-bar {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
-      padding: 6px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      backdrop-filter: blur(20px);
+      gap: 10px;
     }
 
     .curr-switch-group {
       display: flex;
       gap: 4px;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       padding: 3px;
-      border-radius: 14px;
+      border-radius: 20px;
     }
 
     .curr-btn {
       background: transparent;
       border: none;
-      color: #8a8d93;
+      color: #888899;
       padding: 6px 14px;
-      border-radius: 11px;
-      font-size: 12.5px;
+      border-radius: 16px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.2s ease;
     }
 
     .curr-btn.active {
       background: #ffffff;
-      color: #090a0f;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      color: #0b0c10;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .live-rate-display {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 7px 14px;
+      border-radius: 20px;
       font-size: 12px;
-      color: #9a9ea7;
+      color: #aaaaaa;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 6px;
-      padding-right: 4px;
     }
 
     .pulse-dot {
@@ -199,107 +199,247 @@
       height: 7px;
       background: #2ed573;
       border-radius: 50%;
-      box-shadow: 0 0 10px #2ed573;
+      box-shadow: 0 0 8px #2ed573;
       display: inline-block;
       animation: pulseAnim 2s infinite ease-in-out;
     }
 
     @keyframes pulseAnim {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.85); }
+      50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    /* Main Balance Section — Fintech Card */
-    .balance-display-section {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 28px;
-      padding: 28px 20px 24px 20px;
-      text-align: center;
+    /* 💳 PREMIUM BANK CARD HERO SECTION */
+    .premium-bank-card {
       position: relative;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(25px);
+      width: 100%;
+      min-height: 210px;
+      border-radius: 26px;
+      padding: 24px 22px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(30px);
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+    }
+
+    .premium-bank-card:active {
+      transform: scale(0.985);
+    }
+
+    /* Ambient card glare */
+    .premium-bank-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .card-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-chip-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-emv-chip {
+      width: 36px;
+      height: 26px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #dcae36 0%, #f3cf7a 50%, #b8860b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .card-emv-chip::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(0,0,0,0.25);
+    }
+
+    .card-nfc-wave {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.6);
+      transform: rotate(90deg);
+    }
+
+    .card-brand-label {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.9);
+      text-transform: uppercase;
+    }
+
+    .card-middle-balance {
+      margin: 18px 0 10px 0;
+      position: relative;
+      z-index: 2;
     }
 
     .balance-label-row {
       display: flex;
       align-items: center;
-      justify-content: center;
       gap: 6px;
-      color: #8a8d93;
-      font-size: 11.5px;
-      margin-bottom: 8px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.9px;
+      letter-spacing: 1px;
       font-weight: 700;
+      margin-bottom: 6px;
     }
 
     .balance-amount-row {
       display: flex;
       align-items: baseline;
-      justify-content: center;
       gap: 4px;
-      cursor: pointer;
-      transition: transform 0.15s ease;
-    }
-
-    .balance-amount-row:active {
-      transform: scale(0.98);
     }
 
     .balance-currency-sym {
       font-size: 30px;
       font-weight: 800;
-      color: #9a9ea7;
-      margin-right: 2px;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .balance-amount {
-      font-size: 52px;
+      font-size: 46px;
       font-weight: 900;
-      letter-spacing: -2px;
+      letter-spacing: -1.5px;
       color: #ffffff;
       line-height: 1;
     }
 
     .balance-arrow {
-      font-size: 24px;
-      color: #555861;
+      font-size: 22px;
+      color: rgba(255, 255, 255, 0.4);
       margin-left: 6px;
+    }
+
+    .card-bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      position: relative;
+      z-index: 2;
     }
 
     .secondary-converted-val {
       font-size: 13.5px;
-      color: #8a8d93;
+      color: rgba(255, 255, 255, 0.7);
       font-weight: 600;
-      margin-top: 8px;
     }
 
-    /* Pill Badge Card */
+    .card-status-pill {
+      background: rgba(46, 213, 115, 0.15);
+      border: 1px solid rgba(46, 213, 115, 0.4);
+      color: #2ed573;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* 🚀 REVOLUT / APPLE NEOMORPHIC QUICK ACTION BUTTONS */
+    .quick-actions-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .quick-action-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(15px);
+    }
+
+    .quick-action-btn:active {
+      transform: scale(0.94);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .quick-action-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .quick-action-btn.primary .quick-action-icon {
+      background: #ffffff;
+      color: #0b0c10;
+      font-weight: 900;
+    }
+
+    .quick-action-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #e0e0e0;
+    }
+
+    /* Wallet / TopUp Pill Card */
     .akho-pill-card {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 22px;
+      border-radius: 20px;
       padding: 14px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       backdrop-filter: blur(20px);
       cursor: pointer;
-      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .akho-pill-card:active {
       transform: scale(0.98);
       background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.16);
     }
 
     .akho-pill-left {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 700;
     }
 
@@ -308,39 +448,38 @@
       height: 32px;
       background: #ffffff;
       border-radius: 50%;
-      color: #090a0f;
+      color: #0b0c10;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 15px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      font-size: 14px;
     }
 
     .akho-pill-right {
       color: #ffffff;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       display: flex;
       align-items: center;
       gap: 6px;
       background: rgba(255, 255, 255, 0.08);
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: 14px;
     }
 
     /* Section Cards */
     .section-card {
       background: rgba(255, 255, 255, 0.04);
-      border-radius: 22px;
-      padding: 18px 20px;
+      border-radius: 20px;
+      padding: 16px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(20px);
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .section-card:active {
@@ -349,30 +488,29 @@
     }
 
     .section-card-title {
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 700;
-      letter-spacing: -0.2px;
     }
 
     .section-card-right {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: #8a8d93;
+      color: #888899;
       font-size: 13px;
       font-weight: 600;
     }
 
     /* Services Grid */
     .services-title {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 800;
-      color: #71757e;
-      margin-top: 4px;
+      color: #6a6e78;
+      margin-top: 2px;
       margin-bottom: 12px;
       text-transform: uppercase;
       letter-spacing: 0.9px;
-      padding-left: 4px;
+      padding-left: 2px;
     }
 
     .services-grid {
@@ -383,18 +521,18 @@
 
     .service-card {
       background: rgba(255, 255, 255, 0.04);
-      border-radius: 22px;
+      border-radius: 20px;
       padding: 16px 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
       gap: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       cursor: pointer;
-      min-height: 120px;
+      min-height: 115px;
       justify-content: center;
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .service-card:active {
@@ -403,21 +541,21 @@
     }
 
     .service-icon-box {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       background: rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.09);
+      font-size: 19px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .service-label {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
-      color: #d1d4dc;
+      color: #cccccc;
       line-height: 1.3;
     }
 
@@ -428,7 +566,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: #090a0f;
+      background: #0b0c10;
       z-index: 9999;
       display: none;
       flex-direction: column;
@@ -444,7 +582,7 @@
     }
 
     .tx-modal-content {
-      max-width: 480px;
+      max-width: 440px;
       width: 100%;
       margin: 0 auto;
       height: 100%;
@@ -458,13 +596,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 0 16px 0;
+      padding: 8px 0 16px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .tx-back-btn {
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: #ffffff;
       font-size: 22px;
       cursor: pointer;
@@ -478,14 +616,13 @@
     }
 
     .tx-back-btn:active {
-      transform: scale(0.92);
-      background: rgba(255, 255, 255, 0.14);
+      transform: scale(0.9);
     }
 
     .tx-modal-title {
       font-size: 17px;
       font-weight: 800;
-      letter-spacing: -0.4px;
+      letter-spacing: -0.3px;
     }
 
     .tx-filters {
@@ -503,19 +640,19 @@
     .tx-filter-btn {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #8a8d93;
+      color: #888899;
       padding: 8px 18px;
-      border-radius: 22px;
-      font-size: 13px;
+      border-radius: 20px;
+      font-size: 12.5px;
       font-weight: 700;
       white-space: nowrap;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.2s ease;
     }
 
     .tx-filter-btn.active {
       background: #ffffff;
-      color: #090a0f;
+      color: #0b0c10;
       border-color: #ffffff;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     }
@@ -526,14 +663,14 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding-top: 8px;
+      padding-top: 6px;
       padding-bottom: 24px;
     }
 
     .tx-item {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 20px;
+      border-radius: 18px;
       padding: 14px 16px;
       display: flex;
       align-items: center;
@@ -554,12 +691,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 800;
       flex-shrink: 0;
-      background: rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.06);
       color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .tx-info {
@@ -569,13 +706,13 @@
     }
 
     .tx-title {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       color: #ffffff;
     }
 
     .tx-date {
-      font-size: 12px;
+      font-size: 11.5px;
       color: #71757e;
     }
 
@@ -587,14 +724,14 @@
     }
 
     .tx-amount {
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 800;
       color: #ffffff;
     }
 
     .tx-status {
-      font-size: 11px;
-      color: #8a8d93;
+      font-size: 10.5px;
+      color: #888899;
       font-weight: 600;
     }
 
@@ -607,38 +744,38 @@
       color: #60646d;
       gap: 12px;
       text-align: center;
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 600;
     }
 
     .tx-empty-icon {
-      font-size: 42px;
+      font-size: 40px;
       opacity: 0.35;
     }
 
-    /* TOP UP UI */
+    /* TOP UP / WALLET UI */
     .wallet-sub-btn {
       width: 100%;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #ffffff;
       padding: 13px;
-      border-radius: 18px;
-      margin-top: 14px;
-      margin-bottom: 22px;
+      border-radius: 16px;
+      margin-top: 12px;
+      margin-bottom: 20px;
       cursor: pointer;
       font-weight: 700;
-      font-size: 13.5px;
+      font-size: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .wallet-sub-btn:active {
-      background: rgba(255, 255, 255, 0.1);
       transform: scale(0.98);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .package-grid {
@@ -651,57 +788,57 @@
     .pkg-btn {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 22px;
+      border-radius: 20px;
       padding: 18px 16px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
       cursor: pointer;
       position: relative;
-      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .pkg-btn:active {
       transform: scale(0.96);
       border-color: #ffffff;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.09);
     }
 
     .pkg-price {
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 700;
-      color: #8a8d93;
+      color: #888899;
     }
 
     .pkg-label {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 900;
       color: #ffffff;
-      letter-spacing: -0.6px;
+      letter-spacing: -0.5px;
     }
 
     .pkg-vip-badge {
       position: absolute;
       top: -9px;
       right: 14px;
-      background: #ffffff;
-      color: #090a0f;
-      font-size: 9.5px;
+      background: linear-gradient(135deg, #dcae36, #f3cf7a);
+      color: #0b0c10;
+      font-size: 9px;
       font-weight: 900;
       padding: 3px 9px;
       border-radius: 10px;
       text-transform: uppercase;
       letter-spacing: 0.6px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
     }
 
-    /* Dynamic Cashout Box */
+    /* Cashout Box */
     .cashout-box {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 24px;
+      border-radius: 22px;
       padding: 20px;
       margin-bottom: 20px;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -709,7 +846,7 @@
 
     .cashout-box.unlocked {
       border: 1px solid #2ed573;
-      background: rgba(46, 213, 115, 0.06);
+      background: rgba(46, 213, 115, 0.05);
       box-shadow: 0 8px 24px rgba(46, 213, 115, 0.15);
     }
 
@@ -721,7 +858,7 @@
 
     .cashout-title {
       color: #ffffff;
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 800;
     }
 
@@ -736,17 +873,17 @@
 
     .cashout-status-badge.locked {
       background: rgba(255, 255, 255, 0.08);
-      color: #8a8d93;
+      color: #888899;
     }
 
     .cashout-status-badge.unlocked {
       background: #2ed573;
-      color: #090a0f;
+      color: #0b0c10;
     }
 
     .cashout-desc {
       font-size: 12px;
-      color: #8a8d93;
+      color: #888899;
       margin-top: 5px;
       font-weight: 500;
     }
@@ -756,36 +893,35 @@
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #ffffff;
-      padding: 14px 16px;
-      border-radius: 16px;
+      padding: 13px 16px;
+      border-radius: 14px;
       font-size: 13.5px;
       outline: none;
       margin-top: 12px;
-      transition: border-color 0.2s ease, background 0.2s ease;
+      transition: border-color 0.2s ease;
     }
 
     .auth-input:focus {
       border-color: #ffffff;
-      background: rgba(255, 255, 255, 0.08);
     }
 
     .withdraw-btn {
       width: 100%;
       background: #ffffff;
       border: none;
-      color: #090a0f;
+      color: #0b0c10;
       padding: 14px;
-      border-radius: 16px;
+      border-radius: 14px;
       font-weight: 800;
       font-size: 13.5px;
       margin-top: 10px;
       cursor: pointer;
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .withdraw-btn:active {
       transform: scale(0.98);
-      background: #e5e5e5;
+      background: #e0e0e0;
     }
 
     .withdraw-btn:disabled {
@@ -796,57 +932,42 @@
     .activity-log {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 24px;
-      padding: 20px;
+      border-radius: 22px;
+      padding: 18px;
       margin-bottom: 20px;
     }
 
     /* ==========================================================================
-       ☀️ LIGHT THEME (Complete Clean Apple / Facebook Edition)
+       ☀️ LIGHT THEME (Apple Card Minimal Edition)
        ========================================================================== */
     body.light-mode {
-      background-color: #f0f2f5 !important;
+      background-color: #f4f5f8 !important;
       color: #050505 !important;
     }
 
     body.light-mode .bg-gradient {
-      background: radial-gradient(circle at 50% 0%, rgba(24, 119, 242, 0.06) 0%, transparent 60%),
-                  radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 0.02) 0%, transparent 50%) !important;
+      background: 
+        radial-gradient(circle at 20% 0%, rgba(24, 119, 242, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 80% 20%, rgba(220, 174, 54, 0.05) 0%, transparent 40%) !important;
     }
 
     body.light-mode .header-title {
       color: #050505 !important;
     }
 
-    body.light-mode .header-subtitle {
-      color: #65676b !important;
-    }
-
-    body.light-mode .header-subtitle svg {
-      fill: #2ed573 !important;
-    }
-
     body.light-mode .back-btn,
     body.light-mode .settings-btn {
       background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
+      border: 1px solid #e1e3e8 !important;
       color: #050505 !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
     }
 
-    body.light-mode .back-btn:active,
-    body.light-mode .settings-btn:active {
-      background: #e4e6eb !important;
-    }
-
-    body.light-mode .currency-bar {
+    body.light-mode .curr-switch-group,
+    body.light-mode .live-rate-display {
       background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
+      border: 1px solid #e1e3e8 !important;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
-    }
-
-    body.light-mode .curr-switch-group {
-      background: #f0f2f5 !important;
     }
 
     body.light-mode .curr-btn {
@@ -854,9 +975,8 @@
     }
 
     body.light-mode .curr-btn.active {
-      background: #ffffff !important;
-      color: #050505 !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+      background: #050505 !important;
+      color: #ffffff !important;
     }
 
     body.light-mode .live-rate-display {
@@ -867,51 +987,37 @@
       color: #050505 !important;
     }
 
-    body.light-mode .balance-display-section {
-      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%) !important;
-      border: 1px solid #dadde1 !important;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04) !important;
+    /* Light Card */
+    body.light-mode .premium-bank-card {
+      background: linear-gradient(135deg, #1c1e24 0%, #111215 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22) !important;
+      color: #ffffff !important;
     }
 
-    body.light-mode .balance-label-row {
-      color: #65676b !important;
-    }
-
-    body.light-mode #curr-code-display {
-      color: #050505 !important;
-    }
-
-    body.light-mode .balance-currency-sym {
-      color: #65676b !important;
-    }
-
-    body.light-mode .balance-amount {
-      color: #050505 !important;
-    }
-
-    body.light-mode .balance-arrow {
-      color: #8a8d91 !important;
-    }
-
-    body.light-mode .secondary-converted-val {
-      color: #65676b !important;
-    }
-
+    body.light-mode .quick-action-btn,
     body.light-mode .akho-pill-card,
     body.light-mode .section-card,
     body.light-mode .service-card {
       background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+      border: 1px solid #e1e3e8 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
     }
 
-    body.light-mode .akho-pill-card:active,
-    body.light-mode .section-card:active,
-    body.light-mode .service-card:active {
+    body.light-mode .quick-action-icon {
       background: #f0f2f5 !important;
+      color: #050505 !important;
+      border: 1px solid #e1e3e8 !important;
     }
 
-    body.light-mode .akho-pill-left {
+    body.light-mode .quick-action-btn.primary .quick-action-icon {
+      background: #050505 !important;
+      color: #ffffff !important;
+    }
+
+    body.light-mode .quick-action-label,
+    body.light-mode .akho-pill-left,
+    body.light-mode .section-card-title {
       color: #050505 !important;
     }
 
@@ -921,25 +1027,13 @@
     }
 
     body.light-mode .akho-pill-right {
-      color: #050505 !important;
       background: #f0f2f5 !important;
-    }
-
-    body.light-mode .section-card-title {
       color: #050505 !important;
-    }
-
-    body.light-mode .section-card-right {
-      color: #8a8d91 !important;
-    }
-
-    body.light-mode .services-title {
-      color: #65676b !important;
     }
 
     body.light-mode .service-icon-box {
-      background: #f0f2f5 !important;
-      border: 1px solid #dadde1 !important;
+      background: #f4f5f8 !important;
+      border: 1px solid #e1e3e8 !important;
     }
 
     body.light-mode .service-label {
@@ -947,11 +1041,11 @@
     }
 
     body.light-mode .tx-modal-overlay {
-      background: #f0f2f5 !important;
+      background: #f4f5f8 !important;
     }
 
     body.light-mode .tx-header {
-      border-bottom: 1px solid #dadde1 !important;
+      border-bottom: 1px solid #e1e3e8 !important;
     }
 
     body.light-mode .tx-modal-title {
@@ -960,18 +1054,13 @@
 
     body.light-mode .tx-back-btn {
       background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
+      border: 1px solid #e1e3e8 !important;
       color: #050505 !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
-    }
-
-    body.light-mode .tx-back-btn:active {
-      background: #e4e6eb !important;
     }
 
     body.light-mode .tx-filter-btn {
       background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
+      border: 1px solid #e1e3e8 !important;
       color: #65676b !important;
     }
 
@@ -983,101 +1072,33 @@
 
     body.light-mode .tx-item {
       background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
+      border: 1px solid #e1e3e8 !important;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
     }
 
     body.light-mode .tx-icon-box {
-      background: #f0f2f5 !important;
+      background: #f4f5f8 !important;
       color: #050505 !important;
-      border: 1px solid #dadde1 !important;
+      border: 1px solid #e1e3e8 !important;
     }
 
-    body.light-mode .tx-title {
-      color: #050505 !important;
-    }
-
-    body.light-mode .tx-date {
-      color: #8a8d91 !important;
-    }
-
+    body.light-mode .tx-title,
     body.light-mode .tx-amount {
       color: #050505 !important;
     }
 
-    body.light-mode .tx-status {
-      color: #65676b !important;
-    }
-
-    body.light-mode .tx-empty-state {
-      color: #8a8d91 !important;
-    }
-
-    body.light-mode #walletMain p[data-key="wallet_desc"] {
-      color: #65676b !important;
-    }
-
-    body.light-mode #walletMain p[data-key="how_it_works"] {
-      color: #1877f2 !important;
-    }
-
-    body.light-mode .wallet-sub-btn {
+    body.light-mode .wallet-sub-btn,
+    body.light-mode .pkg-btn,
+    body.light-mode .cashout-box,
+    body.light-mode .activity-log {
       background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
-      color: #050505 !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+      border: 1px solid #e1e3e8 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
     }
 
-    body.light-mode .wallet-sub-btn:active {
-      background: #e4e6eb !important;
-    }
-
-    body.light-mode .pkg-btn {
-      background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
-    }
-
-    body.light-mode .pkg-btn:active {
-      background: #f0f2f5 !important;
-      border-color: #050505 !important;
-    }
-
-    body.light-mode .pkg-price {
-      color: #65676b !important;
-    }
-
-    body.light-mode .pkg-label {
-      color: #050505 !important;
-    }
-
-    body.light-mode .pkg-vip-badge {
-      background: #050505 !important;
-      color: #ffffff !important;
-    }
-
-    body.light-mode .cashout-box {
-      background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
-    }
-
-    body.light-mode .cashout-box.unlocked {
-      border: 1px solid #2ed573 !important;
-      background: rgba(46, 213, 115, 0.06) !important;
-    }
-
+    body.light-mode .pkg-label,
     body.light-mode .cashout-title {
       color: #050505 !important;
-    }
-
-    body.light-mode .cashout-status-badge.locked {
-      background: #e4e6eb !important;
-      color: #65676b !important;
-    }
-
-    body.light-mode .cashout-desc {
-      color: #65676b !important;
     }
 
     body.light-mode .auth-input {
@@ -1086,43 +1107,14 @@
       color: #050505 !important;
     }
 
-    body.light-mode .auth-input:focus {
-      border-color: #1877f2 !important;
-    }
-
     body.light-mode .withdraw-btn {
       background: #050505 !important;
       color: #ffffff !important;
-    }
-
-    body.light-mode .withdraw-btn:active {
-      background: #2a2a2a !important;
-    }
-
-    body.light-mode .activity-log {
-      background: #ffffff !important;
-      border: 1px solid #dadde1 !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
-    }
-
-    body.light-mode .activity-log > div:first-child {
-      color: #050505 !important;
-    }
-
-    body.light-mode #logContent {
-      color: #65676b !important;
-    }
-
-    body.light-mode .toast-notification {
-      background: #050505 !important;
-      color: #ffffff !important;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25) !important;
     }
   </style>
 </head>
 <body>
   <script>
-    // საიტი ყველგან და ყოველთვის თეთრია
     localStorage.setItem('eb_theme', 'light');
     document.body.classList.add('light-mode');
   </script>
@@ -1147,7 +1139,7 @@
           <span id="lbl-protected">დაცულია</span>
         </div>
       </div>
-      <button class="settings-btn" onclick="alert('პარამეტრები')">⚙️</button>
+      <button class="settings-btn" onclick="alert('პარამეტრები')">⚙️️</button>
     </div>
 
     <!-- Currency Switcher Bar & Live Rate -->
@@ -1162,19 +1154,49 @@
       </div>
     </div>
 
-    <!-- Main Balance Display -->
-    <div class="balance-display-section">
-      <div class="balance-label-row">
-        <span id="lbl-expected-sum">ხელმისაწვდომი ბალანსი</span>
-        <span id="curr-code-display" style="font-weight: bold; color: #fff;">EUR</span>
-        <span>👁️</span>
+    <!-- 💳 PREMIUM BANK CARD (HERO SECTION) -->
+    <div class="premium-bank-card" onclick="openTopUpModal()">
+      <div class="card-top-row">
+        <div class="card-chip-box">
+          <div class="card-emv-chip"></div>
+          <span class="card-nfc-wave">)))</span>
+        </div>
+        <span class="card-brand-label">EmigrantCard</span>
       </div>
-      <div class="balance-amount-row" onclick="openTopUpModal()">
-        <span class="balance-currency-sym" id="main-curr-symbol">€</span>
-        <span class="balance-amount" id="main-balance-val">0.00</span>
-        <span class="balance-arrow">›</span>
+
+      <div class="card-middle-balance">
+        <div class="balance-label-row">
+          <span id="lbl-expected-sum">ხელმისაწვდომი ბალანსი</span>
+          <span id="curr-code-display" style="font-weight: 800; color: #fff;">EUR</span>
+          <span>👁️</span>
+        </div>
+        <div class="balance-amount-row">
+          <span class="balance-currency-sym" id="main-curr-symbol">€</span>
+          <span class="balance-amount" id="main-balance-val">0.00</span>
+          <span class="balance-arrow">›</span>
+        </div>
       </div>
-      <div class="secondary-converted-val" id="secondary-converted-val">≈ ₾ 0.00</div>
+
+      <div class="card-bottom-row">
+        <div class="secondary-converted-val" id="secondary-converted-val">≈ ₾ 0.00</div>
+        <span class="card-status-pill">Active</span>
+      </div>
+    </div>
+
+    <!-- 🚀 QUICK ACTION BUTTONS -->
+    <div class="quick-actions-row">
+      <div class="quick-action-btn primary" onclick="openTopUpModal()">
+        <div class="quick-action-icon">+</div>
+        <span class="quick-action-label" id="lbl-topup-btn">შევსება</span>
+      </div>
+      <div class="quick-action-btn" onclick="openTopUpModal(); setTimeout(() => document.getElementById('cashoutBox').scrollIntoView({behavior:'smooth'}), 350);">
+        <div class="quick-action-icon">↗</div>
+        <span class="quick-action-label">გატანა</span>
+      </div>
+      <div class="quick-action-btn" onclick="openTransactionsModal()">
+        <div class="quick-action-icon">≡</div>
+        <span class="quick-action-label" id="lbl-last-purchase">ისტორია</span>
+      </div>
     </div>
 
     <!-- Wallet / TopUp Pill Card -->
@@ -1184,7 +1206,7 @@
         <span>საფულე: <strong id="akho-coins-val">0.00 €</strong></span>
       </div>
       <div class="akho-pill-right">
-        <span id="lbl-topup-btn">შევსება</span>
+        <span>პარამეტრები</span>
         <span>➔</span>
       </div>
     </div>
@@ -1193,7 +1215,7 @@
     <div class="section-card" onclick="openTransactionsModal()">
       <div class="section-card-title" id="lbl-transactions">ტრანზაქციები</div>
       <div class="section-card-right">
-        <span id="lbl-last-purchase">ისტორია</span>
+        <span>სრული სია</span>
         <span>›</span>
       </div>
     </div>
@@ -1203,17 +1225,17 @@
       <div class="services-title" id="lbl-services">სერვისები</div>
       <div class="services-grid">
         <div class="service-card" onclick="alert('გათამაშების საჩუქრები')">
-          <div class="service-icon-box">💰</div>
+          <div class="service-icon-box">🎁</div>
           <div class="service-label" id="lbl-live-rewards">მოგებული ჯილდოები</div>
         </div>
 
         <div class="service-card" onclick="alert('მონეტიზაციის ცენტრი')">
-          <div class="service-icon-box">📊</div>
+          <div class="service-icon-box">📈</div>
           <div class="service-label" id="lbl-monetization">მონეტიზაცია</div>
         </div>
 
         <div class="service-card" onclick="alert('გამოწერების მართვა')">
-          <div class="service-icon-box">📅</div>
+          <div class="service-icon-box">⚡</div>
           <div class="service-label" id="lbl-subscriptions">გამოწერების მართვა</div>
         </div>
       </div>
@@ -1250,7 +1272,7 @@
       </div>
 
       <div style="flex: 1; overflow-y: auto; padding-top: 10px;" id="walletMain">
-        <p style="font-size:12px; color:#777777; text-transform:uppercase; letter-spacing:0.6px; font-weight:700;" data-key="wallet_desc">შეავსეთ ბალანსი Stripe გადახდით</p>
+        <p style="font-size:12px; color:#888899; text-transform:uppercase; letter-spacing:0.6px; font-weight:700;" data-key="wallet_desc">შეავსეთ ბალანსი Stripe გადახდით</p>
         <p onclick="openInfoUI()" style="font-size:12px; color:#ffffff; cursor:pointer; margin-top:4px; text-decoration:underline; font-weight:600;" data-key="how_it_works">როგორ მუშაობს საფულე?</p>
 
         <button class="wallet-sub-btn" onclick="openLeaderboard()">
@@ -1314,7 +1336,7 @@
             <input type="text" id="ibanInput" class="auth-input" placeholder="IBAN / PayPal" disabled style="margin-top: 8px;">
             <button class="withdraw-btn" id="withdrawBtn" onclick="submitWithdraw()" disabled data-key="withdraw_req">გატანის მოთხოვნა</button>
           </div>
-          <div id="cashoutStatus" style="color:#777777; font-size: 11px; margin-top: 10px; font-weight: 700;">
+          <div id="cashoutStatus" style="color:#888899; font-size: 11px; margin-top: 10px; font-weight: 700;">
             🔒 გატანისთვის გჭირდებათ მინიმუმ 50.00 € (≈ 148.00 ₾)
           </div>
         </div>
@@ -1322,7 +1344,7 @@
         <!-- ACTIVITY LOG -->
         <div class="activity-log">
           <div style="color:#ffffff; font-size:14px; font-weight:800;">აქტივობის ისტორია</div>
-          <div id="logContent" style="margin-top:10px; font-size:12px; color:#777777; font-weight:500;">ისტორია ცარიელია</div>
+          <div id="logContent" style="margin-top:10px; font-size:12px; color:#888899; font-weight:500;">ისტორია ცარიელია</div>
         </div>
       </div>
     </div>
@@ -1615,7 +1637,7 @@
         }
         if (withdrawBtn) withdrawBtn.disabled = true;
         if (cashoutStatus) {
-          cashoutStatus.style.color = '#777777';
+          cashoutStatus.style.color = '#888899';
           cashoutStatus.innerText = `🔒 გატანისთვის გჭირდებათ მინიმუმ 50.00 € (≈ ${minGel} ₾)`;
         }
       }
@@ -1788,7 +1810,6 @@
       alert("რეიტინგის გვერდი მალე დაემატება!");
     }
 
-    /* თანხის გატანის ფუნქცია - თანხის ჩამოჭრით და განხილვაში ჩაწერით */
     function submitWithdraw() {
       var user = auth.currentUser;
       if (!user) {
@@ -1847,13 +1868,11 @@
 
       var batch = db.batch();
 
-      // 1. მითითებული თანხის ჩამოჭრა ბალანსიდან
       batch.set(userRef, {
         balance: firebase.firestore.FieldValue.increment(-withdrawAmount),
         last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
 
-      // 2. ტრანზაქციების ისტორიაში ჩაწერა სტატუსით "განხილვაში"
       var txRef = userRef.collection('transactions').doc();
       batch.set(txRef, {
         type: 'expense',
@@ -1866,7 +1885,6 @@
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // 3. ადმინისტრაციისთვის მოთხოვნის დაფიქსირება
       var adminReqRef = db.collection('withdrawal_requests').doc();
       batch.set(adminReqRef, {
         request_id: txRef.id,
@@ -1890,9 +1908,6 @@
           statusEl.innerText = "✓ გატანის მოთხოვნა მიღებულია (განხილვაშია)!";
         }
 
-        // ==========================================
-        // აი აქ უნდა ჩასვა EmailJS კოდი:
-        // ==========================================
         emailjs.send("service_hjiqge4", "template_50xhnnm", {
           to_email: "jimsheri.gvinjilia1980@gmail.com",
           user_email: user.email || "უცნობი",
@@ -1906,7 +1921,6 @@
         }, function(error) {
             alert("შეცდომა მეილზე: " + JSON.stringify(error));
         });
-        // ==========================================
 
         showToast("გატანის მოთხოვნა მიღებულია! თანხა ჩამოიჭრა და გადამოწმდება 24 საათში.");
       }).catch(function(err) {
