@@ -9366,16 +9366,15 @@ function updateProfileModeLayout(isDigital, profileData) {
   if (!mainCard) return;
 
   if (isDigital) {
-    // ჩაირთოს ციფრული რეჟიმის სტილები
     mainCard.classList.add('is-digital-creator');
 
-    // ლოკაციის ჩასმა
+    // შენი ორიგინალი ქალაქის ველი (ხაზი 4093-დან)
     var locEl = document.getElementById('pro-creator-location');
-    if (locEl) {
-      locEl.innerText = (profileData && profileData.city) ? profileData.city : 'Tbilisi';
+    if (locEl && profileData) {
+      locEl.innerText = profileData.current_city || profileData.city || 'Tbilisi';
     }
 
-    // ციფრულ ერთხაზიან სტატისტიკაში ციფრების გადატანა
+    // სტატისტიკის გადატანა ერთ ხაზზე
     var folEl = document.getElementById('pro-stat-followers-val');
     var fingEl = document.getElementById('pro-stat-following-val');
     var postEl = document.getElementById('pro-stat-posts-val');
@@ -9389,17 +9388,19 @@ function updateProfileModeLayout(isDigital, profileData) {
     if (postEl && curPost) postEl.innerText = curPost.innerText || '0';
 
   } else {
-    // დაბრუნდეს სტანდარტული პროფილი (ყველაფერი როგორც იყო)
     mainCard.classList.remove('is-digital-creator');
   }
 }
 
-// 2. ოვალური აბების გადართვის ფუნქცია (Pills Switcher)
 function switchProfilePillTab(tabName, btnEl) {
-  document.querySelectorAll('.pro-pill-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.pro-pill-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
   if (btnEl) btnEl.classList.add('active');
-  switchProfileTab(tabName); // იძახებს შენს უკვე არსებულ ორიგინალ switchProfileTab-ს
+  switchProfileTab(tabName);
 }
+
+
 
   </script>
 
