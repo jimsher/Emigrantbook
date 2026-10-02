@@ -9143,7 +9143,77 @@ function clearAllSearchHistory() {
     renderSearchHistory();
   }
 }
-   
+
+// აქ იწყება პროფილის ახალი ბლოკი
+  // 🟢 1. რედაქტირების გვერდის გამართული გახსნა
+function openEditProfileScreen() {
+  if (typeof showScreen === 'function') {
+    showScreen('edit-profile');
+  } else {
+    var p = document.getElementById('profile-screen');
+    var e = document.getElementById('edit-profile-screen');
+    if (p) p.style.display = 'none';
+    if (e) e.style.display = 'block';
+  }
+}
+
+// 🟢 2. სხვის პროფილზე დროისა და მეგობრობის ბანერის სინქრონიზაცია
+function setupFbProfileExtras(profileData) {
+  var isOwner = (currentUser && profileData && (currentUser.uid === profileData.uid || currentUser.uid === profileData.id));
+  
+  var activeBadge = document.getElementById('fb-other-user-last-active');
+  var activeText = document.getElementById('fb-other-user-time-text');
+  var friendCard = document.getElementById('fb-friendship-card');
+  var friendTitle = document.getElementById('fb-friendship-title-text');
+  var friendYears = document.getElementById('fb-friendship-years-text');
+
+  // თუ ჩემი პროფილია: დრო დაიმალოს, კამერის ღილაკი გამოჩნდეს
+  if (isOwner) {
+    if (activeBadge) activeBadge.style.display = 'none';
+    if (friendCard) friendCard.style.display = 'none';
+    var camBtn = document.getElementById('avatar-camera-btn');
+    if (camBtn) camBtn.style.display = 'flex';
+    return;
+  }
+
+  // თუ სხვისი პროფილია: კამერის ღილაკი დაიმალოს, დრო გამოჩნდეს
+  var camBtn = document.getElementById('avatar-camera-btn');
+  if (camBtn) camBtn.style.display = 'none';
+
+  if (activeBadge && profileData) {
+    activeBadge.style.display = 'inline-flex';
+    // საიტზე ყოფნის დროის დათვლა
+    if (profileData.last_active || profileData.last_login || profileData.updated_at) {
+      var lastDate = (profileData.last_active && profileData.last_active.toDate) ? profileData.last_active.toDate() : new Date(profileData.last_active || profileData.last_login || Date.now());
+      var diffMin = Math.max(1, Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60)));
+      if (diffMin < 60) {
+        activeText.innerText = diffMin + ' წთ';
+      } else if (diffMin < 1440) {
+        activeText.innerText = Math.floor(diffMin / 60) + ' სთ';
+      } else {
+        activeText.innerText = Math.floor(diffMin / 1440) + ' დღე';
+      }
+    } else {
+      activeText.innerText = 'ახლახან';
+    }
+  }
+
+  // მეგობრობის ბანერი
+  if (friendCard && profileData) {
+    friendCard.style.display = 'flex';
+    var userName = profileData.fullname || profileData.name || 'მომხმარებელმა';
+    if (friendTitle) friendTitle.innerText = 'თქვენ და ' + userName;
+    
+    // მეგობრობის წლების გამოთვლა (თუ თარიღი აქვს, თუ არა 1 წელი)
+    var years = 1;
+    if (profileData.friends_since) {
+      var fDate = (profileData.friends_since.toDate) ? profileData.friends_since.toDate() : new Date(profileData.friends_since);
+      years = Math.max(1, new Date().getFullYear() - fDate.getFullYear());
+    }
+    if (friendYears) friendYears.innerText = 'აღნიშნეთ მეგობრობის ' + years + ' წელი!';
+  }
+}
+  
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
