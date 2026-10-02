@@ -9372,25 +9372,38 @@ function clearAllSearchHistory() {
 
 
     // 1. პროფილის ვიზუალის ავტომატური გადართვა (Digital vs Standard)
-// 1. პროფილის ვიზუალის სინქრონიზაცია და გადართვა
 function updateProfileModeLayout(isDigital, profileData) {
   var mainCard = document.getElementById('main-profile-card');
   if (!mainCard) return;
 
+  var revertBtn = document.getElementById('btn-revert-profile');
+
+  // შემოწმება: ჩემი პროფილია თუ სხვისი
+  var isOwner = (currentUser && profileData && currentUser.uid === profileData.uid);
+
   if (isDigital) {
     mainCard.classList.add('is-digital-creator');
 
-    // მეილი არასდროს გამოჩნდეს ციფრულ პროფილზე
+    // 1. "სტანდარტულზე დაბრუნება" გამოჩნდეს მხოლოდ და მხოლოდ მფლობელთან!
+    if (revertBtn) {
+      if (isOwner) {
+        revertBtn.style.setProperty('display', 'inline-flex', 'important');
+      } else {
+        revertBtn.style.setProperty('display', 'none', 'important');
+      }
+    }
+
+    // 2. მეილის დამალვა
     var subEl = document.getElementById('profile-user-subtitle');
     if (subEl) subEl.style.setProperty('display', 'none', 'important');
 
-    // ლოკაციის ჩასმა (Piza ან რაც უწერია ბაზაში)
+    // 3. ლოკაცია
     var locEl = document.getElementById('pro-creator-location');
     if (locEl && profileData) {
-      locEl.innerText = profileData.current_city || profileData.city || 'Piza';
+      locEl.innerText = profileData.current_city || profileData.city || profileData.country || 'Tbilisi';
     }
 
-    // რეალური სტატისტიკის გადატანა ნულების გარეშე
+    // 4. სტატისტიკის სინქრონიზაცია
     function syncStats() {
       var curFol = document.getElementById('stat-followers-count');
       var curFing = document.getElementById('stat-following-count');
@@ -9407,47 +9420,16 @@ function updateProfileModeLayout(isDigital, profileData) {
 
     syncStats();
     setTimeout(syncStats, 300);
-    setTimeout(syncStats, 1000);
+    setTimeout(syncStats, 800);
 
   } else {
-    // სტანდარტულზე დაბრუნება
     mainCard.classList.remove('is-digital-creator');
+    if (revertBtn) revertBtn.style.setProperty('display', 'none', 'important');
     var subEl = document.getElementById('profile-user-subtitle');
     if (subEl) subEl.style.display = '';
   }
 }
 
-// 2. ოვალური აბების გადართვა
-function switchProfilePillTab(tabName, btnEl) {
-  document.querySelectorAll('.pro-pill-btn').forEach(function(b) {
-    b.classList.remove('active');
-  });
-  if (btnEl) btnEl.classList.add('active');
-  switchProfileTab(tabName);
-}
-
-// 3. სტანდარტულ პროფილზე დაბრუნების ფუნქცია (გათიშვა)
-async function revertToStandardProfile() {
-  if (!currentUser) {
-    alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-    return;
-  }
-
-  if (!confirm("ნამდვილად გსურთ პროფესიონალური რეჟიმის გათიშვა და სტანდარტულ პროფილზე დაბრუნება?")) {
-    return;
-  }
-
-  try {
-    await db.collection('profiles').doc(currentUser.uid).update({
-      is_professional_mode: false
-    });
-
-    alert("პროფილი წარმატებით დაუბრუნდა სტანდარტულ რეჟიმს!");
-    location.reload();
-  } catch (err) {
-    alert("შეცდომა: " + err.message);
-  }
-}
     // აქ მთავრდება
 
     
