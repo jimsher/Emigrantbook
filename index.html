@@ -1246,7 +1246,7 @@ body.light-mode .sponsored-cta-btn:hover {
 </div>
       
    <!-- აქ იწყება პროფილის სრული გვერდი -->     
-     <div id="profile-screen">
+  <div id="profile-screen">
     <div class="header profile-header-fix">
       <div class="nav-icons-center">
         <!-- 1. Home (მარცხნივ) -->
@@ -1273,6 +1273,8 @@ body.light-mode .sponsored-cta-btn:hover {
           <div id="views-unread-dot" style="display: none; position: absolute; top: 0px; right: 0px; width: 8px; height: 8px; background: #2e86de; border-radius: 50%; border: 1.5px solid #000;"></div>
         </button> 
 
+
+        
         <!-- 4. მენიუ -->
         <button class="burger-btn" id="profile-burger-btn" onclick="toggleSideMenu(event)">
           <div class="burger-line"></div>
@@ -1282,9 +1284,11 @@ body.light-mode .sponsored-cta-btn:hover {
       </div>
     </div>
     
+
     <div class="side-menu-overlay" id="side-menu-overlay" onclick="toggleSideMenu(event)"></div>
     <div class="side-menu-content" id="side-menu-content">
       
+
     <div style="padding: 10px 20px 15px 20px; border-bottom: 1px solid #222222;">
   <label style="color: #dcae36; font-weight: bold; font-size: 13px;" id="lbl-select-lang">🌐 ენის არჩევა / Select Language</label>
   
@@ -1361,6 +1365,8 @@ body.light-mode .sponsored-cta-btn:hover {
   </div>
 </div>   
 <!-- აქ  მთავრდება -->
+      
+      
 
       <div class="menu-section-title">Resources</div>
 
@@ -1536,65 +1542,45 @@ body.light-mode .sponsored-cta-btn:hover {
     </div>
         
     <div class="feed-container">
-      <div class="facebook-profile-container">
-        <!-- 1. ქავერი (კამერის ღილაკით ქვედა მარჯვენა კუთხეში) -->
-        <div class="profile-cover-wrapper" id="profile-cover-banner">
-          <button class="cover-camera-btn" id="cover-camera-btn" onclick="triggerCoverUpload()">
-            <img src="icons/camera.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Cover Camera">
+  <div class="facebook-profile-container">
+    <div class="profile-cover-wrapper" id="profile-cover-banner">
+      <button class="cover-camera-btn" id="cover-camera-btn" onclick="triggerCoverUpload()">
+        <img src="icons/camera.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Cover Camera">
+      </button>
+    </div>
+
+    <div class="profile-info-wrapper">
+      <div class="avatar-stats-row">
+        <div class="profile-avatar-holder">
+          <div class="profile-big-avatar" id="profile-big-avatar">
+            ?
+            <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
+          </div>
+          <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
+            <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
           </button>
         </div>
-
-        <!-- 2. თეთრი მომრგვალებული ბარათი -->
-        <div class="profile-info-wrapper">
-          <div class="avatar-stats-row">
-            <div class="profile-avatar-holder">
-              <!-- ფიქრის ბუშტი -->
-              <div class="fb-thought-bubble">ვფიქრობ...</div>
-
-              <div class="profile-big-avatar" id="profile-big-avatar">
-                ?
-                <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
-              </div>
-
-              <!-- ავატარის კამერა -->
-              <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
-                <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
-              </button>
-            </div>
+        <div class="profile-stats-block">
+          <div class="stat-item">
+            <span class="stat-value" id="stat-posts-count">0</span>
+            <span class="stat-label" id="lbl-stat-post">post</span>
           </div>
+          <div class="stat-item" onclick="openConnectionsScreen('followers')">
+            <span class="stat-value" id="stat-followers-count">0</span>
+            <span class="stat-label" id="lbl-stat-followers">followers</span>
+          </div>
+          <div class="stat-item" onclick="openConnectionsScreen('following')">
+            <span class="stat-value" id="stat-following-count">0</span>
+            <span class="stat-label" id="lbl-stat-following">following</span>
+          </div>
+        </div>
+      </div>
             
-          <!-- სახელი და სტატისტიკა ცენტრში -->
           <div class="profile-user-headline">
             <div class="profile-fb-name" id="profile-user-name">Loading...</div>
             <div class="profile-fb-subtitle" id="profile-user-subtitle">...</div>
-
-            <!-- შენი ორიგინალი სტატისტიკის ველები: X მეგობრები · Y პოსტი -->
-            <div class="profile-stats-block">
-              <div class="stat-item" onclick="openConnectionsScreen('followers')">
-                <span class="stat-value" id="stat-followers-count">0</span>
-                <span class="stat-label" id="lbl-stat-followers">მეგობრები</span>
-              </div>
-              <span class="stat-separator-dot">·</span>
-              <div class="stat-item">
-                <span class="stat-value" id="stat-posts-count">0</span>
-                <span class="stat-label" id="lbl-stat-post">პოსტი</span>
-              </div>
-            </div>
-
-            <!-- ურთიერთობის სტატუსი (მაგ: დაქორწინებული) -->
-            <div class="fb-relationship-status-line" id="fb-relationship-status" style="display: none;">
-              <span>💕</span>
-              <span id="fb-relationship-text">დაქორწინებული</span>
-            </div>
-
-            <!-- საერთო მეგობრების ხაზი -->
-            <div class="fb-mutual-friends-row" id="fb-mutual-row" style="display: none;">
-              <div class="fb-mutual-avatars" id="fb-mutual-avatars-box"></div>
-              <div class="fb-mutual-text" id="fb-mutual-text-label">მეგობრები, რომლებთანაც საერთო რამეები გაკავშირებთ</div>
-            </div>
           </div>
 
-          <!-- მოქმედების ღილაკები (Edit, Stories და ა.შ.) -->
           <div class="profile-action-column" id="profile-action-panel">
             <div style="text-align: center; padding: 10px; color:#aaaaaa;">Loading actions...</div>
           </div>
@@ -1608,24 +1594,6 @@ body.light-mode .sponsored-cta-btn:hover {
           </div>
           <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">This profile is private</div>
           <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">Only friends can see this user's posts, photos, and videos.</div>
-        </div>
-
-        <!-- ტაბები (ყველა / ფოტოები / ვიდეოები) -->
-        <div class="profile-tabs">
-          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">ყველა</button>
-          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">ფოტოები</button>
-          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">ვიდეო</button>
-        </div>
-
-        <!-- პერსონალური დეტალური ინფორმაცია + ფანქრის ღილაკი -->
-        <div class="fb-details-header-bar">
-          <span class="fb-details-title">პერსონალური დეტალური ინფორმაცია</span>
-          <button type="button" class="fb-details-edit-icon-btn" onclick="openEditProfileScreen()" title="რედაქტირება">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#65676b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9"></path>
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-            </svg>
-          </button>
         </div>
 
         <div class="profile-details-box" id="profile-details-container">
@@ -1643,7 +1611,12 @@ body.light-mode .sponsored-cta-btn:hover {
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
         </div>
 
-      </div> <!-- facebook-profile-container იხურება აქ -->
+       <div class="profile-tabs">
+          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
+          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
+          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
+        </div>
+      </div> <!-- პროფილის ნაცრისფერი ყუთი იხურება აქ! -->
 
       <div id="profile-posts-wall" style="margin-top: 16px;">
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading posts...</div>
@@ -1653,9 +1626,139 @@ body.light-mode .sponsored-cta-btn:hover {
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading photos...</div>
       </div>
     </div>
+  </div> 
+     <!-- აწ მთავრდება ფროფილის სრული გვერდი -->   
+  
+   <div id="edit-profile-screen">
+    <div class="header">
+      <div class="logo-text" id="lbl-back-to-profile" onclick="showScreen('profile')">← Back to Profile</div>
+    </div>
+    <div class="feed-container">
+      <div class="edit-profile-card">
+        <div class="edit-header" id="lbl-edit-header">✏️ Update Profile Info</div>
+        <div class="input-group">
+          <label id="lbl-edit-fullname">First Name<br>Last Name</label>
+          <input type="text" id="edit-fullname" placeholder="John Doe">
+        </div>
+        <div class="input-group">
+          <label id="lbl-edit-gender">Gender</label>
+          <select id="edit-gender">
+            <option value="">Not specified</option>
+            <option value="Male">Male / მამრობითი</option>
+            <option value="Female">Female / მდედრობითი</option>
+            <option value="Other">Other / სხვა</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label id="lbl-edit-age">Age</label>
+          <input type="number" id="edit-age" placeholder="e.g. 25">
+        </div>
+        <div class="input-group">
+          <label id="lbl-edit-job">Workplace (Position, Company)</label>
+          <input type="text" id="edit-job" placeholder="e.g. Developer">
+        </div>
+        <div class="input-group">
+          <label id="lbl-edit-city">Current City</label>
+          <input type="text" id="edit-city" placeholder="e.g. Tbilisi">
+        </div>
+        <div class="input-group">
+          <label id="lbl-edit-country">Country</label>
+          <input type="text" id="edit-country" placeholder="e.g. Georgia">
+        </div>
+        <div class="input-group">
+          <label id="lbl-edit-relationship">Relationship Status</label>
+          <select id="edit-relationship">
+            <option value="" id="opt-rel-1">Not specified</option>
+            <option value="Single" id="opt-rel-2">Single</option>
+            <option value="In a relationship" id="opt-rel-3">In a relationship</option>
+            <option value="Engaged" id="opt-rel-4">Engaged</option>
+            <option value="Married" id="opt-rel-5">Married</option>
+            <option value="It's complicated" id="opt-rel-6">It's complicated</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label id="lbl-edit-events">Life Events</label>
+          <textarea id="edit-events" placeholder="e.g. Started a new job, relocated..."></textarea>
+        </div>
+        <div class="edit-buttons-wrapper">
+          <button class="btn btn-save" id="lbl-save-changes" onclick="saveProfileChanges()">Save Changes</button>
+          <button class="btn btn-cancel" id="lbl-cancel-changes" onclick="showScreen('profile')">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
-     
-   <!-- აქ მთავრდება -->
+
+  <!-- PRIVACY SETTINGS SCREEN -->
+  <!-- PRIVACY SETTINGS SCREEN -->
+<div id="privacy-screen" style="display: none;">
+  <div class="header">
+    <div class="logo-text" id="lbl-back-to-profile-privacy" onclick="showScreen('profile')">← Back to Profile</div>
+  </div>
+  <div class="feed-container">
+    <div class="privacy-section-card">
+      <div class="edit-header" id="lbl-privacy-header" style="color: #ffffff; display: flex; align-items: center; gap: 8px;">
+        <img src="icons/blend.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Settings">
+        <span>Settings & Privacy</span>
+      </div>
+      
+      <div class="privacy-option-item">
+        <div class="privacy-option-title" id="lbl-privacy-opt-title" style="color: #ffffff; display: flex; align-items: center; gap: 8px;">
+          <img src="icons/database.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Privacy">
+          <span>Profile Privacy</span>
+        </div>
+        <div class="privacy-option-desc" id="lbl-privacy-opt-desc">Choose who can see your profile, posts, photos, and videos:</div>
+        
+        <div class="privacy-radio-list">
+          <label class="privacy-radio-item">
+            <input type="radio" name="privacy_setting" value="public" checked>
+            <span id="lbl-opt-public" style="display: inline-flex; align-items: center; gap: 8px;">
+              <img src="icons/award.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Public">
+              <span>Everyone (Public)</span>
+            </span>
+          </label>
+          <label class="privacy-radio-item">
+            <input type="radio" name="privacy_setting" value="friends">
+            <span id="lbl-opt-friends" style="display: inline-flex; align-items: center; gap: 8px;">
+              <img src="icons/users.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Friends">
+              <span>Friends Only</span>
+            </span>
+          </label>
+          <label class="privacy-radio-item">
+            <input type="radio" name="privacy_setting" value="private">
+            <span id="lbl-opt-private" style="display: inline-flex; align-items: center; gap: 8px;">
+              <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Private">
+              <span>Only Me (Private)</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="edit-buttons-wrapper" style="margin-top: 25px;">
+        <button class="btn btn-save" id="lbl-save-privacy" onclick="savePrivacySettings()">Save</button>
+        <button class="btn btn-cancel" id="lbl-cancel-privacy" onclick="showScreen('profile')">Cancel</button>
+      </div>
+
+      <!-- 🗑️ ანგარიშის წაშლის სექცია (Google Play Account Deletion) -->
+      <div style="margin-top: 30px; padding-top: 18px; border-top: 1px solid #282830;">
+        <div style="font-size: 11.5px; color: #8a8f9d; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+          Account Control
+        </div>
+        <button type="button" onclick="deleteUserAccountPermanently()" style="width: 100%; background: rgba(255, 77, 79, 0.08); border: 1px solid rgba(255, 77, 79, 0.35); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 16px;">🗑️</span>
+            <div style="text-align: left;">
+              <div style="color: #ff4d4f; font-weight: 700; font-size: 13.5px;" id="lbl-delete-account-title">Delete Account</div>
+              <div style="color: #8a8f9d; font-size: 11px; margin-top: 2px;" id="lbl-delete-account-sub">Permanently delete your profile and data</div>
+            </div>
+          </div>
+          <span style="color: #ff4d4f; font-weight: bold; font-size: 16px;">›</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+  <!-- აქ მთავრდება -->
   
     <div id="connections-screen" style="display: none;">
     <div class="header">
@@ -3869,10 +3972,8 @@ auth.onAuthStateChanged(function(user) {
 
     
     function renderProfileDetails(profileData) {
-    var container = document.getElementById('profile-details-container');
-    if (!container) return;
-     setupFbProfileExtras(profileData);
-
+      var container = document.getElementById('profile-details-container');
+      if (!container) return;
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
       // სქესი
@@ -9160,65 +9261,7 @@ function clearAllSearchHistory() {
     renderSearchHistory();
   }
 }
-
-// აქ იწყება პროფილის ახალი ბლოკი
-  function setupFbProfileExtras(profileData) {
-  // შემოწმება: საკუთარ პროფილზე ვართ თუ სხვისაზე
-  var isOwner = (currentUser && profileData && (currentUser.uid === profileData.uid || currentUser.uid === profileData.id));
-
-  var activeBadge = document.getElementById('fb-other-user-last-active');
-  var activeText = document.getElementById('fb-other-user-time-text');
-  var friendCard = document.getElementById('fb-friendship-card');
-  var friendTitle = document.getElementById('fb-friendship-title-text');
-  var friendYears = document.getElementById('fb-friendship-years-text');
-  var camBtn = document.getElementById('avatar-camera-btn');
-
-  // 1. საკუთარი პროფილი (ჩემი ანგარიში):
-  if (isOwner) {
-    if (activeBadge) activeBadge.style.display = 'none'; // ონლაინის დრო დაიმალოს!
-    if (friendCard) friendCard.style.display = 'none';   // მეგობრობის ბანერი დაიმალოს!
-    if (camBtn) camBtn.style.display = 'flex';           // ფოტოს ასატვირთი კამერა გამოჩნდეს!
-    return;
-  }
-
-  // 2. სხვისი პროფილი:
-  if (camBtn) camBtn.style.display = 'none'; // სხვის პროფილზე კამერა არ უნდა ჩანდეს!
-
-  // საიტზე ყოფნის დრო (მხოლოდ სხვის პროფილზე)
-  if (activeBadge && profileData) {
-    activeBadge.style.display = 'inline-flex';
-    if (profileData.last_active || profileData.last_login || profileData.updated_at) {
-      var lastDate = (profileData.last_active && profileData.last_active.toDate) 
-        ? profileData.last_active.toDate() 
-        : new Date(profileData.last_active || profileData.last_login || Date.now());
-      var diffMin = Math.max(1, Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60)));
-      if (diffMin < 60) {
-        activeText.innerText = diffMin + ' წთ';
-      } else if (diffMin < 1440) {
-        activeText.innerText = Math.floor(diffMin / 60) + ' სთ';
-      } else {
-        activeText.innerText = Math.floor(diffMin / 1440) + ' დღე';
-      }
-    } else {
-      activeText.innerText = 'ახლახან';
-    }
-  }
-
-  // მეგობრობის ბანერი რეალური წლებით (მხოლოდ სხვის პროფილზე)
-  if (friendCard && profileData) {
-    friendCard.style.display = 'flex';
-    var userName = profileData.fullname || profileData.name || 'მომხმარებელმა';
-    if (friendTitle) friendTitle.innerText = 'თქვენ და ' + userName;
-    
-    var years = 1;
-    if (profileData.friends_since) {
-      var fDate = (profileData.friends_since.toDate) ? profileData.friends_since.toDate() : new Date(profileData.friends_since);
-      years = Math.max(1, new Date().getFullYear() - fDate.getFullYear());
-    }
-    if (friendYears) friendYears.innerText = 'აღნიშნეთ მეგობრობის ' + years + ' წელი!';
-  }
-}
-
+   
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
