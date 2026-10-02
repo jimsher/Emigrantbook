@@ -9376,54 +9376,39 @@ function clearAllSearchHistory() {
   var mainCard = document.getElementById('main-profile-card');
   if (!mainCard) return;
 
-  var revertBtn = document.getElementById('btn-revert-profile');
-
-  // შემოწმება: ჩემი პროფილია თუ სხვისი
-  var isOwner = (currentUser && profileData && (currentUser.uid === profileData.uid || currentUser.uid === profileData.id));
-
   if (isDigital) {
     mainCard.classList.add('is-digital-creator');
 
-    // 1. "სტანდარტულზე დაბრუნება" გამოჩნდეს მხოლოდ მფლობელთან
-    if (revertBtn) {
-      if (isOwner) {
-        revertBtn.style.setProperty('display', 'inline-flex', 'important');
-      } else {
-        revertBtn.style.setProperty('display', 'none', 'important');
-      }
+    // შენი ორიგინალი ქალაქის ველი (ხაზი 4093-დან)
+    var locEl = document.getElementById('pro-creator-location');
+    if (locEl && profileData) {
+      locEl.innerText = profileData.current_city || profileData.city || 'Tbilisi';
     }
 
-    // 2. მეილის დამალვა
-    var subEl = document.getElementById('profile-user-subtitle');
-    if (subEl) subEl.style.setProperty('display', 'none', 'important');
+    // სტატისტიკის გადატანა ერთ ხაზზე
+    var folEl = document.getElementById('pro-stat-followers-val');
+    var fingEl = document.getElementById('pro-stat-following-val');
+    var postEl = document.getElementById('pro-stat-posts-val');
 
-    if (profileData) {
-      // 3. ლოკაცია პირდაპირ profileData-დან
-      var locEl = document.getElementById('pro-creator-location');
-      if (locEl) {
-        locEl.innerText = profileData.current_city || profileData.city || profileData.country || 'Piza';
-      }
+    var curFol = document.getElementById('stat-followers-count');
+    var curFing = document.getElementById('stat-following-count');
+    var curPost = document.getElementById('stat-posts-count');
 
-      // 4. რეალური გამომწერები, გამოწერილები და პოსტები პირდაპირ profileData-დან
-      var folEl = document.getElementById('pro-stat-followers-val');
-      var fingEl = document.getElementById('pro-stat-following-val');
-      var postEl = document.getElementById('pro-stat-posts-val');
-
-      var followers = profileData.followers_count ?? profileData.followers ?? 0;
-      var following = profileData.following_count ?? profileData.following ?? 0;
-      var posts = profileData.posts_count ?? profileData.posts ?? 0;
-
-      if (folEl) folEl.innerText = followers;
-      if (fingEl) fingEl.innerText = following;
-      if (postEl) postEl.innerText = posts;
-    }
+    if (folEl && curFol) folEl.innerText = curFol.innerText || '0';
+    if (fingEl && curFing) fingEl.innerText = curFing.innerText || '0';
+    if (postEl && curPost) postEl.innerText = curPost.innerText || '0';
 
   } else {
     mainCard.classList.remove('is-digital-creator');
-    if (revertBtn) revertBtn.style.setProperty('display', 'none', 'important');
-    var subEl = document.getElementById('profile-user-subtitle');
-    if (subEl) subEl.style.display = '';
   }
+}
+
+function switchProfilePillTab(tabName, btnEl) {
+  document.querySelectorAll('.pro-pill-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  if (btnEl) btnEl.classList.add('active');
+  switchProfileTab(tabName);
 }
 
     // აქ მთავრდება
