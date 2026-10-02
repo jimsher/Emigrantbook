@@ -1561,13 +1561,20 @@ body.light-mode .sponsored-cta-btn:hover {
                   <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
                 </div>
               </div>
+
+              <!-- 🟢 1. საიტზე ყოფნის დრო (ჩნდება მხოლოდ სხვის პროფილზე) -->
+              <div class="fb-last-active-pill" id="fb-other-user-last-active" style="display: none;">
+                <span class="fb-active-green-dot"></span>
+                <span id="fb-other-user-time-text">51 წთ</span>
+              </div>
+
               <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
                 <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
               </button>
             </div>
           </div>
             
-          <!-- სახელი და სტატისტიკა ცენტრში (შენი ორიგინალი ID-ებით) -->
+          <!-- სახელი და სტატისტიკა ცენტრში -->
           <div class="profile-user-headline">
             <div class="profile-fb-name" id="profile-user-name">Loading...</div>
             <div class="profile-fb-subtitle" id="profile-user-subtitle">...</div>
@@ -1576,12 +1583,12 @@ body.light-mode .sponsored-cta-btn:hover {
             <div class="profile-stats-block">
               <div class="stat-item" onclick="openConnectionsScreen('followers')">
                 <span class="stat-value" id="stat-followers-count">0</span>
-                <span class="stat-label" id="lbl-stat-followers">followers</span>
+                <span class="stat-label" id="lbl-stat-followers">Followers</span>
               </div>
               <span class="stat-separator-dot">·</span>
               <div class="stat-item" onclick="openConnectionsScreen('following')">
                 <span class="stat-value" id="stat-following-count">0</span>
-                <span class="stat-label" id="lbl-stat-following">following</span>
+                <span class="stat-label" id="lbl-stat-following">Following</span>
               </div>
               <span class="stat-separator-dot">·</span>
               <div class="stat-item">
@@ -1591,9 +1598,25 @@ body.light-mode .sponsored-cta-btn:hover {
             </div>
           </div>
 
-          <!-- მოქმედების ღილაკები -->
+          <!-- მოქმედების ღილაკები (Edit / Stories / Add Friend / Message) -->
           <div class="profile-action-column" id="profile-action-panel">
             <div style="text-align: center; padding: 10px; color:#aaaaaa;">Loading actions...</div>
+          </div>
+        </div>
+
+        <!-- 🟢 2. მეგობრობის საიუბილეო ბანერი -->
+        <div class="fb-friendship-anniversary-card" id="fb-friendship-card" style="display: none;">
+          <div class="fb-friendship-icon-circle">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#050505" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="fb-friendship-content">
+            <div class="fb-friendship-title" id="fb-friendship-title-text">თქვენ და ამ მომხმარებელმა</div>
+            <div class="fb-friendship-years" id="fb-friendship-years-text">აღნიშნეთ მეგობრობის 1 წელი!</div>
           </div>
         </div>
 
@@ -1605,6 +1628,18 @@ body.light-mode .sponsored-cta-btn:hover {
           </div>
           <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">This profile is private</div>
           <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">Only friends can see this user's posts, photos, and videos.</div>
+        </div>
+
+        <!-- ოვალური ტაბები -->
+        <div class="profile-tabs">
+          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">ყველა</button>
+          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Reels</button>
+          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">ფოტოები</button>
+        </div>
+
+        <!-- 🟢 3. პერსონალური დეტალური ინფორმაციის სათაური -->
+        <div class="fb-details-main-heading" id="fb-details-heading-label">
+          <span>პერსონალური დეტალური ინფორმაცია</span>
         </div>
 
         <div class="profile-details-box" id="profile-details-container">
@@ -1620,13 +1655,6 @@ body.light-mode .sponsored-cta-btn:hover {
             <button class="friends-see-all-btn" id="lbl-see-all" onclick="openConnectionsScreen('all')">See all</button>
           </div>
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
-        </div>
-
-        <!-- ოვალური ტაბები (შენი ორიგინალი ID-ებითა და ფუნქციებით) -->
-        <div class="profile-tabs">
-          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
-          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
-          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
         </div>
       </div> <!-- პროფილის ნაცრისფერი ყუთი იხურება აქ! -->
 
@@ -3854,8 +3882,10 @@ auth.onAuthStateChanged(function(user) {
 
     
     function renderProfileDetails(profileData) {
-      var container = document.getElementById('profile-details-container');
-      if (!container) return;
+    var container = document.getElementById('profile-details-container');
+    if (!container) return;
+     setupFbProfileExtras(profileData);
+
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
       // სქესი
