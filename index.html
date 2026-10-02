@@ -9361,6 +9361,7 @@ function clearAllSearchHistory() {
 
 
     // 1. პროფილის ვიზუალის ავტომატური გადართვა (Digital vs Standard)
+// 1. პროფილის ვიზუალის სინქრონიზაცია და გადართვა
 function updateProfileModeLayout(isDigital, profileData) {
   var mainCard = document.getElementById('main-profile-card');
   if (!mainCard) return;
@@ -9368,35 +9369,72 @@ function updateProfileModeLayout(isDigital, profileData) {
   if (isDigital) {
     mainCard.classList.add('is-digital-creator');
 
-    // 1. რეალური ქალაქის გამოტანა (რომელიც ქვედა დეტალებში წერია)
+    // მეილი არასდროს გამოჩნდეს ციფრულ პროფილზე
+    var subEl = document.getElementById('profile-user-subtitle');
+    if (subEl) subEl.style.setProperty('display', 'none', 'important');
+
+    // ლოკაციის ჩასმა (Piza ან რაც უწერია ბაზაში)
     var locEl = document.getElementById('pro-creator-location');
     if (locEl && profileData) {
-      locEl.innerText = profileData.current_city || profileData.city || profileData.country || 'Piza';
+      locEl.innerText = profileData.current_city || profileData.city || 'Piza';
     }
 
-    // 2. რეალური სტატისტიკის წამოღება DOM-იდან ან profileData-დან
-    var folVal = (profileData && profileData.followers_count !== undefined) 
-      ? profileData.followers_count 
-      : (document.getElementById('stat-followers-count') ? document.getElementById('stat-followers-count').innerText : '0');
+    // რეალური სტატისტიკის გადატანა ნულების გარეშე
+    function syncStats() {
+      var curFol = document.getElementById('stat-followers-count');
+      var curFing = document.getElementById('stat-following-count');
+      var curPost = document.getElementById('stat-posts-count');
 
-    var fingVal = (profileData && profileData.following_count !== undefined) 
-      ? profileData.following_count 
-      : (document.getElementById('stat-following-count') ? document.getElementById('stat-following-count').innerText : '0');
+      var folEl = document.getElementById('pro-stat-followers-val');
+      var fingEl = document.getElementById('pro-stat-following-val');
+      var postEl = document.getElementById('pro-stat-posts-val');
 
-    var postVal = (profileData && profileData.posts_count !== undefined) 
-      ? profileData.posts_count 
-      : (document.getElementById('stat-posts-count') ? document.getElementById('stat-posts-count').innerText : '0');
+      if (folEl && curFol && curFol.innerText.trim() !== "") folEl.innerText = curFol.innerText;
+      if (fingEl && curFing && curFing.innerText.trim() !== "") fingEl.innerText = curFing.innerText;
+      if (postEl && curPost && curPost.innerText.trim() !== "") postEl.innerText = curPost.innerText;
+    }
 
-    var folEl = document.getElementById('pro-stat-followers-val');
-    var fingEl = document.getElementById('pro-stat-following-val');
-    var postEl = document.getElementById('pro-stat-posts-val');
-
-    if (folEl) folEl.innerText = folVal;
-    if (fingEl) fingEl.innerText = fingVal;
-    if (postEl) postEl.innerText = postVal;
+    syncStats();
+    setTimeout(syncStats, 300);
+    setTimeout(syncStats, 1000);
 
   } else {
+    // სტანდარტულზე დაბრუნება
     mainCard.classList.remove('is-digital-creator');
+    var subEl = document.getElementById('profile-user-subtitle');
+    if (subEl) subEl.style.display = '';
+  }
+}
+
+// 2. ოვალური აბების გადართვა
+function switchProfilePillTab(tabName, btnEl) {
+  document.querySelectorAll('.pro-pill-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  if (btnEl) btnEl.classList.add('active');
+  switchProfileTab(tabName);
+}
+
+// 3. სტანდარტულ პროფილზე დაბრუნების ფუნქცია (გათიშვა)
+async function revertToStandardProfile() {
+  if (!currentUser) {
+    alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    return;
+  }
+
+  if (!confirm("ნამდვილად გსურთ პროფესიონალური რეჟიმის გათიშვა და სტანდარტულ პროფილზე დაბრუნება?")) {
+    return;
+  }
+
+  try {
+    await db.collection('profiles').doc(currentUser.uid).update({
+      is_professional_mode: false
+    });
+
+    alert("პროფილი წარმატებით დაუბრუნდა სტანდარტულ რეჟიმს!");
+    location.reload();
+  } catch (err) {
+    alert("შეცდომა: " + err.message);
   }
 }
 
