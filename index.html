@@ -4838,264 +4838,298 @@ auth.onAuthStateChanged(function(user) {
     }
 
     // აქ იწყება ფუნქცია ორივე ერთად
-      function showMyProfile() {
-      if (!currentUser) return;
-      activeViewingProfileId = currentUser.uid;
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      
-      var onlineBadge = document.getElementById('profile-online-badge');
-      if (onlineBadge) onlineBadge.style.display = "none";
+    function showMyProfile() {
+  if (!currentUser) return;
+  activeViewingProfileId = currentUser.uid;
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  
+  var onlineBadge = document.getElementById('profile-online-badge');
+  if (onlineBadge) onlineBadge.style.display = "none";
 
-      var activeTimeBadge = document.getElementById('profile-active-time-badge');
-      if (activeTimeBadge) activeTimeBadge.style.display = "none"; // 🚫 საკუთარ პროფილზე არ ჩანს!
- 
+  var activeTimeBadge = document.getElementById('profile-active-time-badge');
+  if (activeTimeBadge) activeTimeBadge.style.display = "none"; // 🚫 საკუთარ პროფილზე არ ჩანს!
+
+  var lockMsgEl = document.getElementById('private-profile-lock-msg');
+  if (lockMsgEl) lockMsgEl.style.display = 'none';
+
+  var avatarHolder = document.querySelector('.profile-avatar-holder');
+  var statsBlock = document.querySelector('.profile-stats-block');
+  var userHeadline = document.querySelector('.profile-user-headline');
+  var actionPanel = document.getElementById('profile-action-panel');
+  var detailsBox = document.getElementById('profile-details-container');
+  var friendsPreview = document.querySelector('.profile-friends-preview-box');
+  var tabsEl = document.querySelector('.profile-tabs');
+
+  if (avatarHolder) avatarHolder.style.display = 'block';
+  if (statsBlock) statsBlock.style.display = 'flex';
+  if (userHeadline) userHeadline.style.display = 'block';
+  if (actionPanel) actionPanel.style.display = 'flex';
+  if (detailsBox) detailsBox.style.display = 'block';
+  if (friendsPreview) friendsPreview.style.display = 'block';
+  if (tabsEl) tabsEl.style.display = 'flex';
+
+  // 🌟 ავატარის აწევა ქავერზე ზუსტად Facebook-ის სტილში
+  var avatarRow = document.querySelector('.avatar-stats-row');
+  if (avatarRow) {
+    avatarRow.style.setProperty('margin-top', '-125px', 'important');
+    avatarRow.style.setProperty('display', 'flex', 'important');
+    avatarRow.style.setProperty('flex-direction', 'column', 'important');
+    avatarRow.style.setProperty('align-items', 'center', 'important');
+    avatarRow.style.setProperty('justify-content', 'center', 'important');
+  }
+
+  db.collection('profiles').doc(currentUser.uid).get().then(function(doc) {
+    if (doc.exists) userProfile = doc.data();
+
+    var finalName = userProfile ? userProfile.full_name : currentUser.email;
+    var avatarUrl = userProfile ? userProfile.avatar_url : null;
+    var coverUrl = userProfile ? userProfile.cover_url : null;
+    
+    renderAvatar('profile-big-avatar', avatarUrl, finalName, currentUser.uid);
+    var pName = document.getElementById('profile-user-name');
+    var pSub = document.getElementById('profile-user-subtitle');
+    if (pName) pName.innerText = finalName;
+    if (pSub) pSub.innerText = currentUser.email;
+
+    var banner = document.getElementById('profile-cover-banner');
+    if (banner) {
+      banner.style.setProperty('height', '320px', 'important');
+      banner.style.setProperty('min-height', '320px', 'important');
+      banner.style.setProperty('position', 'relative', 'important');
+      if (coverUrl) {
+        banner.style.backgroundImage = `url('${coverUrl}')`;
+      } else {
+        banner.style.backgroundImage = 'none';
+      }
+    }
+
+    var avCam = document.getElementById('avatar-camera-btn');
+    var covCam = document.getElementById('cover-camera-btn');
+    var burgBtn = document.getElementById('profile-burger-btn');
+    if (avCam) avCam.style.display = "flex";
+
+    // 🌟 საკუთარ პროფილზე კამერა ზის ზუსტად ქავერის ქვედა მარჯვენა კუთხეში
+    if (covCam) {
+      covCam.style.setProperty('display', 'flex', 'important');
+      covCam.style.setProperty('position', 'absolute', 'important');
+      covCam.style.setProperty('bottom', '24px', 'important');
+      covCam.style.setProperty('right', '14px', 'important');
+      covCam.style.setProperty('top', 'auto', 'important');
+      covCam.style.setProperty('z-index', '30', 'important');
+      covCam.style.setProperty('border-radius', '50%', 'important');
+      covCam.style.setProperty('width', '38px', 'important');
+      covCam.style.setProperty('height', '38px', 'important');
+    }
+    if (burgBtn) burgBtn.style.display = "flex";
+
+    if (actionPanel) {
+      actionPanel.innerHTML = `
+        <button class="fb-btn-primary" onclick="triggerStoryUpload()">
+          <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
+          ${t.stories}
+        </button>
+        <button class="fb-btn-secondary" onclick="showEditProfileScreen()">
+          <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
+          ${t.edit}
+        </button>
+        <button class="btn-more-options">•••</button>
+      `;
+    }
+    
+    renderProfileDetails(userProfile || {});
+    switchProfileTab('posts');
+    showScreen('profile');
+
+    // ჰედერში ღილაკის ჩვენება და ახალი მნახველების შემოწმება
+    var viewsBtn = document.getElementById('profile-views-btn-header');
+    if (viewsBtn) {
+      viewsBtn.style.display = 'flex';
+      checkNewProfileVisitors();
+    }
+  });
+}
+
+
+function viewUserProfile(userId) {
+  if (!userId) return;
+  if (userId === currentUser.uid) {
+    showMyProfile();
+    return;
+  }
+  activeViewingProfileId = userId;
+
+  var viewsBtn = document.getElementById('profile-views-btn-header');
+  if (viewsBtn) viewsBtn.style.display = 'none';
+
+  // ვიზიტის დაფიქსირება
+  if (currentUser && userId !== currentUser.uid) {
+    var viewDocId = currentUser.uid + '_' + userId;
+    db.collection('profile_views').doc(viewDocId).set({
+      viewer_id: currentUser.uid,
+      profile_user_id: userId,
+      viewed_at: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(function(){});
+  }
+
+  fetchBlockedUserIds(function(blockedSet) {
+    var isBlocked = blockedSet.has(userId);
+
+    fetchUserProfileCached(userId, function(selectedUser) {
+      if (!selectedUser.full_name && !selectedUser.avatar_url) {
+        alert("User not found");
+        return;
+      }
 
       var lockMsgEl = document.getElementById('private-profile-lock-msg');
-      if (lockMsgEl) lockMsgEl.style.display = 'none';
-
+      var detailsBox = document.getElementById('profile-details-container');
+      var friendsPreview = document.querySelector('.profile-friends-preview-box');
+      var tabsEl = document.querySelector('.profile-tabs');
+      var postsWall = document.getElementById('profile-posts-wall');
+      var photosWall = document.getElementById('profile-photos-wall');
       var avatarHolder = document.querySelector('.profile-avatar-holder');
       var statsBlock = document.querySelector('.profile-stats-block');
       var userHeadline = document.querySelector('.profile-user-headline');
       var actionPanel = document.getElementById('profile-action-panel');
-      var detailsBox = document.getElementById('profile-details-container');
-      var friendsPreview = document.querySelector('.profile-friends-preview-box');
-      var tabsEl = document.querySelector('.profile-tabs');
+      var banner = document.getElementById('profile-cover-banner');
+      var avCam = document.getElementById('avatar-camera-btn');
+      var covCam = document.getElementById('cover-camera-btn');
+      var burgBtn = document.getElementById('profile-burger-btn');
 
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+
+      // 🌟 ავატარის აწევა ქავერზე სხვის პროფილზეც
+      var avatarRow = document.querySelector('.avatar-stats-row');
+      if (avatarRow) {
+        avatarRow.style.setProperty('margin-top', '-125px', 'important');
+        avatarRow.style.setProperty('display', 'flex', 'important');
+        avatarRow.style.setProperty('flex-direction', 'column', 'important');
+        avatarRow.style.setProperty('align-items', 'center', 'important');
+        avatarRow.style.setProperty('justify-content', 'center', 'important');
+      }
+
+      if (isBlocked) {
+        if (banner) banner.style.backgroundImage = 'none';
+        if (avatarHolder) avatarHolder.style.display = 'none';
+        if (statsBlock) statsBlock.style.display = 'none';
+        if (userHeadline) userHeadline.style.display = 'none';
+        if (actionPanel) actionPanel.style.display = 'none';
+        if (detailsBox) detailsBox.style.display = 'none';
+        if (friendsPreview) friendsPreview.style.display = 'none';
+        if (tabsEl) tabsEl.style.display = 'none';
+        if (postsWall) postsWall.style.display = 'none';
+        if (photosWall) photosWall.style.display = 'none';
+        if (avCam) avCam.style.setProperty('display', 'none', 'important');
+        if (covCam) covCam.style.setProperty('display', 'none', 'important');
+        if (burgBtn) burgBtn.style.display = "none";
+
+        if (lockMsgEl) {
+          lockMsgEl.style.display = 'block';
+          lockMsgEl.innerHTML = `
+            <div style="margin-bottom: 15px; display: flex; justify-content: center;">
+              <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Blocked">
+            </div>
+            <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${t.blockedProfileTitle || "Profile Unavailable"}</div>
+            <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;">${t.blockedProfileSub || "You cannot view this profile because a block is active."}</div>
+          `;
+        }
+        showScreen('profile');
+        return;
+      }
+
+      // Unblocked - display header elements
       if (avatarHolder) avatarHolder.style.display = 'block';
       if (statsBlock) statsBlock.style.display = 'flex';
       if (userHeadline) userHeadline.style.display = 'block';
       if (actionPanel) actionPanel.style.display = 'flex';
-      if (detailsBox) detailsBox.style.display = 'block';
-      if (friendsPreview) friendsPreview.style.display = 'block';
-      if (tabsEl) tabsEl.style.display = 'flex';
 
-      db.collection('profiles').doc(currentUser.uid).get().then(function(doc) {
-        if (doc.exists) userProfile = doc.data();
+      var finalName = selectedUser.full_name || "User";
+      var avatarUrl = selectedUser.avatar_url;
+      var coverUrl = selectedUser.cover_url;
 
-        var finalName = userProfile ? userProfile.full_name : currentUser.email;
-        var avatarUrl = userProfile ? userProfile.avatar_url : null;
-        var coverUrl = userProfile ? userProfile.cover_url : null;
-        
-        renderAvatar('profile-big-avatar', avatarUrl, finalName, currentUser.uid);
-        var pName = document.getElementById('profile-user-name');
-        var pSub = document.getElementById('profile-user-subtitle');
-        if (pName) pName.innerText = finalName;
-        if (pSub) pSub.innerText = currentUser.email;
-
-        var banner = document.getElementById('profile-cover-banner');
-        if (banner) {
-          if (coverUrl) {
-            banner.style.backgroundImage = `url('${coverUrl}')`;
-          } else {
-            banner.style.backgroundImage = 'none';
-          }
-        }
-
-        var avCam = document.getElementById('avatar-camera-btn');
-        var covCam = document.getElementById('cover-camera-btn');
-        var burgBtn = document.getElementById('profile-burger-btn');
-        if (avCam) avCam.style.display = "flex";
-        if (covCam) covCam.style.display = "flex";
-        if (burgBtn) burgBtn.style.display = "flex";
-
-        if (actionPanel) {
-          actionPanel.innerHTML = `
-            <button class="fb-btn-primary" onclick="triggerStoryUpload()">
-              <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
-              ${t.stories}
-            </button>
-            <button class="fb-btn-secondary" onclick="showEditProfileScreen()">
-              <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-              ${t.edit}
-            </button>
-            <button class="btn-more-options">•••</button>
-          `;
-        }
-        
-        renderProfileDetails(userProfile || {});
-        switchProfileTab('posts');
-        showScreen('profile');
-
-        // ჰედერში ღილაკის ჩვენება და ახალი მნახველების შემოწმება
-        var viewsBtn = document.getElementById('profile-views-btn-header');
-        if (viewsBtn) {
-          viewsBtn.style.display = 'flex';
-          checkNewProfileVisitors();
-        }
-      });
-    }
-
-    
-       function viewUserProfile(userId) {
-      if (!userId) return;
-      if (userId === currentUser.uid) {
-        showMyProfile();
-        return;
+      var onlineBadge = document.getElementById('profile-online-badge');
+      if (onlineBadge) {
+        onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
       }
-      activeViewingProfileId = userId;
+        
+      // 🟢 ონლაინ / გასულის დროის ზუსტი გადართვა
+      var activeTimeBadge = document.getElementById('profile-active-time-badge');
+      if (activeTimeBadge) {
+        var isOnline = isUserOnline(selectedUser);
 
-      var viewsBtn = document.getElementById('profile-views-btn-header');
-      if (viewsBtn) viewsBtn.style.display = 'none';
+        if (isOnline) {
+          activeTimeBadge.className = 'profile-last-active-pill is-online-dot';
+          activeTimeBadge.innerText = '';
+        } else {
+          activeTimeBadge.className = 'profile-last-active-pill is-offline-pill';
+          activeTimeBadge.innerText = formatLastSeenTime(selectedUser.last_seen);
+        }
 
-      // ვიზიტის დაფიქსირება
-      if (currentUser && userId !== currentUser.uid) {
-        var viewDocId = currentUser.uid + '_' + userId;
-        db.collection('profile_views').doc(viewDocId).set({
-          viewer_id: currentUser.uid,
-          profile_user_id: userId,
-          viewed_at: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(function(){});
+        activeTimeBadge.style.setProperty('display', 'block', 'important');
       }
 
-      fetchBlockedUserIds(function(blockedSet) {
-        var isBlocked = blockedSet.has(userId);
+      renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
+      var pName = document.getElementById('profile-user-name');
+      var pSub = document.getElementById('profile-user-subtitle');
+      if (pName) pName.innerText = finalName;
+      if (pSub) pSub.innerText = "Emigrant";
 
-        fetchUserProfileCached(userId, function(selectedUser) {
-          if (!selectedUser.full_name && !selectedUser.avatar_url) {
-            alert("User not found");
-            return;
-          }
+      if (banner) {
+        banner.style.setProperty('height', '320px', 'important');
+        banner.style.setProperty('min-height', '320px', 'important');
+        banner.style.setProperty('position', 'relative', 'important');
+        if (coverUrl) {
+          banner.style.backgroundImage = `url('${coverUrl}')`;
+        } else {
+          banner.style.backgroundImage = 'none';
+        }
+      }
 
-          var lockMsgEl = document.getElementById('private-profile-lock-msg');
-          var detailsBox = document.getElementById('profile-details-container');
-          var friendsPreview = document.querySelector('.profile-friends-preview-box');
-          var tabsEl = document.querySelector('.profile-tabs');
-          var postsWall = document.getElementById('profile-posts-wall');
-          var photosWall = document.getElementById('profile-photos-wall');
-          var avatarHolder = document.querySelector('.profile-avatar-holder');
-          var statsBlock = document.querySelector('.profile-stats-block');
-          var userHeadline = document.querySelector('.profile-user-headline');
-          var actionPanel = document.getElementById('profile-action-panel');
-          var banner = document.getElementById('profile-cover-banner');
-          var avCam = document.getElementById('avatar-camera-btn');
-          var covCam = document.getElementById('cover-camera-btn');
-          var burgBtn = document.getElementById('profile-burger-btn');
+      // 🚫 სხვის პროფილზე კამერების გარანტირებული დამალვა
+      if (avCam) avCam.style.setProperty('display', 'none', 'important');
+      if (covCam) covCam.style.setProperty('display', 'none', 'important');
+      if (burgBtn) burgBtn.style.display = "none";
 
-          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+      checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
+        var privacySetting = selectedUser.privacy_setting || 'public';
+        var isLocked = false;
+        if (privacySetting === 'friends' && !isFriend) {
+          isLocked = true;
+        } else if (privacySetting === 'private') {
+          isLocked = true;
+        }
 
-          if (isBlocked) {
-            if (banner) banner.style.backgroundImage = 'none';
-            if (avatarHolder) avatarHolder.style.display = 'none';
-            if (statsBlock) statsBlock.style.display = 'none';
-            if (userHeadline) userHeadline.style.display = 'none';
-            if (actionPanel) actionPanel.style.display = 'none';
-            if (detailsBox) detailsBox.style.display = 'none';
-            if (friendsPreview) friendsPreview.style.display = 'none';
-            if (tabsEl) tabsEl.style.display = 'none';
-            if (postsWall) postsWall.style.display = 'none';
-            if (photosWall) photosWall.style.display = 'none';
-            if (avCam) avCam.style.display = "none";
-            if (covCam) covCam.style.display = "none";
-            if (burgBtn) burgBtn.style.display = "none";
-
-            if (lockMsgEl) {
+        if (isLocked) {
+          if (detailsBox) detailsBox.style.display = 'none';
+          if (friendsPreview) friendsPreview.style.display = 'none';
+          if (tabsEl) tabsEl.style.display = 'none';
+          if (postsWall) postsWall.style.display = 'none';
+          if (photosWall) photosWall.style.display = 'none';
+          if (lockMsgEl) {
             lockMsgEl.style.display = 'block';
             lockMsgEl.innerHTML = `
               <div style="margin-bottom: 15px; display: flex; justify-content: center;">
-                <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Blocked">
+                <img src="icons/lock.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Private Profile">
               </div>
-              <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${t.blockedProfileTitle || "Profile Unavailable"}</div>
-              <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;">${t.blockedProfileSub || "You cannot view this profile because a block is active."}</div>
+              <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "This profile is private"}</div>
+              <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">${t.lockedProfileSub || "Only friends can see this user's posts, photos, and videos."}</div>
             `;
           }
-          showScreen('profile');
-          return;
+        } else {
+          if (lockMsgEl) lockMsgEl.style.display = 'none';
+          if (detailsBox) detailsBox.style.display = 'block';
+          if (friendsPreview) friendsPreview.style.display = 'block';
+          if (tabsEl) tabsEl.style.display = 'flex';
+          renderProfileDetails(selectedUser);
+          switchProfileTab('posts');
         }
 
-        // Unblocked - display header elements
-        if (avatarHolder) avatarHolder.style.display = 'block';
-        if (statsBlock) statsBlock.style.display = 'flex';
-        if (userHeadline) userHeadline.style.display = 'block';
-        if (actionPanel) actionPanel.style.display = 'flex';
-
-        var finalName = selectedUser.full_name || "User";
-        var avatarUrl = selectedUser.avatar_url;
-        var coverUrl = selectedUser.cover_url;
-
-        var onlineBadge = document.getElementById('profile-online-badge');
-        if (onlineBadge) {
-          onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
-        }
-          
-                 // 🟢 ონლაინ / გასულის დროის ზუსტი გადართვა
-        var activeTimeBadge = document.getElementById('profile-active-time-badge');
-        if (activeTimeBadge) {
-          var isOnline = isUserOnline(selectedUser);
-
-          if (isOnline) {
-            // ონლაინშია: ჩნდება მხოლოდ მწვანე წერტილი (ტექსტის გარეშე)
-            activeTimeBadge.className = 'profile-last-active-pill is-online-dot';
-            activeTimeBadge.innerText = '';
-          } else {
-            // გასულია: ჩნდება თეთრი აბი დროით (მაგ. 3 სთ)
-            activeTimeBadge.className = 'profile-last-active-pill is-offline-pill';
-            activeTimeBadge.innerText = formatLastSeenTime(selectedUser.last_seen);
-          }
-
-          activeTimeBadge.style.setProperty('display', 'block', 'important');
-        }
-
-
-
-        renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
-        var pName = document.getElementById('profile-user-name');
-        var pSub = document.getElementById('profile-user-subtitle');
-        if (pName) pName.innerText = finalName;
-        if (pSub) pSub.innerText = "Emigrant";
-
-        if (banner) {
-          if (coverUrl) {
-            banner.style.backgroundImage = `url('${coverUrl}')`;
-          } else {
-            banner.style.backgroundImage = 'none';
-          }
-        }
-
-        if (avCam) avCam.style.display = "none";
-        if (covCam) covCam.style.display = "none";
-        if (burgBtn) burgBtn.style.display = "none";
-
-        checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
-          var privacySetting = selectedUser.privacy_setting || 'public';
-          var isLocked = false;
-          if (privacySetting === 'friends' && !isFriend) {
-            isLocked = true;
-          } else if (privacySetting === 'private') {
-            isLocked = true;
-          }
-
-          if (isLocked) {
-            if (detailsBox) detailsBox.style.display = 'none';
-            if (friendsPreview) friendsPreview.style.display = 'none';
-            if (tabsEl) tabsEl.style.display = 'none';
-            if (postsWall) postsWall.style.display = 'none';
-            if (photosWall) photosWall.style.display = 'none';
-            if (lockMsgEl) {
-              lockMsgEl.style.display = 'block';
-              lockMsgEl.innerHTML = `
-                <div style="margin-bottom: 15px; display: flex; justify-content: center;">
-                  <img src="icons/lock.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Private Profile">
-                </div>
-                <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "This profile is private"}</div>
-                <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">${t.lockedProfileSub || "Only friends can see this user's posts, photos, and videos."}</div>
-              `;
-            }
-          
-            } else {
-              if (lockMsgEl) lockMsgEl.style.display = 'none';
-              if (detailsBox) detailsBox.style.display = 'block';
-              if (friendsPreview) friendsPreview.style.display = 'block';
-              if (tabsEl) tabsEl.style.display = 'flex';
-              renderProfileDetails(selectedUser);
-              switchProfileTab('posts');
-            }
-
-            showScreen('profile');
-            updateFriendshipButtons(userId);
-          });
-        });
+        showScreen('profile');
+        updateFriendshipButtons(userId);
       });
-    }      
+    });
+  });
+}
+       
     // აქ მთავრდება ორივე ერთად
     
    // პროფილის ავატარზე აწტივობის მწვანე 
