@@ -9437,6 +9437,48 @@ async function revertToStandardProfile() {
     alert("შეცდომა: " + err.message);
   }
 }
+    // აქ მთავრდება
+
+    
+async function revertToStandardProfile() {
+  if (!currentUser) {
+    alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    return;
+  }
+
+  if (!confirm("ნამდვილად გსურთ პროფესიონალური რეჟიმის გათიშვა და სტანდარტულ პროფილზე დაბრუნება?")) {
+    return;
+  }
+
+  try {
+    await db.collection('profiles').doc(currentUser.uid).update({
+      is_professional_mode: false
+    });
+
+    // ეკრანიდან ციფრული კლასის მოხსნა
+    var mainCard = document.getElementById('main-profile-card');
+    if (mainCard) mainCard.classList.remove('is-digital-creator');
+
+    // ძველი ტაბების და სტატისტიკის დაბრუნება
+    var stdStats = document.getElementById('standard-stats-block');
+    if (stdStats) stdStats.style.display = 'flex';
+    var stdTabs = document.getElementById('standard-profile-tabs');
+    if (stdTabs) stdTabs.style.display = 'flex';
+
+    // ციფრულების დამალვა
+    var proStats = document.getElementById('pro-inline-stats-row');
+    if (proStats) proStats.style.display = 'none';
+    var proMeta = document.getElementById('pro-creator-meta-line');
+    if (proMeta) proMeta.style.display = 'none';
+    var proPills = document.getElementById('pro-pills-tabs-row');
+    if (proPills) proPills.style.display = 'none';
+
+    alert("პროფილი წარმატებით დაუბრუნდა სტანდარტულ რეჟიმს!");
+    location.reload();
+  } catch (err) {
+    alert("შეცდომა რეჟიმის გათიშვისას: " + err.message);
+  }
+}
 
   </script>
 
