@@ -5015,6 +5015,17 @@ auth.onAuthStateChanged(function(user) {
         if (onlineBadge) {
           onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
         }
+          
+         // 🟢 ონლაინ/აქტიურობის დროის ბეიჯის გამოჩენა სხვის პროფილზე
+        var activeTimeBadge = document.getElementById('profile-active-time-badge');
+        var activeTimeText = document.getElementById('profile-active-time-text');
+        if (activeTimeBadge && activeTimeText) {
+          var isOnline = isUserOnline(selectedUser);
+          var timeStr = isOnline ? "აქტიურია" : formatLastSeenTime(selectedUser.last_seen);
+          activeTimeText.innerText = timeStr;
+          activeTimeBadge.style.display = "flex";
+        }
+
 
         renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
         var pName = document.getElementById('profile-user-name');
@@ -5076,7 +5087,22 @@ auth.onAuthStateChanged(function(user) {
       });
     }      
     // აქ მთავრდება ორივე ერთად
+    
+   // პროფილის ავატარზე აწტივობის მწვანე 
+    function formatLastSeenTime(lastSeen) {
+  if (!lastSeen) return "1 წთ";
+  var date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+  var diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
 
+  if (diffSec < 120) return "აქტიურია";
+  if (diffSec < 3600) return Math.floor(diffSec / 60) + " წთ";
+  if (diffSec < 86400) return Math.floor(diffSec / 3600) + " სთ";
+  var diffDays = Math.floor(diffSec / 86400);
+  if (diffDays < 7) return diffDays + " დღ";
+  return Math.floor(diffDays / 7) + " კვ";
+}
+
+    
     function checkFriendshipPair(uid1, uid2, callback) {
   Promise.all([
     db.collection('friend_requests')
@@ -9314,21 +9340,6 @@ function clearAllSearchHistory() {
     localStorage.removeItem('fb_search_history');
     renderSearchHistory();
   }
-}
-
-
-    // პროფილის ავატარზე აწტივობის მწვანე 
-    function formatLastSeenTime(lastSeen) {
-  if (!lastSeen) return "1 წთ";
-  var date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
-  var diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
-
-  if (diffSec < 120) return "აქტიურია";
-  if (diffSec < 3600) return Math.floor(diffSec / 60) + " წთ";
-  if (diffSec < 86400) return Math.floor(diffSec / 3600) + " სთ";
-  var diffDays = Math.floor(diffSec / 86400);
-  if (diffDays < 7) return diffDays + " დღ";
-  return Math.floor(diffDays / 7) + " კვ";
 }
 
   </script>
