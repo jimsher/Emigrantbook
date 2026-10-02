@@ -1,33 +1,4 @@
-ზუსტად მივაგენი მიზეზს, რატომაც არ ინძრეოდა არცერთი ელემენტი!
-შენს CSS ფაილში ძველი კოდი ორჯერ მეორდება:
- * დუბლიკატი 1 (ფაილის შუაში, ხაზი 525-დან):
-.profile-cover-wrapper {
-  height: 200px;
-  ...
-}
-.cover-camera-btn {
-  position: absolute;
-  bottom: 12px; right: 12px;
-  ...
-}
-.profile-info-wrapper {
-  padding: 0 20px 20px 20px;
-}
-.avatar-stats-row {
-  ...
-  margin-top: -60px;
-}
 
- * მედია-ქვერი (ხაზი 760-დან):
-@media (max-width: 680px) {
-  .feed-container { padding: 0 !important; }
-  .facebook-profile-container ... { border-radius: 0 !important; }
-}
-
-და რაც მთავარია:
- * ქოვერის კამერა რატომ არ ადიოდა ქოვერზე: CSS-ში .cover-camera-btn-ს ეწერა bottom: 75px; ქოვერის შიგნით, მაშინ როცა HTML-ში ეგ ღილაკი ან ქავერის ქვემოთ ზის, ან bottom-ით ითვლება ბოლოდან. ქავერის კონტეინერზე დავსვით top: auto; bottom: 16px; right: 16px; და აბსოლუტური პოზიცია position: absolute !important; z-index: 50 !important;.
- * ავატარი რატომ არ ჯდებოდა ცენტრში: .avatar-stats-row-ს ძველი კოდიდან მოყვებოდა justify-content: space-between; align-items: flex-end;, რაც აუქმებდა ცენტრირებას. ახლა დაყენებულია display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; margin: -110px auto 8px auto !important; width: 100% !important; text-align: center !important;.
-ქვემოთ მოცემულია შენი სრული supabase.css ფაილი თავიდან ბოლომდე. ძველი გაჩხერილი დუბლიკატები სრულად გასუფთავებულია, არცერთი სხვა ფუნქციონალი (ლაიქები, კომენტარები, შეტყობინებები, მენიუ, ზარები, ტიკტოკი) არ არის დაზიანებული. ჩაანაცვლე მთლიანი ფაილი:
 /* ==========================================================================
    EMIGRANTBOOK — MAIN STYLESHEET
    ☀️ DEFAULT: FACEBOOK LIGHT THEME (სუფთა თეთრი დიზაინი)
