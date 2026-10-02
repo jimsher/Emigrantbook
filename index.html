@@ -5016,15 +5016,24 @@ auth.onAuthStateChanged(function(user) {
           onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
         }
           
-         // 🟢 ონლაინ/აქტიურობის დროის ბეიჯის გამოჩენა სხვის პროფილზე
+                 // 🟢 ონლაინ / გასულის დროის ზუსტი გადართვა
         var activeTimeBadge = document.getElementById('profile-active-time-badge');
-        var activeTimeText = document.getElementById('profile-active-time-text');
-        if (activeTimeBadge && activeTimeText) {
+        if (activeTimeBadge) {
           var isOnline = isUserOnline(selectedUser);
-          var timeStr = isOnline ? "აქტიურია" : formatLastSeenTime(selectedUser.last_seen);
-          activeTimeText.innerText = timeStr;
-          activeTimeBadge.style.display = "flex";
+
+          if (isOnline) {
+            // ონლაინშია: ჩნდება მხოლოდ მწვანე წერტილი (ტექსტის გარეშე)
+            activeTimeBadge.className = 'profile-last-active-pill is-online-dot';
+            activeTimeBadge.innerText = '';
+          } else {
+            // გასულია: ჩნდება თეთრი აბი დროით (მაგ. 3 სთ)
+            activeTimeBadge.className = 'profile-last-active-pill is-offline-pill';
+            activeTimeBadge.innerText = formatLastSeenTime(selectedUser.last_seen);
+          }
+
+          activeTimeBadge.style.setProperty('display', 'block', 'important');
         }
+
 
 
         renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
