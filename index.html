@@ -1246,7 +1246,7 @@ body.light-mode .sponsored-cta-btn:hover {
 </div>
       
    <!-- აქ იწყება პროფილის სრული გვერდი -->     
-<div id="profile-screen">
+  <div id="profile-screen">
     <div class="header profile-header-fix">
       <div class="nav-icons-center">
         <!-- 1. Home (მარცხნივ) -->
@@ -1562,12 +1562,13 @@ body.light-mode .sponsored-cta-btn:hover {
                 </div>
               </div>
 
-              <!-- 🟢 1. საიტზე ყოფნის დრო (ჩნდება მხოლოდ სხვის პროფილზე) -->
+              <!-- საიტზე ყოფნის დრო (ჩნდება მხოლოდ სხვის პროფილზე JS-ით) -->
               <div class="fb-last-active-pill" id="fb-other-user-last-active" style="display: none;">
                 <span class="fb-active-green-dot"></span>
-                <span id="fb-other-user-time-text">51 წთ</span>
+                <span id="fb-other-user-time-text">ახლახან</span>
               </div>
 
+              <!-- ავატარის კამერა - შენთან ყოველთვის ჩანს! -->
               <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
                 <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
               </button>
@@ -1604,7 +1605,7 @@ body.light-mode .sponsored-cta-btn:hover {
           </div>
         </div>
 
-        <!-- 🟢 2. მეგობრობის საიუბილეო ბანერი -->
+        <!-- მეგობრობის საიუბილეო ბანერი (მხოლოდ სხვის პროფილზე JS-ით) -->
         <div class="fb-friendship-anniversary-card" id="fb-friendship-card" style="display: none;">
           <div class="fb-friendship-icon-circle">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#050505" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1630,14 +1631,7 @@ body.light-mode .sponsored-cta-btn:hover {
           <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">Only friends can see this user's posts, photos, and videos.</div>
         </div>
 
-        <!-- ოვალური ტაბები -->
-        <div class="profile-tabs">
-          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">ყველა</button>
-          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Reels</button>
-          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">ფოტოები</button>
-        </div>
-
-        <!-- 🟢 3. პერსონალური დეტალური ინფორმაციის სათაური -->
+        <!-- პერსონალური დეტალური ინფორმაციის სათაური -->
         <div class="fb-details-main-heading" id="fb-details-heading-label">
           <span>პერსონალური დეტალური ინფორმაცია</span>
         </div>
@@ -1656,7 +1650,15 @@ body.light-mode .sponsored-cta-btn:hover {
           </div>
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
         </div>
-      </div> <!-- პროფილის ნაცრისფერი ყუთი იხურება აქ! -->
+
+        <!-- ⬇️ ტაბები ზის ზუსტად თავის ორიგინალ ადგილას, დაბლა! -->
+        <div class="profile-tabs">
+          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
+          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
+          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
+        </div>
+
+      </div> <!-- facebook-profile-container იხურება აქ -->
 
       <div id="profile-posts-wall" style="margin-top: 16px;">
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading posts...</div>
@@ -1668,7 +1670,7 @@ body.light-mode .sponsored-cta-btn:hover {
     </div>
   </div>
 
-  <!-- აქ მთავრდება -->
+   <!-- აქ მთავრდება -->
   
     <div id="connections-screen" style="display: none;">
     <div class="header">
@@ -9175,46 +9177,35 @@ function clearAllSearchHistory() {
 }
 
 // აქ იწყება პროფილის ახალი ბლოკი
-  // 🟢 1. რედაქტირების გვერდის გამართული გახსნა
-function openEditProfileScreen() {
-  if (typeof showScreen === 'function') {
-    showScreen('edit-profile');
-  } else {
-    var p = document.getElementById('profile-screen');
-    var e = document.getElementById('edit-profile-screen');
-    if (p) p.style.display = 'none';
-    if (e) e.style.display = 'block';
-  }
-}
-
-// 🟢 2. სხვის პროფილზე დროისა და მეგობრობის ბანერის სინქრონიზაცია
-function setupFbProfileExtras(profileData) {
+  function setupFbProfileExtras(profileData) {
+  // შემოწმება: საკუთარ პროფილზე ვართ თუ სხვისაზე
   var isOwner = (currentUser && profileData && (currentUser.uid === profileData.uid || currentUser.uid === profileData.id));
-  
+
   var activeBadge = document.getElementById('fb-other-user-last-active');
   var activeText = document.getElementById('fb-other-user-time-text');
   var friendCard = document.getElementById('fb-friendship-card');
   var friendTitle = document.getElementById('fb-friendship-title-text');
   var friendYears = document.getElementById('fb-friendship-years-text');
+  var camBtn = document.getElementById('avatar-camera-btn');
 
-  // თუ ჩემი პროფილია: დრო დაიმალოს, კამერის ღილაკი გამოჩნდეს
+  // 1. საკუთარი პროფილი (ჩემი ანგარიში):
   if (isOwner) {
-    if (activeBadge) activeBadge.style.display = 'none';
-    if (friendCard) friendCard.style.display = 'none';
-    var camBtn = document.getElementById('avatar-camera-btn');
-    if (camBtn) camBtn.style.display = 'flex';
+    if (activeBadge) activeBadge.style.display = 'none'; // ონლაინის დრო დაიმალოს!
+    if (friendCard) friendCard.style.display = 'none';   // მეგობრობის ბანერი დაიმალოს!
+    if (camBtn) camBtn.style.display = 'flex';           // ფოტოს ასატვირთი კამერა გამოჩნდეს!
     return;
   }
 
-  // თუ სხვისი პროფილია: კამერის ღილაკი დაიმალოს, დრო გამოჩნდეს
-  var camBtn = document.getElementById('avatar-camera-btn');
-  if (camBtn) camBtn.style.display = 'none';
+  // 2. სხვისი პროფილი:
+  if (camBtn) camBtn.style.display = 'none'; // სხვის პროფილზე კამერა არ უნდა ჩანდეს!
 
+  // საიტზე ყოფნის დრო (მხოლოდ სხვის პროფილზე)
   if (activeBadge && profileData) {
     activeBadge.style.display = 'inline-flex';
-    // საიტზე ყოფნის დროის დათვლა
     if (profileData.last_active || profileData.last_login || profileData.updated_at) {
-      var lastDate = (profileData.last_active && profileData.last_active.toDate) ? profileData.last_active.toDate() : new Date(profileData.last_active || profileData.last_login || Date.now());
+      var lastDate = (profileData.last_active && profileData.last_active.toDate) 
+        ? profileData.last_active.toDate() 
+        : new Date(profileData.last_active || profileData.last_login || Date.now());
       var diffMin = Math.max(1, Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60)));
       if (diffMin < 60) {
         activeText.innerText = diffMin + ' წთ';
@@ -9228,13 +9219,12 @@ function setupFbProfileExtras(profileData) {
     }
   }
 
-  // მეგობრობის ბანერი
+  // მეგობრობის ბანერი რეალური წლებით (მხოლოდ სხვის პროფილზე)
   if (friendCard && profileData) {
     friendCard.style.display = 'flex';
     var userName = profileData.fullname || profileData.name || 'მომხმარებელმა';
     if (friendTitle) friendTitle.innerText = 'თქვენ და ' + userName;
     
-    // მეგობრობის წლების გამოთვლა (თუ თარიღი აქვს, თუ არა 1 წელი)
     var years = 1;
     if (profileData.friends_since) {
       var fDate = (profileData.friends_since.toDate) ? profileData.friends_since.toDate() : new Date(profileData.friends_since);
@@ -9243,7 +9233,7 @@ function setupFbProfileExtras(profileData) {
     if (friendYears) friendYears.innerText = 'აღნიშნეთ მეგობრობის ' + years + ' წელი!';
   }
 }
-  
+
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
