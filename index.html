@@ -9311,7 +9311,22 @@ function clearAllSearchHistory() {
     renderSearchHistory();
   }
 }
-   
+
+
+    // პროფილის ავატარზე აწტივობის მწვანე 
+    function formatLastSeenTime(lastSeen) {
+  if (!lastSeen) return "1 წთ";
+  var date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+  var diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (diffSec < 120) return "აქტიურია";
+  if (diffSec < 3600) return Math.floor(diffSec / 60) + " წთ";
+  if (diffSec < 86400) return Math.floor(diffSec / 3600) + " სთ";
+  var diffDays = Math.floor(diffSec / 86400);
+  if (diffDays < 7) return diffDays + " დღ";
+  return Math.floor(diffDays / 7) + " კვ";
+}
+
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
