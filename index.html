@@ -1246,41 +1246,51 @@ body.light-mode .sponsored-cta-btn:hover {
 </div>
       
    <!-- აქ იწყება პროფილის სრული გვერდი -->     
-  <div id="profile-screen">
-    <div class="header profile-header-fix">
+   <div id="profile-screen">
+    <!-- მობილური Facebook-ის სტილის ზედა ზოლი (ინარჩუნებს ყველა ორიგინალ ღილაკს: უკან, ჯგუფები, ფეხები, მენიუ) -->
+    <div class="header profile-header-fix fb-prof-top-bar">
       <div class="nav-icons-center">
-        <!-- 1. Home (მარცხნივ) -->
-        <button class="nav-icon-btn active" onclick="showScreen('home')">
-          <svg class="nav-icon-svg" viewBox="0 0 24 24">
+        <!-- 1. Home / უკან (მარცხნივ) -->
+        <button class="nav-icon-btn active fb-prof-nav-btn" onclick="showScreen('home')" title="მთავარი">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24" width="22" height="22">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
           </svg>
         </button>
 
-        <!-- 2. ჯგუფები (გადატანილია მარჯვნივ, ფეხებთან) -->
-        <button class="nav-icon-btn" id="groups-btn-header" onclick="window.location.href='groups.html'" title="ჯგუფები" style="display: inline-flex; position: relative; margin-left: auto; margin-right: 8px; background: transparent; border: none; cursor: pointer; align-items: center; justify-content: center; outline: none;">
-          <div style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;">
-            <img src="icons/users.svg" style="width: 20px; height: 20px; filter: brightness(0) invert(1);" alt="Groups">
-          </div>
-          <!-- წითელი ციფრიანი ბეიჯი -->
-          <span id="group-badge" style="display: none; position: absolute; top: -2px; right: -2px; background-color: #ff3b30; color: #fff; font-size: 10px; font-weight: bold; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; box-sizing: border-box; border: 1.5px solid #18191a;">0</span>
-        </button>
-        <!-- 3. Profile Views (ფეხები) -->
-        <button class="nav-icon-btn" id="profile-views-btn-header" onclick="openProfileViewsFromHeader()" title="Profile Views" style="display: inline-flex; position: relative; margin-right: 8px; background: transparent; border: none; cursor: pointer; align-items: center; justify-content: center; outline: none;">
-          <div id="views-header-icon-container" style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;">
-            <img src="icons/footprints.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Profile Views">
-          </div>
-          <!-- ლურჯი წერტილი ახალი მნახველისას -->
-          <div id="views-unread-dot" style="display: none; position: absolute; top: 0px; right: 0px; width: 8px; height: 8px; background: #2e86de; border-radius: 50%; border: 1.5px solid #000;"></div>
-        </button> 
+        <div class="fb-prof-top-actions" style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+          <!-- 🔍 საძიებო ღილაკი ფოტოს სტილში -->
+          <button class="nav-icon-btn fb-prof-nav-btn" onclick="openSearchOverlay()" title="ძიება">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
 
+          <!-- 2. ჯგუფები (გადატანილია მარჯვნივ, ფეხებთან) -->
+          <button class="nav-icon-btn fb-prof-nav-btn" id="groups-btn-header" onclick="window.location.href='groups.html'" title="ჯგუფები" style="display: inline-flex; position: relative; background: transparent; border: none; cursor: pointer; align-items: center; justify-content: center; outline: none;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;">
+              <img src="icons/users.svg" style="width: 20px; height: 20px; filter: brightness(0) invert(1);" alt="Groups">
+            </div>
+            <!-- წითელი ციფრიანი ბეიჯი -->
+            <span id="group-badge" style="display: none; position: absolute; top: -2px; right: -2px; background-color: #ff3b30; color: #fff; font-size: 10px; font-weight: bold; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; box-sizing: border-box; border: 1.5px solid #18191a;">0</span>
+          </button>
 
-        
-        <!-- 4. მენიუ -->
-        <button class="burger-btn" id="profile-burger-btn" onclick="toggleSideMenu(event)">
-          <div class="burger-line"></div>
-          <div class="burger-line"></div>
-          <div class="burger-line"></div>
-        </button>
+          <!-- 3. Profile Views (ფეხები) -->
+          <button class="nav-icon-btn fb-prof-nav-btn" id="profile-views-btn-header" onclick="openProfileViewsFromHeader()" title="Profile Views" style="display: inline-flex; position: relative; background: transparent; border: none; cursor: pointer; align-items: center; justify-content: center; outline: none;">
+            <div id="views-header-icon-container" style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;">
+              <img src="icons/footprints.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Profile Views">
+            </div>
+            <!-- ლურჯი წერტილი ახალი მნახველისას -->
+            <div id="views-unread-dot" style="display: none; position: absolute; top: 0px; right: 0px; width: 8px; height: 8px; background: #2e86de; border-radius: 50%; border: 1.5px solid #000;"></div>
+          </button> 
+
+          <!-- 4. მენიუ -->
+          <button class="burger-btn fb-prof-nav-btn" id="profile-burger-btn" onclick="toggleSideMenu(event)" title="მენიუ">
+            <div class="burger-line"></div>
+            <div class="burger-line"></div>
+            <div class="burger-line"></div>
+          </button>
+        </div>
       </div>
     </div>
     
@@ -1549,85 +1559,118 @@ body.light-mode .sponsored-cta-btn:hover {
       </button>
     </div>
 
-    <div class="profile-info-wrapper">
-      <div class="avatar-stats-row">
-        <div class="profile-avatar-holder">
-          <div class="profile-big-avatar" id="profile-big-avatar">
-            ?
-            <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
-          </div>
-          <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
-            <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
-          </button>
-        </div>
-        <div class="profile-stats-block">
-          <div class="stat-item">
-            <span class="stat-value" id="stat-posts-count">0</span>
-            <span class="stat-label" id="lbl-stat-post">post</span>
-          </div>
-          <div class="stat-item" onclick="openConnectionsScreen('followers')">
-            <span class="stat-value" id="stat-followers-count">0</span>
-            <span class="stat-label" id="lbl-stat-followers">followers</span>
-          </div>
-          <div class="stat-item" onclick="openConnectionsScreen('following')">
-            <span class="stat-value" id="stat-following-count">0</span>
-            <span class="stat-label" id="lbl-stat-following">following</span>
-          </div>
-        </div>
-      </div>
-            
-          <div class="profile-user-headline">
-            <div class="profile-fb-name" id="profile-user-name">Loading...</div>
-            <div class="profile-fb-subtitle" id="profile-user-subtitle">...</div>
-          </div>
-
-          <div class="profile-action-column" id="profile-action-panel">
-            <div style="text-align: center; padding: 10px; color:#aaaaaa;">Loading actions...</div>
-          </div>
-        </div>
-
-        <!-- LOCKED PROFILE BANNER -->
-        <!-- LOCKED PROFILE BANNER -->
-        <div id="private-profile-lock-msg" style="display: none; text-align: center; padding: 40px 20px; background: #141414; border-radius: 12px; border: 1px solid #222222; margin: 0 20px 20px 20px;">
-          <div style="margin-bottom: 15px; display: flex; justify-content: center;">
-            <img src="icons/lock.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Locked Profile">
-          </div>
-          <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">This profile is private</div>
-          <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">Only friends can see this user's posts, photos, and videos.</div>
-        </div>
-
-        <div class="profile-details-box" id="profile-details-container">
-          <div style="text-align:center; color:#aaaaaa; padding:10px;">Loading details...</div>
-        </div>
-
-        <div class="profile-friends-preview-box">
-          <div class="friends-preview-header">
-            <div class="friends-preview-title-area" onclick="openConnectionsScreen('all')" style="cursor: pointer;">
-              <span class="friends-preview-title" id="lbl-followers-title">Friends / Followers</span>
-              <span class="friends-preview-count" id="mini-friends-count"></span>
+    <!-- ახალი თანამედროვე მობილური ბარათი მომრგვალებული კუთხეებით (ზუსტად როგორც ფოტოზეა) -->
+    <div class="profile-modern-card">
+      <div class="profile-info-wrapper">
+        <div class="avatar-stats-row">
+          <div class="profile-avatar-holder">
+            <div class="profile-big-avatar" id="profile-big-avatar">
+              ?
+              <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
             </div>
-            <button class="friends-see-all-btn" id="lbl-see-all" onclick="openConnectionsScreen('all')">See all</button>
+            <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
+              <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
+            </button>
           </div>
-          <div class="friends-preview-grid" id="mini-friends-grid"></div>
+
+          <!-- სტატისტიკის ძველი ბლოკი (დამალული სათადარიგოდ, რომ JS შეცდომა არ მოხდეს) -->
+          <div class="profile-stats-block" style="display: none !important;">
+            <div class="stat-item">
+              <span class="stat-value" id="stat-posts-count-old">0</span>
+              <span class="stat-label" id="lbl-stat-post-old">post</span>
+            </div>
+            <div class="stat-item" onclick="openConnectionsScreen('followers')">
+              <span class="stat-value" id="stat-followers-count-old">0</span>
+              <span class="stat-label" id="lbl-stat-followers-old">followers</span>
+            </div>
+            <div class="stat-item" onclick="openConnectionsScreen('following')">
+              <span class="stat-value" id="stat-following-count-old">0</span>
+              <span class="stat-label" id="lbl-stat-following-old">following</span>
+            </div>
+          </div>
+        </div>
+              
+        <div class="profile-user-headline">
+          <div class="profile-fb-name" id="profile-user-name">Loading...</div>
+          <div class="profile-fb-subtitle" id="profile-user-subtitle">...</div>
         </div>
 
-       <div class="profile-tabs">
-          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
-          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
-          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
+        <!-- 🌟 ახალი სტატისტიკა ერთ ხაზზე ცენტრში: X მეგობრები · Y საერთო · Z პოსტი -->
+        <div class="profile-stats-inline">
+          <span class="stat-inline-item" onclick="openConnectionsScreen('followers')">
+            <strong id="stat-followers-count">0</strong> <span id="lbl-stat-followers">მეგობრები</span>
+          </span>
+          <span class="stat-dot-sep">·</span>
+          <span class="stat-inline-item" onclick="openConnectionsScreen('following')">
+            <strong id="stat-following-count">0</strong> <span id="lbl-stat-following">საერთო</span>
+          </span>
+          <span class="stat-dot-sep">·</span>
+          <span class="stat-inline-item" onclick="switchProfileTab('posts')">
+            <strong id="stat-posts-count">0</strong> <span id="lbl-stat-post">პოსტი</span>
+          </span>
         </div>
-      </div> <!-- პროფილის ნაცრისფერი ყუთი იხურება აქ! -->
 
-      <div id="profile-posts-wall" style="margin-top: 16px;">
-        <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading posts...</div>
+        <!-- 🌟 საერთო მეგობრების ბლოკი გადაბმული ავატარებით -->
+        <div class="profile-mutual-summary" id="profile-mutual-summary-block">
+          <div class="mutual-avatars-cluster" id="profile-mutual-avatars-cluster">
+            <img src="logo1.png" class="mutual-avatar-mini" alt="avatar">
+            <img src="logo2.png" class="mutual-avatar-mini" alt="avatar">
+          </div>
+          <div class="mutual-friends-text-wrap" id="lbl-mutual-friends-summary">
+            მეგობრები არიან Emigrantbook-ის მომხმარებლები
+          </div>
+        </div>
+
+        <div class="profile-action-column" id="profile-action-panel">
+          <div style="text-align: center; padding: 10px; color:#aaaaaa;">Loading actions...</div>
+        </div>
       </div>
 
-      <div id="profile-photos-wall" style="display: none; margin-top: 16px;">
-        <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading photos...</div>
+      <!-- LOCKED PROFILE BANNER -->
+      <div id="private-profile-lock-msg" style="display: none; text-align: center; padding: 40px 20px; background: #141414; border-radius: 12px; border: 1px solid #222222; margin: 0 20px 20px 20px;">
+        <div style="margin-bottom: 15px; display: flex; justify-content: center;">
+          <img src="icons/lock.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Locked Profile">
+        </div>
+        <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">This profile is private</div>
+        <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">Only friends can see this user's posts, photos, and videos.</div>
       </div>
-    </div>
-  </div> 
-     <!-- აწ მთავრდება ფროფილის სრული გვერდი -->   
+
+      <div class="profile-details-box" id="profile-details-container">
+        <div style="text-align:center; color:#aaaaaa; padding:10px;">Loading details...</div>
+      </div>
+
+      <!-- 🌟 შესაძლო ნაცნობები (People You May Know) ჰორიზონტალური ბარათებით -->
+      <div class="profile-friends-preview-box">
+        <div class="friends-preview-header">
+          <div class="friends-preview-title-area" onclick="openConnectionsScreen('all')" style="cursor: pointer;">
+            <span class="friends-preview-title" id="lbl-followers-title">შესაძლო ნაცნობები</span>
+            <span class="friends-preview-count" id="mini-friends-count"></span>
+          </div>
+          <button class="friends-see-all-btn" id="lbl-see-all" onclick="openConnectionsScreen('all')">ყველას ნახვა</button>
+        </div>
+        <div class="friends-preview-grid" id="mini-friends-grid"></div>
+      </div>
+
+      <!-- 🌟 ტაბები (Pills ღილაკები: ყველა / ფოტოები / Reels) -->
+      <div class="profile-tabs">
+        <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">ყველა</button>
+        <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">ფოტოები</button>
+        <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Reels</button>
+      </div>
+    </div> <!-- profile-modern-card იხურება აქ -->
+  </div> <!-- პროფილის ნაცრისფერი ყუთი იხურება აქ! -->
+
+  <div id="profile-posts-wall" style="margin-top: 16px;">
+    <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading posts...</div>
+  </div>
+
+  <div id="profile-photos-wall" style="display: none; margin-top: 16px;">
+    <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading photos...</div>
+  </div>
+</div>
+</div>
+    
+   <!-- აწ მთავრდება ფროფილის სრული გვერდი -->   
   
    <div id="edit-profile-screen">
     <div class="header">
