@@ -1246,7 +1246,7 @@ body.light-mode .sponsored-cta-btn:hover {
 </div>
       
    <!-- აქ იწყება პროფილის სრული გვერდი -->     
-    <div id="profile-screen">
+  <div id="profile-screen">
     <div class="header profile-header-fix">
       <div class="nav-icons-center">
         <!-- 1. Home (მარცხნივ) -->
@@ -1542,7 +1542,7 @@ body.light-mode .sponsored-cta-btn:hover {
     </div>
         
     <div class="feed-container">
-  <div class="facebook-profile-container" id="main-profile-card">
+  <div class="facebook-profile-container">
     <div class="profile-cover-wrapper" id="profile-cover-banner">
       <button class="cover-camera-btn" id="cover-camera-btn" onclick="triggerCoverUpload()">
         <img src="icons/camera.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Cover Camera">
@@ -1552,22 +1552,15 @@ body.light-mode .sponsored-cta-btn:hover {
     <div class="profile-info-wrapper">
       <div class="avatar-stats-row">
         <div class="profile-avatar-holder">
-          <!-- 🟢 ციფრული: სთორის ლურჯი რგოლი (როცა ციფრული პროფილია) -->
-          <div class="pro-story-ring-box">
-            <div class="profile-big-avatar" id="profile-big-avatar">
-              ?
-              <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
-            </div>
+          <div class="profile-big-avatar" id="profile-big-avatar">
+            ?
+            <div class="online-status-dot" id="profile-online-badge" style="display: none;"></div>
           </div>
-          <!-- 🛑 ციფრული: სთორის ლურჯი რგოლი დასრულდა -->
-
           <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">
             <img src="icons/camera.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Avatar Camera">
           </button>
         </div>
-
-        <!-- ⚪ სტანდარტული: შენი ორიგინალი სტატისტიკის ბლოკი (უცვლელი) -->
-        <div class="profile-stats-block" id="standard-stats-block">
+        <div class="profile-stats-block">
           <div class="stat-item">
             <span class="stat-value" id="stat-posts-count">0</span>
             <span class="stat-label" id="lbl-stat-post">post</span>
@@ -1586,115 +1579,15 @@ body.light-mode .sponsored-cta-btn:hover {
           <div class="profile-user-headline">
             <div class="profile-fb-name" id="profile-user-name">Loading...</div>
             <div class="profile-fb-subtitle" id="profile-user-subtitle">...</div>
-
-            <!-- ======================================================== -->
-            <!-- 🟢 ციფრული პროფილის დაწყება: ერთხაზიანი სტატისტიკა და შემქმნელი -->
-            <!-- ======================================================== -->
-            <!-- 1. ერთხაზიანი სტატისტიკა -->
-            <div class="pro-inline-stats" id="pro-inline-stats-row" style="display: none;">
-              <span id="pro-stat-followers-val">0</span> <span id="lbl-pro-stat-followers">გამომწერი</span> · 
-              <span id="pro-stat-following-val">0</span> <span id="lbl-pro-stat-following">გამოწერილია</span> · 
-              <span id="pro-stat-posts-val">0</span> <span id="lbl-pro-stat-posts">პოსტი</span>
-            </div>
-
-            <!-- 2. კლაპერის SVG აიქონით ციფრული შემქმნელი + ლოკაცია -->
-            <div class="pro-creator-meta-line" id="pro-creator-meta-line" style="display: none;">
-              <div class="pro-meta-item">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#050505" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
-                  <line x1="7" y1="2" x2="7" y2="22"></line>
-                  <line x1="17" y1="2" x2="17" y2="22"></line>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <line x1="2" y1="7" x2="7" y2="7"></line>
-                  <line x1="2" y1="17" x2="7" y2="17"></line>
-                  <line x1="17" y1="17" x2="22" y2="17"></line>
-                  <line x1="17" y1="7" x2="22" y2="7"></line>
-                </svg>
-                <span id="lbl-pro-creator-title">ციფრული შიგთავსის შემქმნელი</span>
-              </div>
-              <span class="pro-meta-dot">·</span>
-              <div class="pro-meta-item">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#050505" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-                <span id="pro-creator-location">Tbilisi</span>
-              </div>
-            </div>
-            <!-- ======================================================== -->
-            <!-- 🛑 ციფრული პროფილის დასასრული -->
-            <!-- ======================================================== -->
           </div>
 
           <div class="profile-action-column" id="profile-action-panel">
             <div style="text-align: center; padding: 10px; color:#aaaaaa;">Loading actions...</div>
           </div>
-           <!-- 🟢 ციფრულზე გამოსაჩენი: სტანდარტულზე დაბრუნების ღილაკი -->
-        <div style="text-align: center; width: 100%; margin-top: 6px;">
-         <button type="button" class="pro-revert-btn" id="btn-revert-profile" onclick="revertToStandardProfile()" style="display: none;">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-        <path d="M3 3v5h5"></path>
-       </svg>
-        <span>სტანდარტულზე დაბრუნება</span>
-      </button>
-    </div>
-      
         </div>
 
-        <!-- ======================================================== -->
-        <!-- 🟢 ციფრული პროფილის დაწყება: მეგობრობის საიუბილეო ბარათი -->
-        <!-- ======================================================== -->
-        <div class="pro-friendship-highlight-card" id="pro-friendship-box" style="display: none;">
-          <div class="pro-highlight-icon">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#050505" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-          </div>
-          <div class="pro-highlight-texts">
-            <span class="pro-highlight-sub" id="lbl-pro-highlight-sub">თქვენ და ამ მომხმარებელმა</span>
-            <span class="pro-highlight-main" id="lbl-pro-highlight-main">აღნიშნეთ მეგობრობა Emigrantbook-ზე!</span>
-          </div>
-        </div>
-        <!-- ======================================================== -->
-        <!-- 🛑 ციფრული პროფილის დასასრული -->
-        <!-- ======================================================== -->
-
-        <!-- ======================================================== -->
-        <!-- 🟢 ციფრული პროფილის დაწყება: ოვალური აბები (Pills) -->
-        <!-- ======================================================== -->
-        <div class="pro-pills-tabs-row" id="pro-pills-tabs-row" style="display: none;">
-          <button class="pro-pill-btn active" id="pill-btn-all" onclick="switchProfilePillTab('posts', this)">
-            <span id="lbl-pill-all">ყველა</span>
-          </button>
-          <button class="pro-pill-btn" id="pill-btn-reels" onclick="switchProfilePillTab('videos', this)">
-            <span>Reels</span>
-          </button>
-          <button class="pro-pill-btn" id="pill-btn-photos" onclick="switchProfilePillTab('photos', this)">
-            <span id="lbl-pill-photos">ფოტოები</span>
-          </button>
-        </div>
-        <!-- ======================================================== -->
-        <!-- 🛑 ციფრული პროფილის დასასრული -->
-        <!-- ======================================================== -->
-
-        <!-- ⚪ სტანდარტული: ძველი ტაბები (უცვლელი) -->
-        <div class="profile-tabs" id="standard-profile-tabs">
-          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
-          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
-          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
-        </div>
-
-        <!-- 🟢 ციფრული: პერსონალური დეტალური ინფორმაციის სათაური -->
-        <div class="pro-details-header-title" id="pro-details-heading" style="display: none;">
-          <span id="lbl-pro-details-heading">პერსონალური დეტალური ინფორმაცია</span>
-        </div>
-        <!-- 🛑 ციფრული: სათაური დასრულდა -->
-
-        <!-- LOCKED PROFILE BANNER (უცვლელი) -->
+        <!-- LOCKED PROFILE BANNER -->
+        <!-- LOCKED PROFILE BANNER -->
         <div id="private-profile-lock-msg" style="display: none; text-align: center; padding: 40px 20px; background: #141414; border-radius: 12px; border: 1px solid #222222; margin: 0 20px 20px 20px;">
           <div style="margin-bottom: 15px; display: flex; justify-content: center;">
             <img src="icons/lock.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Locked Profile">
@@ -1707,7 +1600,7 @@ body.light-mode .sponsored-cta-btn:hover {
           <div style="text-align:center; color:#aaaaaa; padding:10px;">Loading details...</div>
         </div>
 
-        <div class="profile-friends-preview-box" id="standard-friends-preview-box">
+        <div class="profile-friends-preview-box">
           <div class="friends-preview-header">
             <div class="friends-preview-title-area" onclick="openConnectionsScreen('all')" style="cursor: pointer;">
               <span class="friends-preview-title" id="lbl-followers-title">Friends / Followers</span>
@@ -1718,6 +1611,11 @@ body.light-mode .sponsored-cta-btn:hover {
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
         </div>
 
+       <div class="profile-tabs">
+          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
+          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
+          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
+        </div>
       </div> <!-- პროფილის ნაცრისფერი ყუთი იხურება აქ! -->
 
       <div id="profile-posts-wall" style="margin-top: 16px;">
@@ -1728,8 +1626,7 @@ body.light-mode .sponsored-cta-btn:hover {
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading photos...</div>
       </div>
     </div>
-  </div>
-
+  </div> 
      <!-- აწ მთავრდება ფროფილის სრული გვერდი -->   
   
    <div id="edit-profile-screen">
@@ -4077,8 +3974,6 @@ auth.onAuthStateChanged(function(user) {
     function renderProfileDetails(profileData) {
       var container = document.getElementById('profile-details-container');
       if (!container) return;
-      updateProfileModeLayout(profileData && profileData.is_professional_mode === true, profileData);
-
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
       // სქესი
@@ -9366,94 +9261,7 @@ function clearAllSearchHistory() {
     renderSearchHistory();
   }
 }
-
-
-
-
-
-    // 1. პროფილის ვიზუალის ავტომატური გადართვა (Digital vs Standard)
-    function updateProfileModeLayout(isDigital, profileData) {
-  var mainCard = document.getElementById('main-profile-card');
-  if (!mainCard) return;
-
-  if (isDigital) {
-    mainCard.classList.add('is-digital-creator');
-
-    // შენი ორიგინალი ქალაქის ველი (ხაზი 4093-დან)
-    var locEl = document.getElementById('pro-creator-location');
-    if (locEl && profileData) {
-      locEl.innerText = profileData.current_city || profileData.city || 'Tbilisi';
-    }
-
-    // სტატისტიკის გადატანა ერთ ხაზზე
-    var folEl = document.getElementById('pro-stat-followers-val');
-    var fingEl = document.getElementById('pro-stat-following-val');
-    var postEl = document.getElementById('pro-stat-posts-val');
-
-    var curFol = document.getElementById('stat-followers-count');
-    var curFing = document.getElementById('stat-following-count');
-    var curPost = document.getElementById('stat-posts-count');
-
-    if (folEl && curFol) folEl.innerText = curFol.innerText || '0';
-    if (fingEl && curFing) fingEl.innerText = curFing.innerText || '0';
-    if (postEl && curPost) postEl.innerText = curPost.innerText || '0';
-
-  } else {
-    mainCard.classList.remove('is-digital-creator');
-  }
-}
-
-function switchProfilePillTab(tabName, btnEl) {
-  document.querySelectorAll('.pro-pill-btn').forEach(function(b) {
-    b.classList.remove('active');
-  });
-  if (btnEl) btnEl.classList.add('active');
-  switchProfileTab(tabName);
-}
-
-    // აქ მთავრდება
-
-    
-async function revertToStandardProfile() {
-  if (!currentUser) {
-    alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-    return;
-  }
-
-  if (!confirm("ნამდვილად გსურთ პროფესიონალური რეჟიმის გათიშვა და სტანდარტულ პროფილზე დაბრუნება?")) {
-    return;
-  }
-
-  try {
-    await db.collection('profiles').doc(currentUser.uid).update({
-      is_professional_mode: false
-    });
-
-    // ეკრანიდან ციფრული კლასის მოხსნა
-    var mainCard = document.getElementById('main-profile-card');
-    if (mainCard) mainCard.classList.remove('is-digital-creator');
-
-    // ძველი ტაბების და სტატისტიკის დაბრუნება
-    var stdStats = document.getElementById('standard-stats-block');
-    if (stdStats) stdStats.style.display = 'flex';
-    var stdTabs = document.getElementById('standard-profile-tabs');
-    if (stdTabs) stdTabs.style.display = 'flex';
-
-    // ციფრულების დამალვა
-    var proStats = document.getElementById('pro-inline-stats-row');
-    if (proStats) proStats.style.display = 'none';
-    var proMeta = document.getElementById('pro-creator-meta-line');
-    if (proMeta) proMeta.style.display = 'none';
-    var proPills = document.getElementById('pro-pills-tabs-row');
-    if (proPills) proPills.style.display = 'none';
-
-    alert("პროფილი წარმატებით დაუბრუნდა სტანდარტულ რეჟიმს!");
-    location.reload();
-  } catch (err) {
-    alert("შეცდომა რეჟიმის გათიშვისას: " + err.message);
-  }
-}
-
+   
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
