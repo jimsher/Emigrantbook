@@ -7045,7 +7045,7 @@ function unhidePostFromFeed(postId) {
   var displayAuthorName = isSponsored ? (post.ad_brand_name || post.author_name) : post.author_name;
   var initial = displayAuthorName ? displayAuthorName.charAt(0).toUpperCase() : "?";
   var actionText = (post.action_type && typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][post.action_type]) ? (" " + TRANSLATIONS[currentLang][post.action_type]) : "";
-  displayAuthorName = displayAuthorName + actionText;
+
 
 
 
@@ -7178,14 +7178,14 @@ function unhidePostFromFeed(postId) {
   var statsIconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
 
   return `
-    <div class="post-card" id="post-card-${post.id}">
+     <div class="post-card" id="post-card-${post.id}">
       <div class="post-header">
-        <div class="post-header-left">
-          <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
-          <div class="post-author-info">
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+        <div class="post-header-left" style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+          <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')" style="width: 40px; height: 40px; flex-shrink: 0;">${avatarContent}</div>
+          <div class="post-author-info" style="min-width: 0;">
+            <div style="line-height: 1.3;">
               <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${displayAuthorName}</span>${actionText ? `<span style="font-weight: normal; color: #65676b;">${actionText}</span>` : ''}
-              ${isStudio ? `<img src="icons/crown.svg" class="post-action-icon" style="width:14px;height:14px;" alt="Crown">` : ''}
+              ${isStudio ? `<img src="icons/crown.svg" class="post-action-icon" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;" alt="Crown">` : ''}
             </div>
             ${metaTimeOrSponsoredHtml}
           </div>
@@ -7195,6 +7195,7 @@ function unhidePostFromFeed(postId) {
         </div>
       </div>
       <div class="post-content">${post.content || ""}</div>
+
 
       
       ${studioServiceCardHtml}
