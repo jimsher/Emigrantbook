@@ -6181,43 +6181,20 @@ function sendFriendRequest(targetUserId) {
       .then(function() {
         if (userProfile) userProfile.avatar_url = downloadURL;
         if (cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
-
-        // 🌟 ავტომატური პოსტის შექმნა პროფილის ფოტოს განახლებაზე
-        var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
-        db.collection('posts').add({
-          user_id: currentUser.uid,
-          author_name: authorName,
-          content: "",
-          post_type: "avatar_update",
-          media_url: [downloadURL],
-          media_urls: [downloadURL],
-          media_type: "image",
-          likes_count: 0,
-          created_at: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function() {
-          auth.currentUser.reload().then(function() {
-            showMyProfile();
-            if (typeof loadPosts === 'function') loadPosts();
-            if (typeof loadProfilePosts === 'function') loadProfilePosts(currentUser.uid);
-            if (typeof notifyFriendsAboutNewPost === 'function') {
-              notifyFriendsAboutNewPost(authorName, 'image', downloadURL);
-            }
-          });
-        }).catch(function() {
-          auth.currentUser.reload().then(function() {
-            showMyProfile();
-          });
+        auth.currentUser.reload().then(function() {
+          showMyProfile();
         });
       });
   });
 }
+    
 
-function triggerCoverUpload() {
-  var input = document.getElementById('cover-file-input');
-  if (input) input.click();
-}
+    function triggerCoverUpload() {
+      var input = document.getElementById('cover-file-input');
+      if (input) input.click();
+    }
 
-function uploadCover() {
+    function uploadCover() {
   var fileInput = document.getElementById('cover-file-input');
   if (!fileInput || fileInput.files.length === 0) return;
   var file = fileInput.files[0];
@@ -6229,33 +6206,10 @@ function uploadCover() {
       .update({ cover_url: downloadURL })
       .then(function() {
         if (userProfile) userProfile.cover_url = downloadURL;
-
-        // 🌟 ავტომატური პოსტის შექმნა ქავერის ფოტოს განახლებაზე
-        var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
-        db.collection('posts').add({
-          user_id: currentUser.uid,
-          author_name: authorName,
-          content: "",
-          post_type: "cover_update",
-          media_url: [downloadURL],
-          media_urls: [downloadURL],
-          media_type: "image",
-          likes_count: 0,
-          created_at: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function() {
-          showMyProfile();
-          if (typeof loadPosts === 'function') loadPosts();
-          if (typeof loadProfilePosts === 'function') loadProfilePosts(currentUser.uid);
-          if (typeof notifyFriendsAboutNewPost === 'function') {
-            notifyFriendsAboutNewPost(authorName, 'image', downloadURL);
-          }
-        }).catch(function() {
-          showMyProfile();
-        });
+        showMyProfile();
       });
   });
 }
-
 
     var isLoginMode = true;
 function toggleAuthMode() {
@@ -7047,16 +7001,6 @@ function unhidePostFromFeed(postId) {
   var finalAvatar = authorAvatarUrl || DEFAULT_AVATAR_URL;
   var avatarContent = `<div class="avatar-has-online"><img src="${finalAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
   var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-     
-  var authorActionText = "";
-  if (post.post_type === 'avatar_update') {
-    var txtAvatar = (t && t.updatedAvatarText) ? t.updatedAvatarText : "updated their profile picture.";
-    authorActionText = `<span style="color: #65676b; font-weight: 400; font-size: 13.5px; margin-left: 4px;">${txtAvatar}</span>`;
-  } else if (post.post_type === 'cover_update') {
-    var txtCover = (t && t.updatedCoverText) ? t.updatedCoverText : "updated their cover photo.";
-    authorActionText = `<span style="color: #65676b; font-weight: 400; font-size: 13.5px; margin-left: 4px;">${txtCover}</span>`;
-  }
-
 
   // დრო და სტატუსი: ჩვეულებრივ პოსტზე გამოჩნდება საათი და თარიღი, რეკლამაზე კი "დაფინანსებული"
   var metaTimeOrSponsoredHtml = "";
@@ -7183,13 +7127,12 @@ function unhidePostFromFeed(postId) {
         <div class="post-header-left">
           <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
           <div class="post-author-info">
-          <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 2px;">
-          <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${displayAuthorName}</span>
-           ${authorActionText}${isStudio ? `<img src="icons/crown.svg" class="post-action-icon" style="width:14px;height:14px;margin-left:4px;" alt="Crown">` : ''}
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${displayAuthorName}</span>
+              ${isStudio ? `<img src="icons/crown.svg" class="post-action-icon" style="width:14px;height:14px;" alt="Crown">` : ''}
+            </div>
+            ${metaTimeOrSponsoredHtml}
           </div>
-         ${metaTimeOrSponsoredHtml}
-         </div>
-
         </div>
         <div class="post-header-right">
           ${optionsMenuHtml}
