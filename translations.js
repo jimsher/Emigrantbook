@@ -100,6 +100,10 @@
     drawerUpdates: "Updates",
     drawerVersion: "Version 2.4.0 (2026)",
 
+    updatedAvatarText: "updated their profile picture.",
+    updatedCoverText: "updated their cover photo.",
+    
+
     // აქ იწყება აქტივობის ფაილი  
     backHome: "← Emigrantbook",
     headerTitle: "🕒 Activity Center",
@@ -231,6 +235,9 @@
     drawerProfileSettings: "Impostazioni profilo",
     drawerUpdates: "Aggiornamenti",
     drawerVersion: "Versione 2.4.0 (2026)",
+
+    updatedAvatarText: "ha aggiornato la sua immagine del profilo.",
+    updatedCoverText: "ha aggiornato la sua immagine di copertina.",
       
    // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -363,6 +370,9 @@
     drawerProfileSettings: "პროფილის პარამეტრები",
     drawerUpdates: "განახლებები",
     drawerVersion: "ვერსია 2.4.0 (2026)",
+
+    updatedAvatarText: "-მ(ა) განაახლა თავისი პროფილის სურათი.",
+    updatedCoverText: "-მ(ა) განაახლა თავისი გარეკანის ფოტო.",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -495,6 +505,9 @@
     drawerProfileSettings: "Настройки профиля",
     drawerUpdates: "Обновления",
     drawerVersion: "Версия 2.4.0 (2026)",
+
+    updatedAvatarText: "обновил(а) фото профиля.",
+    updatedCoverText: "обновил(а) фото обложки.",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -627,6 +640,9 @@
     drawerProfileSettings: "Paramètres du profil",
     drawerUpdates: "Mises à jour",
     drawerVersion: "Version 2.4.0 (2026)",
+
+    updatedAvatarText: "a mis à jour sa photo de profil.",
+    updatedCoverText: "a mis à jour sa photo de couverture.",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -759,6 +775,9 @@
     drawerProfileSettings: "Profileinstellungen",
     drawerUpdates: "Aktualisierungen",
     drawerVersion: "Version 2.4.0 (2026)",
+
+    updatedAvatarText: "hat das Profilbild aktualisiert.",
+    updatedCoverText: "hat das Titelbild aktualisiert.",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -891,6 +910,9 @@
     drawerProfileSettings: "Ρυθμίσεις προφίλ",
     drawerUpdates: "Ενημερώσεις",
     drawerVersion: "Έκδοση 2.4.0 (2026)",
+
+    updatedAvatarText: "ενημέρωσε τη φωτογραφία προφίλ του.",
+    updatedCoverText: "ενημέρωσε τη φωτογραφία εξωφύλλου του.",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
