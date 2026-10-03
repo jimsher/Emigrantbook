@@ -7044,6 +7044,10 @@ function unhidePostFromFeed(postId) {
   // სახელი: ჩვეულებრივ პოსტებზე რჩება ზუსტად იგივე post.author_name
   var displayAuthorName = isSponsored ? (post.ad_brand_name || post.author_name) : post.author_name;
   var initial = displayAuthorName ? displayAuthorName.charAt(0).toUpperCase() : "?";
+  var actionText = (post.action_type && typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][post.action_type]) ? (" " + TRANSLATIONS[currentLang][post.action_type]) : "";
+  displayAuthorName = displayAuthorName + actionText;
+
+
 
   // ავატარი: ჩვეულებრივ პოსტებზე რჩება ზუსტად იგივე
   var authorAvatarUrl = isSponsored && post.ad_avatar_url ? post.ad_avatar_url : (cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null);
@@ -7179,8 +7183,8 @@ function unhidePostFromFeed(postId) {
         <div class="post-header-left">
           <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
           <div class="post-author-info">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${displayAuthorName}</span>
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${displayAuthorName}</span>${actionText ? `<span style="font-weight: normal; color: #65676b;">${actionText}</span>` : ''}
               ${isStudio ? `<img src="icons/crown.svg" class="post-action-icon" style="width:14px;height:14px;" alt="Crown">` : ''}
             </div>
             ${metaTimeOrSponsoredHtml}
@@ -7191,6 +7195,7 @@ function unhidePostFromFeed(postId) {
         </div>
       </div>
       <div class="post-content">${post.content || ""}</div>
+
       
       ${studioServiceCardHtml}
       ${mediaHtml}
