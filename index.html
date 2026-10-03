@@ -6181,20 +6181,43 @@ function sendFriendRequest(targetUserId) {
       .then(function() {
         if (userProfile) userProfile.avatar_url = downloadURL;
         if (cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
-        auth.currentUser.reload().then(function() {
-          showMyProfile();
+
+        // 🌟 ავტომატური პოსტის შექმნა პროფილის ფოტოს განახლებაზე
+        var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
+        db.collection('posts').add({
+          user_id: currentUser.uid,
+          author_name: authorName,
+          content: "",
+          post_type: "avatar_update",
+          media_url: [downloadURL],
+          media_urls: [downloadURL],
+          media_type: "image",
+          likes_count: 0,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+          auth.currentUser.reload().then(function() {
+            showMyProfile();
+            if (typeof loadPosts === 'function') loadPosts();
+            if (typeof loadProfilePosts === 'function') loadProfilePosts(currentUser.uid);
+            if (typeof notifyFriendsAboutNewPost === 'function') {
+              notifyFriendsAboutNewPost(authorName, 'image', downloadURL);
+            }
+          });
+        }).catch(function() {
+          auth.currentUser.reload().then(function() {
+            showMyProfile();
+          });
         });
       });
   });
 }
-    
 
-    function triggerCoverUpload() {
-      var input = document.getElementById('cover-file-input');
-      if (input) input.click();
-    }
+function triggerCoverUpload() {
+  var input = document.getElementById('cover-file-input');
+  if (input) input.click();
+}
 
-    function uploadCover() {
+function uploadCover() {
   var fileInput = document.getElementById('cover-file-input');
   if (!fileInput || fileInput.files.length === 0) return;
   var file = fileInput.files[0];
@@ -6206,10 +6229,33 @@ function sendFriendRequest(targetUserId) {
       .update({ cover_url: downloadURL })
       .then(function() {
         if (userProfile) userProfile.cover_url = downloadURL;
-        showMyProfile();
+
+        // 🌟 ავტომატური პოსტის შექმნა ქავერის ფოტოს განახლებაზე
+        var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
+        db.collection('posts').add({
+          user_id: currentUser.uid,
+          author_name: authorName,
+          content: "",
+          post_type: "cover_update",
+          media_url: [downloadURL],
+          media_urls: [downloadURL],
+          media_type: "image",
+          likes_count: 0,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+          showMyProfile();
+          if (typeof loadPosts === 'function') loadPosts();
+          if (typeof loadProfilePosts === 'function') loadProfilePosts(currentUser.uid);
+          if (typeof notifyFriendsAboutNewPost === 'function') {
+            notifyFriendsAboutNewPost(authorName, 'image', downloadURL);
+          }
+        }).catch(function() {
+          showMyProfile();
+        });
       });
   });
 }
+
 
     var isLoginMode = true;
 function toggleAuthMode() {
