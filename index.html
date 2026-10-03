@@ -6176,23 +6176,20 @@ function sendFriendRequest(targetUserId) {
   uploadMediaToFirebase(file, 'images', function(downloadURL) {
     if (!downloadURL) return;
 
-    // 1. პროფილის განახლება
     db.collection('profiles').doc(currentUser.uid)
       .update({ avatar_url: downloadURL })
       .then(function() {
         if (typeof userProfile !== 'undefined' && userProfile) userProfile.avatar_url = downloadURL;
         if (typeof cachedProfiles !== 'undefined' && cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
 
-        // ტექსტის აღება ენების სისტემიდან
-        var postText = (typeof t === 'function') ? (t('updated_profile_picture') || t('updated_avatar') || "Updated profile picture") : "Updated profile picture";
         var author = (userProfile && (userProfile.full_name || userProfile.name)) || currentUser.displayName || "User";
 
-        // 2. პოსტის შექმნა ზუსტად ძველი პოსტების ფორმატით
         var postData = {
           user_id: currentUser.uid,
           author_name: author,
           author_avatar: downloadURL,
-          content: postText,
+          content: "",
+          action_type: "updatedAvatarText",
           media_url: downloadURL,
           media_type: "image",
           likes_count: 0,
@@ -6227,23 +6224,20 @@ function uploadCover() {
   uploadMediaToFirebase(file, 'images', function(downloadURL) {
     if (!downloadURL) return;
 
-    // 1. ქავერის განახლება
     db.collection('profiles').doc(currentUser.uid)
       .update({ cover_url: downloadURL })
       .then(function() {
         if (typeof userProfile !== 'undefined' && userProfile) userProfile.cover_url = downloadURL;
 
-        // ტექსტის აღება ენების სისტემიდან
-        var postText = (typeof t === 'function') ? (t('updated_cover_photo') || t('updated_cover') || "Updated cover photo") : "Updated cover photo";
         var author = (userProfile && (userProfile.full_name || userProfile.name)) || currentUser.displayName || "User";
         var currentAvatar = (userProfile && userProfile.avatar_url) || "";
 
-        // 2. პოსტის შექმნა ზუსტად ძველი პოსტების ფორმატით
         var postData = {
           user_id: currentUser.uid,
           author_name: author,
           author_avatar: currentAvatar,
-          content: postText,
+          content: "",
+          action_type: "updatedCoverText",
           media_url: downloadURL,
           media_type: "image",
           likes_count: 0,
@@ -6263,6 +6257,9 @@ function uploadCover() {
       });
   });
 }
+
+
+
 
     
 
