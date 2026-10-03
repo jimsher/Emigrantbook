@@ -6168,48 +6168,103 @@ function sendFriendRequest(targetUserId) {
 }      
     // აქ მთავრდება
     // აქ მთავრდება იმაგე
-   function uploadAvatar() {
+  function uploadAvatar() {
   var fileInput = document.getElementById('avatar-file-input');
   if (!fileInput || fileInput.files.length === 0) return;
   var file = fileInput.files[0];
 
-  // პირდაპირ ვუშვებთ Cloudflare-ის images ფოლდერში
   uploadMediaToFirebase(file, 'images', function(downloadURL) {
     if (!downloadURL) return;
+
+    // 1. პროფილის განახლება
     db.collection('profiles').doc(currentUser.uid)
       .update({ avatar_url: downloadURL })
       .then(function() {
-        if (userProfile) userProfile.avatar_url = downloadURL;
-        if (cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
-        auth.currentUser.reload().then(function() {
-          showMyProfile();
+        if (typeof userProfile !== 'undefined' && userProfile) userProfile.avatar_url = downloadURL;
+        if (typeof cachedProfiles !== 'undefined' && cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
+
+        // ტექსტის აღება ენების სისტემიდან
+        var postText = (typeof t === 'function') ? (t('updated_profile_picture') || t('updated_avatar') || "Updated profile picture") : "Updated profile picture";
+        var author = (userProfile && (userProfile.full_name || userProfile.name)) || currentUser.displayName || "User";
+
+        // 2. პოსტის შექმნა ზუსტად ძველი პოსტების ფორმატით
+        var postData = {
+          user_id: currentUser.uid,
+          author_name: author,
+          author_avatar: downloadURL,
+          content: postText,
+          media_url: downloadURL,
+          media_type: "image",
+          likes_count: 0,
+          comments_count: 0,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection('posts').add(postData).then(function() {
+          if (auth.currentUser) {
+            auth.currentUser.reload().then(function() {
+              if (typeof showMyProfile === 'function') showMyProfile();
+            });
+          } else {
+            if (typeof showMyProfile === 'function') showMyProfile();
+          }
+        }).catch(function(err) {
+          console.error("Post creation error:", err);
+          if (typeof showMyProfile === 'function') showMyProfile();
         });
+
+      }).catch(function(err) {
+        console.error("Profile update error:", err);
       });
   });
 }
-    
 
-    function triggerCoverUpload() {
-      var input = document.getElementById('cover-file-input');
-      if (input) input.click();
-    }
-
-    function uploadCover() {
+function uploadCover() {
   var fileInput = document.getElementById('cover-file-input');
   if (!fileInput || fileInput.files.length === 0) return;
   var file = fileInput.files[0];
 
-  // პირდაპირ ვუშვებთ Cloudflare-ის images ფოლდერში
   uploadMediaToFirebase(file, 'images', function(downloadURL) {
     if (!downloadURL) return;
+
+    // 1. ქავერის განახლება
     db.collection('profiles').doc(currentUser.uid)
       .update({ cover_url: downloadURL })
       .then(function() {
-        if (userProfile) userProfile.cover_url = downloadURL;
-        showMyProfile();
+        if (typeof userProfile !== 'undefined' && userProfile) userProfile.cover_url = downloadURL;
+
+        // ტექსტის აღება ენების სისტემიდან
+        var postText = (typeof t === 'function') ? (t('updated_cover_photo') || t('updated_cover') || "Updated cover photo") : "Updated cover photo";
+        var author = (userProfile && (userProfile.full_name || userProfile.name)) || currentUser.displayName || "User";
+        var currentAvatar = (userProfile && userProfile.avatar_url) || "";
+
+        // 2. პოსტის შექმნა ზუსტად ძველი პოსტების ფორმატით
+        var postData = {
+          user_id: currentUser.uid,
+          author_name: author,
+          author_avatar: currentAvatar,
+          content: postText,
+          media_url: downloadURL,
+          media_type: "image",
+          likes_count: 0,
+          comments_count: 0,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection('posts').add(postData).then(function() {
+          if (typeof showMyProfile === 'function') showMyProfile();
+        }).catch(function(err) {
+          console.error("Post creation error:", err);
+          if (typeof showMyProfile === 'function') showMyProfile();
+        });
+
+      }).catch(function(err) {
+        console.error("Cover update error:", err);
       });
   });
 }
+
+    
 
     var isLoginMode = true;
 function toggleAuthMode() {
