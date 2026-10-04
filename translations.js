@@ -134,6 +134,7 @@
 
     mutualSummaryText: "Friends you may share connections with",
     followersSummaryText: "Followers are Emigrantbook members",
+    personalDetailsTitle: "Details",
     
 
     // აქ იწყება აქტივობის ფაილი  
@@ -469,6 +470,7 @@
 
     mutualSummaryText: "მეგობრები, რომლებთანაც საერთო რამეები გაკავშირებთ",
     followersSummaryText: "გამომწერები არიან Emigrantbook-ის მომხმარებლები",
+    personalDetailsTitle: "პერსონალური დეტალური ინფორმაცია",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
