@@ -282,6 +282,20 @@
     aboutThisAccount: "Informazioni su questo account",
     turnOnNotifsPost: "Attiva le notifiche per questo post",
     copyPostLink: "Copia link",
+
+    whyNotInterested: "Perché non ti interessa?",
+    surveyNotRelevant: "Non pertinente ai miei interessi...",
+    surveyFraud: "Frode o truffa",
+    surveySexual: "Contenuto sessuale",
+    surveyDisturbing: "Contenuto disturbante",
+    surveyDontLikeCreator: "Non mi piace questo creatore",
+    surveyOther: "Altro",
+    whatElseCanDo: "Cos'altro puoi fare",
+    snoozeAuthor30: "Metti in pausa {name} per 30 giorni",
+    appealPost: "Segnala post",
+    undoHidePost: "Annulla nascondi post",
+    snoozeSuccess: "Autore messo in pausa per 30 giorni.",
+    feedbackThanks: "Grazie per il tuo feedback!",
       
    // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
