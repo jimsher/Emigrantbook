@@ -3739,17 +3739,24 @@ auth.onAuthStateChanged(function(user) {
 }
 
     
-     function subscribeToMessagesRealtime() {
+    function subscribeToMessagesRealtime() {
   if (!currentUser) return;
 
-  // ვწმენდთ ძველ ლაივ მოსმენებს, რომ არ გაირეპლიკოს
-  messengerUnsubscribeGroup.forEach(function(unsub) {
-    if (typeof unsub === 'function') unsub();
-  });
+  var currentSubUid = currentUser.uid; // ვამაგრებთ ამ კონკრეტულ მომხმარებელს
+
+  // ვწმენდთ ძველ ლაივ მოსმენებს
+  if (Array.isArray(messengerUnsubscribeGroup)) {
+    messengerUnsubscribeGroup.forEach(function(unsub) {
+      if (typeof unsub === 'function') unsub();
+    });
+  }
   messengerUnsubscribeGroup = [];
 
   // მეგობრების სიას ვიღებთ ქეშირებულად ან ერთხელ
   getMyFriendIds(function(friendIdsSet) {
+    // თუ სანამ სია მოვიდა იუზერი გავიდა ან შეიცვალა, ვაჩერებთ
+    if (!currentUser || currentUser.uid !== currentSubUid) return;
+
     var friendIds = Array.from(friendIdsSet);
 
     if (friendIds.length === 0) {
@@ -3759,22 +3766,21 @@ auth.onAuthStateChanged(function(user) {
     }
 
     let unreadChatsMap = {};
-    let processed = 0;
 
-    // ვზღუდავთ ერთდროულ ბაზის დარტყმებს, რომ ბრაუზერი და ფაირბეისი არ გაიჭედოს
     friendIds.forEach(function(fId) {
-      let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
+      let chatId = currentSubUid < fId ? currentSubUid + '_' + fId : fId + '_' + currentSubUid;
       
-      // ვიყენებთ ლიმიტს და ვკითხულობთ ოპტიმიზებულად
       var unsubMsg = db.collection('chats').doc(chatId).collection('messages')
         .where('read', '==', false)
         .limit(5)
         .onSnapshot(function(msgsSnap) {
-          processed++;
+          // თუ ამ მომენტში სხვა იუზერია შესული, არაფერი გააკეთოს
+          if (!currentUser || currentUser.uid !== currentSubUid) return;
+
           let unreadCountFromFriend = 0;
           
           msgsSnap.forEach(function(msgDoc) {
-            if (msgDoc.data().senderId !== currentUser.uid) {
+            if (msgDoc.data().senderId !== currentSubUid) {
               unreadCountFromFriend++;
             }
           });
@@ -3803,6 +3809,7 @@ auth.onAuthStateChanged(function(user) {
     });
   });
 }
+ 
           
 
     function subscribeToGlobalNotifications() {
