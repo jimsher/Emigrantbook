@@ -3550,7 +3550,12 @@ auth.onAuthStateChanged(function(user) {
       console.error("Profile load error:", err);
       hidePreloader();
     });
-  } else {
+    } else {
+    // 🛑 1. წინა მომხმარებლის მსმენელების გათიშვა (რომ მესიჯები არ აირიოს)
+    if (typeof unsubscribeMessages === 'function') { unsubscribeMessages(); }
+    if (typeof unsubscribePosts === 'function') { unsubscribePosts(); }
+    if (typeof unsubscribeCalls === 'function') { unsubscribeCalls(); }
+
     // ნავბარის დამალვა გამოსვლისას
     var bottomNav = document.getElementById('bottomNav');
     if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
@@ -3581,12 +3586,14 @@ auth.onAuthStateChanged(function(user) {
 
     currentUser = null;
     userProfile = null;
+    activeViewingProfileId = null;
 
     applyLanguageDOM();
     showScreen('auth');
     hidePreloader();
   }
-});     
+});
+
     // აქ მთავრდება
 
     function toggleRequestsDropdown(event) {
