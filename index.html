@@ -4082,63 +4082,118 @@ auth.onAuthStateChanged(function(user) {
 
     
     function renderProfileDetails(profileData) {
-      var container = document.getElementById('profile-details-container');
-      if (!container) return;
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  var container = document.getElementById('profile-details-container');
+  if (!container) return;
 
-      // სქესი
-      var genderHtml = profileData.gender ? `
-        <div class="detail-item">
-          <span class="icon"><img src="icons/venus-and-mars.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Gender"></span>
-          <span>${t.gender || 'Gender'}: <strong>${profileData.gender}</strong></span>
-        </div>` : '';
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
 
-      // ასაკი
-      var ageHtml = profileData.age ? `
-        <div class="detail-item">
-          <span class="icon"><img src="icons/cake.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Age"></span>
-          <span>${t.age}: <strong>${profileData.age}</strong></span>
-        </div>` : '';
+  // 1. დაბადების თარიღი ან ასაკი
+  var birthHtml = "";
+  if (profileData.birth_date) {
+    birthHtml = `
+      <div class="detail-item">
+        <span class="icon"><img src="icons/cake.svg" class="post-action-icon" alt="Birthday"></span>
+        <span>${profileData.birth_date}</span>
+      </div>`;
+  } else if (profileData.age) {
+    birthHtml = `
+      <div class="detail-item">
+        <span class="icon"><img src="icons/cake.svg" class="post-action-icon" alt="Age"></span>
+        <span>${profileData.age}</span>
+      </div>`;
+  }
 
-      // სამუშაო ადგილი / პროფესია
-      var jobHtml = profileData.job_title ? `
-        <div class="detail-item">
-          <span class="icon"><img src="icons/briefcase-business.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Job"></span>
-          <span>${t.job}: <strong>${profileData.job_title}</strong></span>
-        </div>` : '';
+  // 2. ურთიერთობის სტატუსი (თარგმანით)
+  var relHtml = "";
+  if (profileData.relationship) {
+    var relVal = profileData.relationship;
+    if (relVal === 'Single') relVal = t.relSingle || "Single";
+    else if (relVal === 'In a relationship') relVal = t.relInRelationship || "In a relationship";
+    else if (relVal === 'Engaged') relVal = t.relEngaged || "Engaged";
+    else if (relVal === 'Married') relVal = t.relMarried || "Married";
+    else if (relVal === "It's complicated") relVal = t.relComplicated || "It's complicated";
 
-      // ამჟამინდელი ქალაქი
-      var userCity = profileData.current_city || profileData.real_ip_city;
-      var cityHtml = userCity ? `
-        <div class="detail-item">
-          <span class="icon"><img src="icons/house.svg" class="post-action-icon" style="width:16px;height:16px;" alt="City"></span>
-          <span>${t.city}: <strong>${userCity}</strong></span>
-        </div>` : '';
+    relHtml = `
+      <div class="detail-item">
+        <span class="icon"><img src="icons/heart.svg" class="post-action-icon" alt="Relationship"></span>
+        <span>${relVal}</span>
+      </div>`;
+  }
 
-      // ქვეყანა
-      var userCountry = profileData.country || profileData.real_ip_country;
-      var countryHtml = userCountry ? `
-        <div class="detail-item">
-          <span class="icon"><img src="icons/map-pinned.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Country"></span>
-          <span>${t.country}: <strong>${userCountry}</strong></span>
-        </div>` : '';
+  // 3. სქესი (მხოლოდ პასუხი)
+  var genderHtml = "";
+  if (profileData.gender) {
+    var genVal = profileData.gender;
+    if (genVal === 'Male') genVal = (currentLang === 'ka') ? "მამრობითი" : genVal;
+    else if (genVal === 'Female') genVal = (currentLang === 'ka') ? "მდედრობითი" : genVal;
+    else if (genVal === 'Other') genVal = (currentLang === 'ka') ? "სხვა" : genVal;
 
-      // ურთიერთობის სტატუსი
-      var relHtml = profileData.relationship ? `
-        <div class="detail-item">
-          <span class="icon"><img src="icons/heart.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Relationship"></span>
-          <span>${t.relStatus}: <strong>${profileData.relationship}</strong></span>
-        </div>` : '';
+    genderHtml = `
+      <div class="detail-item">
+        <span class="icon"><img src="icons/venus-and-mars.svg" class="post-action-icon" alt="Gender"></span>
+        <span>${genVal}</span>
+      </div>`;
+  }
 
-      // ცხოვრებისეული მოვლენები
-      var eventHtml = profileData.life_events ? `
-        <div class="detail-item">
-          <span class="icon"><img src="icons/wand-sparkles.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Events"></span>
-          <span>${t.lifeEvents}: <strong>${profileData.life_events}</strong></span>
-        </div>` : '';
+  // 4. სამუშაო ადგილი / პოზიცია
+  var jobHtml = profileData.job_title ? `
+    <div class="detail-item">
+      <span class="icon"><img src="icons/briefcase-business.svg" class="post-action-icon" alt="Job"></span>
+      <span>${profileData.job_title}</span>
+    </div>` : '';
 
-      container.innerHTML = genderHtml + ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
-    }   
+  // 5. ქალაქი
+  var userCity = profileData.current_city || profileData.real_ip_city;
+  var cityHtml = userCity ? `
+    <div class="detail-item">
+      <span class="icon"><img src="icons/house.svg" class="post-action-icon" alt="City"></span>
+      <span>${userCity}</span>
+    </div>` : '';
+
+  // 6. ქვეყანა
+  var userCountry = profileData.country || profileData.real_ip_country;
+  var countryHtml = userCountry ? `
+    <div class="detail-item">
+      <span class="icon"><img src="icons/map-pinned.svg" class="post-action-icon" alt="Country"></span>
+      <span>${userCountry}</span>
+    </div>` : '';
+
+  // 7. ცხოვრებისეული მოვლენები
+  var eventHtml = profileData.life_events ? `
+    <div class="detail-item">
+      <span class="icon"><img src="icons/wand-sparkles.svg" class="post-action-icon" alt="Events"></span>
+      <span>${profileData.life_events}</span>
+    </div>` : '';
+
+  var allItemsHtml = birthHtml + relHtml + genderHtml + jobHtml + cityHtml + countryHtml + eventHtml;
+
+  // თუ მომხმარებელს არაფერი აქვს შევსებული
+  if (!allItemsHtml.trim()) {
+    container.innerHTML = "";
+    return;
+  }
+
+  // ფანქრის ხატულა (მხოლოდ საკუთარ პროფილზე)
+  var isOwnProfile = (activeViewingProfileId === (currentUser ? currentUser.uid : null));
+  var editPenHtml = isOwnProfile ? `
+    <div class="profile-details-edit-pen" onclick="showEditProfileScreen()">
+      <img src="icons/pen.svg" class="post-action-icon" style="width: 18px; height: 18px; opacity: 0.8;" alt="Edit">
+    </div>
+  ` : '';
+
+  var titleText = t.personalDetailsTitle || "პერსონალური დეტალური ინფორმაცია";
+
+  container.innerHTML = `
+    <div class="profile-details-header-row">
+      <div class="profile-details-main-title">${titleText}</div>
+      ${editPenHtml}
+    </div>
+    <div class="profile-details-list">
+      ${allItemsHtml}
+    </div>
+  `;
+}
+
 
     
    function updateRealtimeStats(userId) {
