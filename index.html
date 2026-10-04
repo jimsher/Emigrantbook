@@ -9620,6 +9620,88 @@ function clearAllSearchHistory() {
   </div>
 </div>  
 
+  <!-- აწ იწყება სამი წერტილი და იქსის მოდალუ -->
+  <!-- 📱 Facebook Style Other Post Bottom Sheet Modal -->
+<div id="eb-other-post-modal" class="custom-lang-modal-overlay" onclick="closeOtherPostBottomSheet()" style="display: none; align-items: flex-end; z-index: 100000;">
+  <div class="eb-share-sheet" onclick="event.stopPropagation()" style="padding: 12px 14px 20px 14px; max-height: 80vh; overflow-y: auto;">
+    <div class="share-drag-bar" style="margin-bottom: 12px;"></div>
+    
+    <!-- ბლოკი 1: დაინტერესება -->
+    <div style="background: rgba(0, 0, 0, 0.04); border-radius: 10px; padding: 4px 8px; margin-bottom: 12px;">
+      <div onclick="handleOtherPostAction('interested')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: #e4e6eb; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: #050505;">+</div>
+        <div>
+          <div id="lbl-sheet-interested" style="font-weight: 700; font-size: 14px; color: #050505;">Interested</div>
+          <div id="lbl-sheet-interested-sub" style="font-size: 12px; color: #65676b;">You will see more posts like this.</div>
+        </div>
+      </div>
+      <div onclick="handleOtherPostAction('not_interested')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer;">
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: #e4e6eb; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: #050505;">−</div>
+        <div>
+          <div id="lbl-sheet-not-interested" style="font-weight: 700; font-size: 14px; color: #050505;">Not interested</div>
+          <div id="lbl-sheet-not-interested-sub" style="font-size: 12px; color: #65676b;">You will see fewer posts like this.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ბლოკი 2: მოქმედებები -->
+    <div style="background: rgba(0, 0, 0, 0.04); border-radius: 10px; padding: 4px 8px; display: flex; flex-direction: column;">
+      <!-- შენახვა -->
+      <div onclick="handleOtherPostAction('save')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <img src="icons/bookmark.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Save">
+        <div>
+          <div id="lbl-sheet-save" style="font-weight: 700; font-size: 14px; color: #050505;">Save post</div>
+          <div id="lbl-sheet-save-sub" style="font-size: 12px; color: #65676b;">Add this to your saved items.</div>
+        </div>
+      </div>
+
+      <!-- დამალვა -->
+      <div onclick="handleOtherPostAction('hide')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <div style="font-size: 18px; width: 20px; text-align: center; color: #050505;">⌧</div>
+        <div>
+          <div id="lbl-sheet-hide" style="font-weight: 700; font-size: 14px; color: #050505;">Hide post</div>
+          <div id="lbl-sheet-hide-sub" style="font-size: 12px; color: #65676b;">Never show this post again.</div>
+        </div>
+      </div>
+
+      <!-- მოხსენება -->
+      <div onclick="handleOtherPostAction('report')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <img src="icons/triangle-alert.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Report">
+        <div>
+          <div id="lbl-sheet-report" style="font-weight: 700; font-size: 14px; color: #050505;">Report post</div>
+          <div id="lbl-sheet-report-sub" style="font-size: 12px; color: #65676b;">Let us know about a problem with this post.</div>
+        </div>
+      </div>
+
+      <!-- რატომ ვხედავ -->
+      <div onclick="handleOtherPostAction('why_seeing')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <div style="font-size: 18px; width: 20px; text-align: center; color: #050505;">ⓘ</div>
+        <div id="lbl-sheet-why-seeing" style="font-weight: 700; font-size: 14px; color: #050505;">Why am I seeing this post?</div>
+      </div>
+
+      <!-- ანგარიშის შესახებ -->
+      <div onclick="handleOtherPostAction('about_account')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <img src="icons/database.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="About">
+        <div id="lbl-sheet-about" style="font-weight: 700; font-size: 14px; color: #050505;">About this account</div>
+      </div>
+
+      <!-- ცნობები -->
+      <div onclick="handleOtherPostAction('toggle_notifs')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <img src="icons/clock-4.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Notif">
+        <div id="lbl-sheet-notifs" style="font-weight: 700; font-size: 14px; color: #050505;">Turn on notifications for this post</div>
+      </div>
+
+      <!-- ბმული -->
+      <div onclick="handleOtherPostAction('copy_link')" style="display: flex; align-items: center; gap: 12px; padding: 10px 6px; cursor: pointer;">
+        <img src="icons/tag.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Copy Link">
+        <div id="lbl-sheet-copy" style="font-weight: 700; font-size: 14px; color: #050505;">Copy link</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- აქ მთავრდება --> 
+
 
   <!-- აქ იწყება -->
   <!-- ქასთომ დადასტურების მოდალი (Dark UI) -->
