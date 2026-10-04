@@ -8596,6 +8596,64 @@ function openNotificationTarget(postId, userId) {
   }, 400);
 }
 
+
+    // ფუნქცია სამი წერტილი და იქსის
+    var activeTargetOtherPostId = null;
+var activeTargetOtherPostAuthor = "";
+
+function openOtherPostBottomSheet(postId, authorNameEncoded, event) {
+  if (event) event.stopPropagation();
+  activeTargetOtherPostId = postId;
+  activeTargetOtherPostAuthor = decodeURIComponent(authorNameEncoded || "");
+  
+  if (typeof applyLanguageDOM === 'function') applyLanguageDOM();
+  
+  var modal = document.getElementById('eb-other-post-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeOtherPostBottomSheet() {
+  var modal = document.getElementById('eb-other-post-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function handleOtherPostAction(action) {
+  var postId = activeTargetOtherPostId;
+  var authorName = activeTargetOtherPostAuthor;
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  
+  closeOtherPostBottomSheet();
+
+  if (action === 'interested') {
+    alert(t.interestedAlert || "მადლობა! თქვენი არხი მოერგება თქვენს ინტერესებს.");
+  } else if (action === 'not_interested') {
+    openOtherPostHideSurvey(postId, encodeURIComponent(authorName));
+  } else if (action === 'save') {
+    alert(t.savedAlert || "პოსტი შენახულია!");
+  } else if (action === 'hide') {
+    openOtherPostHideSurvey(postId, encodeURIComponent(authorName));
+  } else if (action === 'report') {
+    alert(t.reportAlert || "მადლობა! პოსტი გადაცემულია ადმინისტრაციას შესამოწმებლად.");
+  } else if (action === 'why_seeing') {
+    alert(t.whySeeingAlert || "ამ პოსტს ხედავთ, რადგან ის საჯაროა ან თქვენს სამეგობრო წრეს ეკუთვნის.");
+  } else if (action === 'about_account') {
+    alert((t.userUnit || "მომხმარებელი") + ": " + (authorName || "User"));
+  } else if (action === 'toggle_notifs') {
+    alert(t.notifsOnAlert || "ცნობები ამ პოსტისთვის ჩართულია.");
+  } else if (action === 'copy_link') {
+    var link = "https://emigrantbook.com?post=" + postId;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link).then(function() {
+        alert(t.linkCopied || "ბმული დაკოპირებულია!");
+      });
+    } else {
+      prompt(t.copyPostLink || "დააკოპირეთ ბმული:", link);
+    }
+  }
+}
+
+    // აქ მატაბრდება
+
 // აქ იწყება
 /* ==========================================================================
    👥 FACEBOOK STYLE მეგობრების გვერდის ლოგიკა + საერთო მეგობრები რეალურად
