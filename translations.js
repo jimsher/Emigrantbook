@@ -418,6 +418,20 @@
     aboutThisAccount: "ამ ანგარიშის შესახებ",
     turnOnNotifsPost: "ცნობების ჩართვა ამ პოსტისთვის",
     copyPostLink: "ბმულის კოპირება",
+
+    whyNotInterested: "რატომ არ ხართ დაინტერესებული?",
+    surveyNotRelevant: "არ შეესაბამება ჩემს ინტერესის სფეროს...",
+    surveyFraud: "თაღლითობა",
+    surveySexual: "სექსუალური",
+    surveyDisturbing: "შემაშფოთებელი",
+    surveyDontLikeCreator: "არ მომწონს შიგთავსის შემქმნელი",
+    surveyOther: "სხვა",
+    whatElseCanDo: "კიდევ რა შეგიძლიათ მოიმოქმედოთ",
+    snoozeAuthor30: "დროებით ჩაჩუმდეს {name} 30 დღით",
+    appealPost: "პოსტის გასაჩივრება",
+    undoHidePost: "პოსტის დამალვის მოხსნა",
+    snoozeSuccess: "ავტორი დროებით გაჩუმებულია 30 დღით.",
+    feedbackThanks: "მადლობა გამოხმაურებისთვის!",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
