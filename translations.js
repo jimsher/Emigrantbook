@@ -117,6 +117,20 @@
     aboutThisAccount: "About this account",
     turnOnNotifsPost: "Turn on notifications for this post",
     copyPostLink: "Copy link",
+
+    whyNotInterested: "Why aren't you interested?",
+    surveyNotRelevant: "Not relevant to my interests...",
+    surveyFraud: "Fraud or scam",
+    surveySexual: "Sexual content",
+    surveyDisturbing: "Disturbing",
+    surveyDontLikeCreator: "I don't like this creator",
+    surveyOther: "Other",
+    whatElseCanDo: "What else you can do",
+    snoozeAuthor30: "Snooze {name} for 30 days",
+    appealPost: "Report post",
+    undoHidePost: "Undo hide post",
+    snoozeSuccess: "Author has been snoozed for 30 days.",
+    feedbackThanks: "Thanks for your feedback!",
     
 
     // აქ იწყება აქტივობის ფაილი  
