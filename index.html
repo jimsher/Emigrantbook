@@ -3556,6 +3556,15 @@ auth.onAuthStateChanged(function(user) {
     if (typeof unsubscribePosts === 'function') { unsubscribePosts(); }
     if (typeof unsubscribeCalls === 'function') { unsubscribeCalls(); }
 
+    if (Array.isArray(messengerUnsubscribeGroup)) {
+      messengerUnsubscribeGroup.forEach(function(unsub) {
+        if (typeof unsub === 'function') unsub();
+      });
+      messengerUnsubscribeGroup = [];
+    }
+    var badge = document.getElementById('messenger-badge');
+    if (badge) badge.style.display = 'none';
+
     // ნავბარის დამალვა გამოსვლისას
     var bottomNav = document.getElementById('bottomNav');
     if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
