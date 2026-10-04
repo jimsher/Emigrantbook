@@ -7219,16 +7219,14 @@ function unhidePostFromFeed(postId) {
         </div>
       </div>
     `;
-  } else if (currentUser) {
-    // 🌟 სხვის პოსტზე Facebook-ის სტილის სამი წერტილი და იქსი
+    } else if (currentUser) {
     optionsMenuHtml = `
       <div class="other-post-actions-header" style="display: flex; align-items: center; gap: 4px;">
-        <button type="button" class="post-header-action-btn" onclick="openOtherPostBottomSheet('${post.id}', '${encodeURIComponent(post.author_name || '')}', event)" style="background: transparent; border: none; color: #65676b; font-size: 20px; font-weight: bold; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 50%;" title="მენიუ">···</button>
-        <button type="button" class="post-header-action-btn" onclick="openOtherPostHideSurvey('${post.id}', '${encodeURIComponent(post.author_name || '')}', event)" style="background: transparent; border: none; color: #65676b; font-size: 18px; font-weight: 600; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 50%;" title="დამალვა">✕</button>
+        <button type="button" class="post-header-action-btn" onclick="openOtherPostBottomSheet('${post.id}', '${encodeURIComponent(post.author_name || '')}', '${post.user_id}', event)" style="background: transparent; border: none; color: #65676b; font-size: 20px; font-weight: bold; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 50%;" title="მენიუ">···</button>
+        <button type="button" class="post-header-action-btn" onclick="openOtherPostHideSurvey('${post.id}', '${encodeURIComponent(post.author_name || '')}', '${post.user_id}', event)" style="background: transparent; border: none; color: #65676b; font-size: 18px; font-weight: 600; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 50%;" title="დამალვა">✕</button>
       </div>
     `;
   }
-
 
 
   var hasLiked = likedPosts.includes(post.id);
