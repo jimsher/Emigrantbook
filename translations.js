@@ -373,6 +373,21 @@
 
     updatedAvatarText: "-მ(ა) განაახლა თავისი პროფილის სურათი.",
     updatedCoverText: "-მ(ა) განაახლა თავისი გარეკანის ფოტო.",
+
+    interested: "მაინტერესებს",
+    interestedSub: "თქვენთვის ნაჩვენები პოსტებიდან მეტი იქნება ამის მსგავსი.",
+    notInterested: "არ მაინტერესებს",
+    notInterestedSub: "თქვენთვის ნაჩვენები პოსტებიდან ნაკლები იქნება ამის მსგავსი.",
+    savePostItem: "პოსტის შენახვა",
+    savePostItemSub: "ამის დამატება თქვენს შენახულ ერთეულებში.",
+    hidePostItem: "პოსტის დამალვა",
+    hidePostItemSub: "აღარასდროს მაჩვენოთ ეს პოსტი.",
+    reportPostItem: "პოსტზე მოხსენება",
+    reportPostItemSub: "გვაცნობეთ ამ პოსტთან დაკავშირებული პრობლემის შესახებ.",
+    whySeeingPost: "რატომ ვხედავ ამ პოსტს?",
+    aboutThisAccount: "ამ ანგარიშის შესახებ",
+    turnOnNotifsPost: "ცნობების ჩართვა ამ პოსტისთვის",
+    copyPostLink: "ბმულის კოპირება",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
