@@ -102,6 +102,21 @@
 
     updatedAvatarText: "updated their profile picture.",
     updatedCoverText: "updated their cover photo.",
+
+    interested: "Interested",
+    interestedSub: "You will see more posts like this.",
+    notInterested: "Not interested",
+    notInterestedSub: "You will see fewer posts like this.",
+    savePostItem: "Save post",
+    savePostItemSub: "Add this to your saved items.",
+    hidePostItem: "Hide post",
+    hidePostItemSub: "Never show this post again.",
+    reportPostItem: "Report post",
+    reportPostItemSub: "Let us know about a problem with this post.",
+    whySeeingPost: "Why am I seeing this post?",
+    aboutThisAccount: "About this account",
+    turnOnNotifsPost: "Turn on notifications for this post",
+    copyPostLink: "Copy link",
     
 
     // აქ იწყება აქტივობის ფაილი  
