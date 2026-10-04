@@ -774,6 +774,20 @@
     aboutThisAccount: "À propos de ce compte",
     turnOnNotifsPost: "Activer les notifications pour cette publication",
     copyPostLink: "Copier le lien",
+
+    whyNotInterested: "Pourquoi n'êtes-vous pas intéressé(e) ?",
+    surveyNotRelevant: "Ne correspond pas à mes centres d'intérêt...",
+    surveyFraud: "Fraude ou arnaque",
+    surveySexual: "Contenu sexuel",
+    surveyDisturbing: "Dérangeant",
+    surveyDontLikeCreator: "Je n'aime pas ce créateur",
+    surveyOther: "Autre",
+    whatElseCanDo: "Ce que vous pouvez faire d'autre",
+    snoozeAuthor30: "Mettre {name} en sourdine pendant 30 jours",
+    appealPost: "Signaler la publication",
+    undoHidePost: "Annuler le masquage",
+    snoozeSuccess: "Auteur mis en sourdine pendant 30 jours.",
+    feedbackThanks: "Merci pour votre retour !",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
