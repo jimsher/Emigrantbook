@@ -6623,7 +6623,25 @@ function loadPosts(isNextPage) {
             var isFriend = myFriendsSet.has(authorId);
             var isBlocked = blockedSet.has(authorId);
 
-            var shouldShow = !isBlocked && (isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend));
+            // 🛑 ჩაჩუმებული ავტორის შემოწმება (30 დღე)
+            var isSnoozed = false;
+            try {
+              var snoozedMap = JSON.parse(localStorage.getItem('eb_snoozed_authors_' + currentUser.uid)) || {};
+              if (snoozedMap[authorId] && Date.now() < snoozedMap[authorId]) {
+                isSnoozed = true;
+              }
+            } catch(e) {}
+
+            // 🛑 დამალული პოსტის შემოწმება
+            var isManuallyHidden = false;
+            try {
+              var hiddenList = JSON.parse(localStorage.getItem('eb_hidden_posts_' + currentUser.uid)) || [];
+              if (hiddenList.includes(postData.id)) {
+                isManuallyHidden = true;
+              }
+            } catch(e) {}
+
+            var shouldShow = !isBlocked && !isSnoozed && !isManuallyHidden && (isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend));
 
             if (shouldShow) {
               postsWall.innerHTML += createPostCardHtml(postData);
@@ -6638,6 +6656,7 @@ function loadPosts(isNextPage) {
               }
             }
           });
+
 
           observeVideos();
           isLoadingMorePosts = false;
