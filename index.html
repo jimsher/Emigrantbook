@@ -6039,46 +6039,128 @@ function sendFriendRequest(targetUserId) {
       }
     }
 
-    function loadUserPosts(userId) {
+    // პროფილის კედლის პოსტები
+    var profileLastVisiblePostDoc = null;
+var isLoadingMoreProfilePosts = false;
+var hasMoreProfilePosts = true;
+var isProfileScrollAttached = false;
+
+function loadUserPosts(userId, isNextPage) {
   var profileWall = document.getElementById('profile-posts-wall');
   var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
   var btnPosts = document.getElementById('tab-btn-posts');
-  if(profileWall && btnPosts && btnPosts.classList.contains('active')) {
+
+  if (!isNextPage) {
+    profileLastVisiblePostDoc = null;
+    hasMoreProfilePosts = true;
+    isLoadingMoreProfilePosts = false;
+
+    if (profileWall && btnPosts && btnPosts.classList.contains('active')) {
       profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
+    }
+
+    // 🌟 1. რეალური პოსტების რაოდენობის დათვლა ჰედერისთვის (20-ზე გაყინვის გარეშე)
+    if (typeof db.collection('posts').where('user_id', '==', userId).count === 'function') {
+      db.collection('posts')
+        .where('user_id', '==', userId)
+        .count()
+        .get()
+        .then(function(countSnap) {
+          updateProfileStats(userId, countSnap.data().count);
+        })
+        .catch(function(err) {
+          console.warn("Profile count error:", err);
+        });
+    } else {
+      db.collection('posts').where('user_id', '==', userId).get().then(function(allSnap) {
+        updateProfileStats(userId, allSnap.size);
+      }).catch(function(){});
+    }
+  } else {
+    if (isLoadingMoreProfilePosts || !hasMoreProfilePosts) return;
   }
 
-  db.collection('posts')
+  isLoadingMoreProfilePosts = true;
+
+  // 🌟 2. შენი ორიგინალი მოთხოვნა პაგინაციის დამატებით
+  var query = db.collection('posts')
     .where('user_id', '==', userId)
-    .orderBy('created_at', 'desc')
-    .limit(20)
+    .orderBy('created_at', 'desc');
+
+  if (isNextPage && profileLastVisiblePostDoc) {
+    query = query.startAfter(profileLastVisiblePostDoc);
+  }
+
+  query.limit(20)
     .get()
     .then(function(snapshot) {
-      var posts = [];
-      snapshot.forEach(function(doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
-      
-      updateProfileStats(userId, posts.length);
-
-      if (!profileWall) return;
-
-      if (posts.length === 0) {
-        profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">Empty wall.</div>`;
+      if (!profileWall) {
+        isLoadingMoreProfilePosts = false;
         return;
       }
 
-      profileWall.innerHTML = "";
+      if (!isNextPage) {
+        profileWall.innerHTML = "";
+      }
+
+      if (snapshot.empty) {
+        hasMoreProfilePosts = false;
+        isLoadingMoreProfilePosts = false;
+        if (!isNextPage) {
+          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">Empty wall.</div>`;
+        }
+        return;
+      }
+
+      profileLastVisiblePostDoc = snapshot.docs[snapshot.docs.length - 1];
+      if (snapshot.docs.length < 20) {
+        hasMoreProfilePosts = false;
+      }
+
+      var posts = [];
+      snapshot.forEach(function(doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
       
+      // 🌟 შენი ორიგინალი რენდერი (სრულიად ხელუხლებელი)
       posts.forEach(function(post) {
-        // აქ გადაეცემა true, რომ კოდმა იცოდეს პროფილის გვერდია და მთავარზე დამალული პოსტიც აქ გამოჩნდეს
         profileWall.innerHTML += createPostCardHtml(post, true);
         renderCommentsCountOnly(post);
       });
       observeVideos();
+
+      isLoadingMoreProfilePosts = false;
+
+      // 🌟 3. სქროლის მსმენელი მხოლოდ პროფილის პოსტების კედლისთვის
+      if (!isProfileScrollAttached) {
+        isProfileScrollAttached = true;
+        window.addEventListener('scroll', function() {
+          var profScr = document.getElementById('profile-screen');
+          var btnPostsActive = document.getElementById('tab-btn-posts');
+          if (!profScr || profScr.style.display !== 'block') return;
+          if (!btnPostsActive || !btnPostsActive.classList.contains('active')) return;
+
+          if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 450) {
+            if (!isLoadingMoreProfilePosts && hasMoreProfilePosts) {
+              var currentTargetId = activeViewingProfileId || (currentUser ? currentUser.uid : null);
+              if (currentTargetId) {
+                loadUserPosts(currentTargetId, true);
+              }
+            }
+          }
+        }, { passive: true });
+      }
+
     }).catch(function(error) {
+      isLoadingMoreProfilePosts = false;
       console.error("Firestore Index Error or query failure: ", error);
-      if (profileWall) profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">Error loading posts.</div>`;
+      if (!isNextPage && profileWall) {
+        profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">Error loading posts.</div>`;
+      }
     });
 }
 
+    // აქ მთავრდება
+
+  
     function showEditProfileScreen() {
       if (!userProfile) return;
 
