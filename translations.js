@@ -610,6 +610,20 @@
     aboutThisAccount: "Об этом аккаунте",
     turnOnNotifsPost: "Включить уведомления для этой публикации",
     copyPostLink: "Копировать ссылку",
+
+    whyNotInterested: "Почему вам это не интересно?",
+    surveyNotRelevant: "Не соответствует моим интересам...",
+    surveyFraud: "Мошенничество",
+    surveySexual: "Сексуальный подтекст",
+    surveyDisturbing: "Тревожный контент",
+    surveyDontLikeCreator: "Мне не нравится этот автор",
+    surveyOther: "Другое",
+    whatElseCanDo: "Что еще вы можете сделать",
+    snoozeAuthor30: "Приостановить показ {name} на 30 дней",
+    appealPost: "Пожаловаться на публикацию",
+    undoHidePost: "Отменить скрытие публикации",
+    snoozeSuccess: "Публикации автора скрыты на 30 дней.",
+    feedbackThanks: "Спасибо за ваш отзыв!",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
