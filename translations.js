@@ -253,6 +253,21 @@
 
     updatedAvatarText: "ha aggiornato la sua immagine del profilo.",
     updatedCoverText: "ha aggiornato la sua immagine di copertina.",
+
+    interested: "Mi interessa",
+    interestedSub: "Mostra più post simili a questo.",
+    notInterested: "Non mi interessa",
+    notInterestedSub: "Mostra meno post simili a questo.",
+    savePostItem: "Salva post",
+    savePostItemSub: "Aggiungi questo elemento ai tuoi elementi salvati.",
+    hidePostItem: "Nascondi post",
+    hidePostItemSub: "Non mostrare mai più questo post.",
+    reportPostItem: "Segnala post",
+    reportPostItemSub: "Segnala un problema relativo a questo post.",
+    whySeeingPost: "Perché vedo questo post?",
+    aboutThisAccount: "Informazioni su questo account",
+    turnOnNotifsPost: "Attiva le notifiche per questo post",
+    copyPostLink: "Copia link",
       
    // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
