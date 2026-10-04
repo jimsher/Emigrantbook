@@ -303,6 +303,7 @@
 
     mutualSummaryText: "Amici con cui potresti avere legami in comune",
     followersSummaryText: "I follower sono membri di Emigrantbook",
+    personalDetailsTitle: "Dettagli personali",
       
    // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -1139,6 +1140,7 @@
 
     mutualSummaryText: "Φίλοι με τους οποίους έχετε κοινά ενδιαφέροντα",
     followersSummaryText: "Οι ακόλουθοι είναι μέλη του Emigrantbook",
+    personalDetailsTitle: "Προσωπικές λεπτομέρειες",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
