@@ -1046,6 +1046,20 @@
     aboutThisAccount: "Σχετικά με αυτόν τον λογαριασμό",
     turnOnNotifsPost: "Ενεργοποίηση ειδοποιήσεων για αυτήν τη δημοσίευση",
     copyPostLink: "Αντιγραφή συνδέσμου",
+
+    whyNotInterested: "Γιατί δεν σας ενδιαφέρει;",
+    surveyNotRelevant: "Δεν σχετίζεται με τα ενδιαφέροντά μου...",
+    surveyFraud: "Απάτη",
+    surveySexual: "Σεξουαλικό περιεχόμενο",
+    surveyDisturbing: "Ενοχλητικό",
+    surveyDontLikeCreator: "Δεν μου αρέσει ο δημιουργός",
+    surveyOther: "Άλλο",
+    whatElseCanDo: "Τι άλλο μπορείτε να κάνετε",
+    snoozeAuthor30: "Σίγαση του χρήστη {name} για 30 ημέρες",
+    appealPost: "Αναφορά δημοσίευσης",
+    undoHidePost: "Αναίρεση απόκρυψης",
+    snoozeSuccess: "Ο χρήστης τέθηκε σε σίγαση για 30 ημέρες.",
+    feedbackThanks: "Ευχαριστούμε για τα σχόλιά σας!",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
