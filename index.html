@@ -9810,6 +9810,66 @@ function clearAllSearchHistory() {
   }
 }
 
+
+    // პროფილზე პატარა სამი ავატარის ფუნქცია
+    function renderProfileFollowersCluster(targetUserId) {
+  var summaryBlock = document.getElementById('profile-mutual-summary-block');
+  var clusterEl = document.getElementById('profile-mutual-avatars-cluster');
+  var textEl = document.getElementById('lbl-mutual-friends-summary');
+  if (!summaryBlock || !clusterEl || !textEl) return;
+
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+
+  // ბაზიდან ვიღებთ ამ მომხმარებლის მიღებულ მეგობრობებს (გამომწერებს)
+  db.collection('friend_requests')
+    .where('receiver_id', '==', targetUserId)
+    .where('status', '==', 'accepted')
+    .limit(10)
+    .get()
+    .then(function(snapshot) {
+      if (snapshot.empty) {
+        summaryBlock.style.display = 'none'; // თუ გამომწერი არ ჰყავს, ბლოკი იმალება
+        return;
+      }
+
+      var senderIds = [];
+      snapshot.forEach(function(docSnap) {
+        senderIds.push(docSnap.data().sender_id);
+      });
+
+      // ვიღებთ ბოლო 3 მომხმარებლის ID-ს
+      var topThreeIds = senderIds.slice(0, 3);
+
+      fetchMultipleProfilesCached(topThreeIds, function() {
+        var avatarsHtml = "";
+        topThreeIds.forEach(function(uId) {
+          var pData = cachedProfiles[uId] || {};
+          var avatar = pData.avatar_url || DEFAULT_AVATAR_URL;
+          avatarsHtml += `<img src="${avatar}" class="mutual-avatar-mini" alt="avatar">`;
+        });
+
+        clusterEl.innerHTML = avatarsHtml;
+
+        // ტექსტის შერჩევა: საკუთარ პროფილზე თუ სხვის პროფილზე
+        var label = (targetUserId === currentUser.uid) 
+          ? (t.mutualSummaryText || "მეგობრები, რომლებთანაც საერთო რამეები გაკავშირებთ")
+          : (t.followersSummaryText || "გამომწერები არიან Emigrantbook-ის მომხმარებლები");
+
+        textEl.innerText = label;
+        summaryBlock.style.display = 'flex';
+
+        // დაკლიკებისას გადავიდეს მეგობრების სრულ სიაზე
+        summaryBlock.onclick = function() {
+          openConnectionsScreen('followers');
+        };
+      });
+    }).catch(function(err) {
+      console.warn("Followers cluster error:", err);
+      summaryBlock.style.display = 'none';
+    });
+}
+
+    // აქ მთავრდება
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
