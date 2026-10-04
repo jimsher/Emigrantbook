@@ -299,6 +299,9 @@
     undoHidePost: "Annulla nascondi post",
     snoozeSuccess: "Autore messo in pausa per 30 giorni.",
     feedbackThanks: "Grazie per il tuo feedback!",
+
+    mutualSummaryText: "Amici con cui potresti avere legami in comune",
+    followersSummaryText: "I follower sono membri di Emigrantbook",
       
    // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -630,6 +633,9 @@
     undoHidePost: "Отменить скрытие публикации",
     snoozeSuccess: "Публикации автора скрыты на 30 дней.",
     feedbackThanks: "Спасибо за ваш отзыв!",
+
+    mutualSummaryText: "Друзья, с которыми у вас есть общие связи",
+    followersSummaryText: "Подписчики являются пользователями Emigrantbook",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -794,6 +800,9 @@
     undoHidePost: "Annuler le masquage",
     snoozeSuccess: "Auteur mis en sourdine pendant 30 jours.",
     feedbackThanks: "Merci pour votre retour !",
+
+    mutualSummaryText: "Amis avec lesquels vous avez des liens en commun",
+    followersSummaryText: "Les abonnés sont des membres d'Emigrantbook",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -958,6 +967,9 @@
     undoHidePost: "Ausblenden rückgängig machen",
     snoozeSuccess: "Autor für 30 Tage stummgeschaltet.",
     feedbackThanks: "Vielen Dank für dein Feedback!",
+
+    mutualSummaryText: "Freunde, mit denen du Gemeinsamkeiten hast",
+    followersSummaryText: "Follower sind Mitglieder von Emigrantbook",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -1122,6 +1134,9 @@
     undoHidePost: "Αναίρεση απόκρυψης",
     snoozeSuccess: "Ο χρήστης τέθηκε σε σίγαση για 30 ημέρες.",
     feedbackThanks: "Ευχαριστούμε για τα σχόλιά σας!",
+
+    mutualSummaryText: "Φίλοι με τους οποίους έχετε κοινά ενδιαφέροντα",
+    followersSummaryText: "Οι ακόλουθοι είναι μέλη του Emigrantbook",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
