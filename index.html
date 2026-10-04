@@ -8689,10 +8689,132 @@ function handleOtherPostAction(action) {
     }
   }
 }
+// აქ მატაბრდება
 
-    // აქ მატაბრდება
+    
+    // აქ იწყება იქსის ფუნქცია
+    // ორიგინალი პოსტის HTML-ის დროებითი მეხსიერება Undo-სთვის
+var hiddenPostsBackupHtml = {};
 
-// აქ იწყება
+function openOtherPostHideSurvey(postId, authorNameEncoded, event) {
+  if (event) event.stopPropagation();
+
+  var postCard = document.getElementById('post-card-' + postId);
+  if (!postCard) return;
+
+  var authorName = decodeURIComponent(authorNameEncoded || "User");
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+
+  // ვინახავთ ძველ HTML-ს, რომ "დამალვის მოხსნაზე" (Undo) უცვლელად აღდგეს
+  if (!hiddenPostsBackupHtml[postId]) {
+    hiddenPostsBackupHtml[postId] = postCard.innerHTML;
+  }
+
+  var snoozeText = (t.snoozeAuthor30 || "დროებით ჩაჩუმდეს {name} 30 დღით").replace("{name}", authorName);
+
+  // პოსტის ადგილზე Facebook-ის სტილის ბარათის ჩასმა
+  postCard.innerHTML = `
+    <div class="fb-hide-survey-box" style="padding: 16px; font-family: inherit; color: #050505;">
+      <!-- ზედა სათაური -->
+      <div style="font-weight: 700; font-size: 16px; margin-bottom: 14px;">
+        ${t.whyNotInterested || "რატომ არ ხართ დაინტერესებული?"}
+      </div>
+
+      <!-- ჩიპების / ტეგების სია -->
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
+        <button type="button" onclick="submitSurveyReason('${postId}')" style="background: #e4e6eb; color: #050505; border: none; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;">
+          ${t.surveyNotRelevant || "არ შეესაბამება ჩემს ინტერესის სფეროს..."}
+        </button>
+        <button type="button" onclick="submitSurveyReason('${postId}')" style="background: #e4e6eb; color: #050505; border: none; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;">
+          ${t.surveyFraud || "თაღლითობა"}
+        </button>
+        <button type="button" onclick="submitSurveyReason('${postId}')" style="background: #e4e6eb; color: #050505; border: none; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;">
+          ${t.surveySexual || "სექსუალური"}
+        </button>
+        <button type="button" onclick="submitSurveyReason('${postId}')" style="background: #e4e6eb; color: #050505; border: none; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;">
+          ${t.surveyDisturbing || "შემაშფოთებელი"}
+        </button>
+        <button type="button" onclick="submitSurveyReason('${postId}')" style="background: #e4e6eb; color: #050505; border: none; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;">
+          ${t.surveyDontLikeCreator || "არ მომწონს შიგთავსის შემქმნელი"}
+        </button>
+        <button type="button" onclick="submitSurveyReason('${postId}')" style="background: #e4e6eb; color: #050505; border: none; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;">
+          ${t.surveyOther || "სხვა"}
+        </button>
+      </div>
+
+      <!-- ქვედა სექცია: კიდევ რა შეგიძლიათ მოიმოქმედოთ -->
+      <div style="font-weight: 700; font-size: 15px; margin-bottom: 12px;">
+        ${t.whatElseCanDo || "კიდევ რა შეგიძლიათ მოიმოქმედოთ"}
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- 1. ჩაჩუმება 30 დღით -->
+        <div onclick="snoozeAuthor('${postId}')" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+          <img src="icons/clock-4.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Snooze">
+          <span style="font-size: 14px; font-weight: 600;">${snoozeText}</span>
+        </div>
+
+        <!-- 2. გასაჩივრება -->
+        <div onclick="reportSurveyPost('${postId}')" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+          <img src="icons/triangle-alert.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Report">
+          <span style="font-size: 14px; font-weight: 600;">${t.appealPost || "პოსტის გასაჩივრება"}</span>
+        </div>
+
+        <!-- 3. დამალვის მოხსნა (Undo) -->
+        <div onclick="undoHideOtherPost('${postId}')" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+          <img src="icons/undo-2.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Undo">
+          <span style="font-size: 14px; font-weight: 600;">${t.undoHidePost || "პოსტის დამალვის მოხსნა"}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// მიზეზზე დაჭერა
+function submitSurveyReason(postId) {
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  var postCard = document.getElementById('post-card-' + postId);
+  if (postCard) {
+    postCard.innerHTML = `
+      <div style="padding: 16px; text-align: center; color: #65676b; font-size: 14px; font-weight: 600;">
+        ✓ ${t.feedbackThanks || "მადლობა გამოხმაურებისთვის!"}
+      </div>
+    `;
+    setTimeout(function() {
+      if (postCard) postCard.remove();
+    }, 1500);
+  }
+}
+
+// 30 დღით ჩაჩუმება
+function snoozeAuthor(postId) {
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  alert(t.snoozeSuccess || "ავტორი დროებით გაჩუმებულია 30 დღით.");
+  var postCard = document.getElementById('post-card-' + postId);
+  if (postCard) postCard.remove();
+}
+
+// გასაჩივრება
+function reportSurveyPost(postId) {
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  alert(t.reportAlert || "მადლობა! პოსტი გადაცემულია ადმინისტრაციას შესამოწმებლად.");
+  var postCard = document.getElementById('post-card-' + postId);
+  if (postCard) postCard.remove();
+}
+
+// დამალვის მოხსნა (Undo - პოსტის დაბრუნება)
+function undoHideOtherPost(postId) {
+  var postCard = document.getElementById('post-card-' + postId);
+  if (postCard && hiddenPostsBackupHtml[postId]) {
+    postCard.innerHTML = hiddenPostsBackupHtml[postId];
+    delete hiddenPostsBackupHtml[postId];
+    if (typeof observeVideos === 'function') observeVideos();
+  }
+}
+
+    // აქ მთავრდება
+
+  // აქ იწყება
 /* ==========================================================================
    👥 FACEBOOK STYLE მეგობრების გვერდის ლოგიკა + საერთო მეგობრები რეალურად
    ========================================================================== */
