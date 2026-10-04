@@ -553,6 +553,21 @@
 
     updatedAvatarText: "обновил(а) фото профиля.",
     updatedCoverText: "обновил(а) фото обложки.",
+
+    interested: "Интересует",
+    interestedSub: "Вы будете видеть больше таких публикаций.",
+    notInterested: "Не интересует",
+    notInterestedSub: "Вы будете видеть меньше таких публикаций.",
+    savePostItem: "Сохранить публикацию",
+    savePostItemSub: "Добавить в сохраненное.",
+    hidePostItem: "Скрыть публикацию",
+    hidePostItemSub: "Больше не показывать эту публикацию.",
+    reportPostItem: "Пожаловаться",
+    reportPostItemSub: "Сообщить о проблеме с этой публикацией.",
+    whySeeingPost: "Почему я вижу эту публикацию?",
+    aboutThisAccount: "Об этом аккаунте",
+    turnOnNotifsPost: "Включить уведомления для этой публикации",
+    copyPostLink: "Копировать ссылку",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
