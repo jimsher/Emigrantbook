@@ -703,6 +703,21 @@
 
     updatedAvatarText: "a mis à jour sa photo de profil.",
     updatedCoverText: "a mis à jour sa photo de couverture.",
+
+    interested: "Intéressé(e)",
+    interestedSub: "Vous verrez plus de publications comme celle-ci.",
+    notInterested: "Pas intéressé(e)",
+    notInterestedSub: "Vous verrez moins de publications comme celle-ci.",
+    savePostItem: "Enregistrer la publication",
+    savePostItemSub: "Ajouter ceci à vos éléments enregistrés.",
+    hidePostItem: "Masquer la publication",
+    hidePostItemSub: "Ne plus jamais afficher cette publication.",
+    reportPostItem: "Signaler la publication",
+    reportPostItemSub: "Signalez-nous un problème concernant cette publication.",
+    whySeeingPost: "Pourquoi est-ce que je vois cette publication ?",
+    aboutThisAccount: "À propos de ce compte",
+    turnOnNotifsPost: "Activer les notifications pour cette publication",
+    copyPostLink: "Copier le lien",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
