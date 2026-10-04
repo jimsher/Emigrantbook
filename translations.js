@@ -131,6 +131,9 @@
     undoHidePost: "Undo hide post",
     snoozeSuccess: "Author has been snoozed for 30 days.",
     feedbackThanks: "Thanks for your feedback!",
+
+    mutualSummaryText: "Friends you may share connections with",
+    followersSummaryText: "Followers are Emigrantbook members",
     
 
     // აქ იწყება აქტივობის ფაილი  
@@ -460,6 +463,9 @@
     undoHidePost: "პოსტის დამალვის მოხსნა",
     snoozeSuccess: "ავტორი დროებით გაჩუმებულია 30 დღით.",
     feedbackThanks: "მადლობა გამოხმაურებისთვის!",
+
+    mutualSummaryText: "მეგობრები, რომლებთანაც საერთო რამეები გაკავშირებთ",
+    followersSummaryText: "გამომწერები არიან Emigrantbook-ის მომხმარებლები",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
