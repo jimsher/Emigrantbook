@@ -639,6 +639,7 @@
 
     mutualSummaryText: "Друзья, с которыми у вас есть общие связи",
     followersSummaryText: "Подписчики являются пользователями Emigrantbook",
+    personalDetailsTitle: "Подробная информация",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -806,6 +807,7 @@
 
     mutualSummaryText: "Amis avec lesquels vous avez des liens en commun",
     followersSummaryText: "Les abonnés sont des membres d'Emigrantbook",
+    personalDetailsTitle: "Informations personnelles",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -973,6 +975,7 @@
 
     mutualSummaryText: "Freunde, mit denen du Gemeinsamkeiten hast",
     followersSummaryText: "Follower sind Mitglieder von Emigrantbook",
+    personalDetailsTitle: "Steckbrief",
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
