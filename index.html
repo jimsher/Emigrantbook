@@ -7641,7 +7641,8 @@ function createPost() {
       });
     } 
 
-    function likePost(postId, isTiktokView) {
+    
+        function likePost(postId, isTiktokView) {
   if (!currentUser) return;
   var postRef = db.collection('posts').doc(postId);
   var likeRef = postRef.collection('post_likes').doc(currentUser.uid);
@@ -7689,43 +7690,8 @@ function createPost() {
                              targetAuthorId !== "all";
 
             if (isValidUid && targetAuthorId !== currentUser.uid) {
-              var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "მომხმარებელი");
-              var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "https://emigrantbook.com/icons/icon-192x192.png";
-
-              var pushPayload = {
-                app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
-                target_channel: "push",
-                include_aliases: {
-                  external_id: [targetAuthorId]
-                },
-                headings: { ka: myName, en: myName, it: myName, ru: myName },
-                contents: { 
-                  ka: "მოეწონა თქვენი პოსტი ❤️", 
-                  en: "Liked your post ❤️", 
-                  it: "Ha messo 'Mi piace' al tuo post ❤️", 
-                  ru: "Понравилась ваша публикация ❤️" 
-                },
-                url: "https://emigrantbook.com/index.html",
-                large_icon: myAvatar,
-                chrome_web_icon: myAvatar,
-                chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
-                collapse_id: Date.now().toString(),
-                web_push_topic: Date.now().toString(),
-                priority: 10,
-                android_visibility: 1,
-                ios_badgeType: "Increase",
-                ios_badgeCount: 1,
-                android_badge_type: "Increase",
-                android_badge_count: 1
-              };
-
-              fetch("https://dry-tree-6777.emigrantbook.workers.dev", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(pushPayload)
-              }).catch(function(err) {
-                console.warn("Like push error:", err);
-              });
+              // 🌟 ახალი მრავალენოვანი Push (7 ენით, შენი heart.svg ხატულით და Cloudflare ხიდით)
+              sendTargetedPush(targetAuthorId, 'like', 'https://emigrantbook.com/index.html');
             } else {
               console.log("Push skipped: Invalid author ID or own post:", targetAuthorId);
             }
@@ -7740,6 +7706,8 @@ function createPost() {
     console.error("Like check error:", err);
   });
 }
+    
+
 
     function updatePostLikesCount(postId, change) {
       var postRef = db.collection('posts').doc(postId);
