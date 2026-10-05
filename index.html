@@ -3025,6 +3025,11 @@ body.light-mode .sponsored-cta-btn:hover {
   localStorage.setItem('emigrantbook_lang', newLang);
   applyLanguageDOM();
 
+    if (window.OneSignal && window.OneSignal.User) {
+    OneSignal.User.setLanguage(newLang);
+  }
+
+
   if (currentUser) {
     db.collection('profiles').doc(currentUser.uid).update({ language: newLang }).catch(function(err) {
       console.warn("Language update in profile warning:", err);
