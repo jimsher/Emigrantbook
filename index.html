@@ -3460,13 +3460,17 @@ auth.onAuthStateChanged(function(user) {
 
     // Web OneSignal-ის სინქრონიზაცია
     try {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.login(user.uid);
-      });
-    } catch (e) {
-      console.warn("Web OneSignal Sync error:", e);
-    }
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.login(user.uid);
+    // 🌐 ვეუბნებით OneSignal-ს რა ენა აქვს მომხმარებელს რეალურად:
+    var activeLang = currentLang || 'en';
+    await OneSignal.User.setLanguage(activeLang);
+  });
+} catch (e) {
+  console.warn("Web OneSignal Sync error:", e);
+}
+
 
     var targetUserId = sessionStorage.getItem('target_view_user_id');
     var targetScreen = sessionStorage.getItem('target_screen');
