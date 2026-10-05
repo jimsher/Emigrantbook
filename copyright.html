@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ინტელექტუალური საკუთრება | Emigrantbook</title>
+  <title id="doc-title">ინტელექტუალური საკუთრება | Emigrantbook</title>
   <style>
     * {
       margin: 0;
@@ -246,29 +246,6 @@
     .rule-item-box span {
       color: #555555;
     }
-
-    .ip-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .ip-list li {
-      position: relative;
-      padding-left: 18px;
-      font-size: 13.5px;
-      color: #4b4f56;
-    }
-
-    .ip-list li::before {
-      content: '•';
-      position: absolute;
-      left: 4px;
-      color: #1877f2;
-      font-size: 18px;
-      line-height: 1;
-    }
   </style>
 </head>
 <body>
@@ -276,20 +253,20 @@
   <!-- ზედა ჰედერი -->
   <header class="ip-header">
     <div class="header-left">
-      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='terms-and-policies.html'" aria-label="უკან">
+      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='terms-and-policies.html'" aria-label="უკან" id="btn-back">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
       </button>
-      <span class="header-title">ინტელექტუალური საკუთრება</span>
+      <span class="header-title" id="txt-header-title">ინტელექტუალური საკუთრება</span>
     </div>
     <a href="index.html" class="header-logo">Emigrantbook</a>
   </header>
 
   <main class="ip-container">
 
-    <!-- ჩამოსაშლელი მენიუ (როგორც სქრინზეა) -->
+    <!-- ჩამოსაშლელი მენიუ -->
     <div class="dropdown-wrapper">
       <button class="dropdown-btn" id="dropdownBtn" onclick="toggleDropdown()">
         <span id="dropdownCurrentLabel">საავტორო უფლებები</span>
@@ -299,88 +276,400 @@
       </button>
 
       <div class="dropdown-menu" id="dropdownMenu">
-        <div class="dropdown-item active" onclick="selectSection('sec-copyright', 'საავტორო უფლებები')">საავტორო უფლებები</div>
-        <div class="dropdown-item" onclick="selectSection('sec-trademark', 'სასაქონლო ნიშანი')">სასაქონლო ნიშანი</div>
-        <div class="dropdown-item" onclick="selectSection('sec-general', 'ზოგადი შენიშვნა')">ზოგადი შენიშვნა</div>
+        <div class="dropdown-item active" id="opt-copyright" onclick="selectSection('sec-copyright', 'copyright')">საავტორო უფლებები</div>
+        <div class="dropdown-item" id="opt-trademark" onclick="selectSection('sec-trademark', 'trademark')">სასაქონლო ნიშანი</div>
+        <div class="dropdown-item" id="opt-general" onclick="selectSection('sec-general', 'general')">ზოგადი შენიშვნა</div>
       </div>
     </div>
 
     <!-- დიდი ბანერი -->
     <div class="hero-banner">
-      <h1>ინტელექტუალური<br>საკუთრება</h1>
+      <h1 id="txt-hero">ინტელექტუალური<br>საკუთრება</h1>
     </div>
 
     <div class="meta-dates">
-      <span>გამოცემის თარიღი: 27 მარტი, 2025</span>
-      <span>ძალაში შესვლის თარიღი: 26 აპრილი, 2025</span>
+      <span id="txt-publish-date">გამოცემის თარიღი: 27 მარტი, 2025</span>
+      <span id="txt-effective-date">ძალაში შესვლის თარიღი: 26 აპრილი, 2025</span>
     </div>
 
     <!-- შესავალი -->
-    <div class="notice-box">
+    <div class="notice-box" id="txt-notice">
       <strong>Emigrantbook</strong> პატივს სცემს სხვათა ინტელექტუალური საკუთრების უფლებებს და მკაცრად მოითხოვს მომხმარებლის შეთანხმებისა და საზოგადოების წესების დაცვას. დაუშვებელია ისეთი კონტენტის განთავსება, რომელიც არღვევს მესამე პირების საავტორო ან სასაქონლო ნიშნის უფლებებს.
     </div>
 
     <!-- 1. საავტორო უფლებები -->
     <section class="content-card" id="sec-copyright">
-      <h2>საავტორო უფლებები (Copyright)</h2>
-      <p>საავტორო უფლება იცავს ორიგინალურ ნაწარმოებებს (მუსიკა, ვიდეოები, ტექსტი, ფოტოები). ის იცავს იდეის ორიგინალურ გამოხატულებას (მაგალითად, ვიდეოს შექმნის ან გადაღების უნიკალურ გზას), თუმცა არ იცავს თავად იდეას ან ფაქტს.</p>
+      <h2 id="txt-c-title">საავტორო უფლებები (Copyright)</h2>
+      <p id="txt-c-desc">საავტორო უფლება იცავს ორიგინალურ ნაწარმოებებს (მუსიკა, ვიდეოები, ტექსტი, ფოტოები). ის იცავს იდეის ორიგინალურ გამოხატულებას (მაგალითად, ვიდეოს შექმნის ან გადაღების უნიკალურ გზას), თუმცა არ იცავს თავად იდეას ან ფაქტს.</p>
 
       <div class="rule-item-box">
-        <strong>საავტორო უფლებების დარღვევა</strong>
-        <span>სხვისი დაცული მასალის უნებართვო ან უკანონო გამოყენება წარმოადგენს Emigrantbook-ის წესების უხეშ დარღვევას.</span>
+        <strong id="txt-r1-title">საავტორო უფლებების დარღვევა</strong>
+        <span id="txt-r1-desc">სხვისი დაცული მასალის უნებართვო ან უკანონო გამოყენება წარმოადგენს Emigrantbook-ის წესების უხეშ დარღვევას.</span>
       </div>
 
       <div class="rule-item-box">
-        <strong>კეთილსინდისიერი გამოყენება (გამონაკლისები)</strong>
-        <span>ყველა უნებართვო გამოყენება არ ითვლება დარღვევად. საერთაშორისო პრაქტიკით დასაშვებია მასალის გამოყენება ციტირებისთვის, კრიტიკისთვის, ანალიზისთვის, პაროდიისა და კარიკატურისთვის, თუ ეს არ აყენებს უსაფუძვლო ზიანს ავტორს.</span>
+        <strong id="txt-r2-title">კეთილსინდისიერი გამოყენება (გამონაკლისები)</strong>
+        <span id="txt-r2-desc">ყველა უნებართვო გამოყენება არ ითვლება დარღვევად. საერთაშორისო პრაქტიკით დასაშვებია მასალის გამოყენება ციტირებისთვის, კრიტიკისთვის, ანალიზისთვის, პაროდიისა და კარიკატურისთვის, თუ ეს არ აყენებს უსაფუძვლო ზიანს ავტორს.</span>
       </div>
 
       <div class="rule-item-box">
-        <strong>კონტენტის წაშლა და ანგარიშის შეზღუდვა</strong>
-        <span>დარღვევით ატვირთული ვიდეოები და პოსტები დაუყოვნებლივ წაიშლება. მომხმარებელს, რომელიც სისტემატურად არღვევს საავტორო უფლებებს, სამუდამოდ გაუუქმდება ანგარიში.</span>
+        <strong id="txt-r3-title">კონტენტის წაშლა და ანგარიშის შეზღუდვა</strong>
+        <span id="txt-r3-desc">დარღვევით ატვირთული ვიდეოები და პოსტები დაუყოვნებლივ წაიშლება. მომხმარებელს, რომელიც სისტემატურად არღვევს საავტორო უფლებებს, სამუდამოდ გაუუქმდება ანგარიში.</span>
       </div>
 
-      <h3>ინფორმაცია უფლებათა მფლობელებისთვის</h3>
-      <p>თუ მიგაჩნიათ, რომ თქვენი ნამუშევარი უნებართვოდ განთავსდა Emigrantbook-ზე, შეგიძლიათ მოგვმართოთ საჩივრით (DMCA / EU საავტორო დირექტივის შესაბამისად). საჩივარში აუცილებელია მიუთითოთ ზუსტი ბმული და თქვენი უფლებამოსილების დამადასტურებელი დეტალები.</p>
+      <h3 id="txt-h-title">ინფორმაცია უფლებათა მფლობელებისთვის</h3>
+      <p id="txt-h-desc">თუ მიგაჩნიათ, რომ თქვენი ნამუშევარი უნებართვოდ განთავსდა Emigrantbook-ზე, შეგიძლიათ მოგვმართოთ საჩივრით (DMCA / EU საავტორო დირექტივის შესაბამისად). საჩივარში აუცილებელია მიუთითოთ ზუსტი ბმული და თქვენი უფლებამოსილების დამადასტურებელი დეტალები.</p>
 
-      <h3>აპელაცია მომხმარებლებისთვის</h3>
-      <p>თუ თქვენი ვიდეო ან პოსტი წაიშალა საავტორო საჩივრის გამო, მაგრამ დარწმუნებული ხართ, რომ გაქვთ მისი გამოყენების უფლება (ან საქმე გვაქვს შეცდომასთან), შეგიძლიათ გამოგზავნოთ აპელაცია საპასუხო არგუმენტებით.</p>
+      <h3 id="txt-a-title">აპელაცია მომხმარებლებისთვის</h3>
+      <p id="txt-a-desc">თუ თქვენი ვიდეო ან პოსტი წაიშალა საავტორო საჩივრის გამო, მაგრამ დარწმუნებული ხართ, რომ გაქვთ მისი გამოყენების უფლება (ან საქმე გვაქვს შეცდომასთან), შეგიძლიათ გამოგზავნოთ აპელაცია საპასუხო არგუმენტებით.</p>
     </section>
 
     <!-- 2. სასაქონლო ნიშანი -->
     <section class="content-card" id="sec-trademark">
-      <h2>სასაქონლო ნიშანი (Trademark)</h2>
-      <p>სასაქონლო ნიშანი არის სიტყვა, სიმბოლო, ლოგო ან ლოზუნგი, რომელიც განასხვავებს კონკრეტული ბრენდის საქონელსა და მომსახურებას სხვებისგან.</p>
+      <h2 id="txt-tm-title">სასაქონლო ნიშანი (Trademark)</h2>
+      <p id="txt-tm-desc">სასაქონლო ნიშანი არის სიტყვა, სიმბოლო, ლოგო ან ლოზუნგი, რომელიც განასხვავებს კონკრეტული ბრენდის საქონელსა და მომსახურებას სხვებისგან.</p>
 
       <div class="rule-item-box">
-        <strong>უფლებების დარღვევა</strong>
-        <span>აკრძალულია სხვისი სასაქონლო ნიშნის ან იდენტური ლოგოს ისეთი გამოყენება, რამაც შეიძლება შეცდომაში შეიყვანოს მომხმარებლები და შექმნას მცდარი შთაბეჭდილება, თითქოს თქვენ ოფიციალურად წარმოადგენთ ამ ბრენდს.</span>
+        <strong id="txt-tm1-title">უფლებების დარღვევა</strong>
+        <span id="txt-tm1-desc">აკრძალულია სხვისი სასაქონლო ნიშნის ან იდენტური ლოგოს ისეთი გამოყენება, რამაც შეიძლება შეცდომაში შეიყვანოს მომხმარებლები და შექმნას მცდარი შთაბეჭდილება, თითქოს თქვენ ოფიციალურად წარმოადგენთ ამ ბრენდს.</span>
       </div>
 
       <div class="rule-item-box">
-        <strong>კონტრაფაქცია (ყალბი პროდუქცია)</strong>
-        <span>მკაცრად აკრძალულია ყალბი (ფალსიფიცირებული) ბრენდული ნივთების რეკლამირება, ყიდვა, გაყიდვა ან პოპულარიზაცია Emigrantbook-ის მარკეტპლეისსა თუ პოსტებში.</span>
+        <strong id="txt-tm2-title">კონტრაფაქცია (ყალბი პროდუქცია)</strong>
+        <span id="txt-tm2-desc">მკაცრად აკრძალულია ყალბი (ფალსიფიცირებული) ბრენდული ნივთების რეკლამირება, ყიდვა, გაყიდვა ან პოპულარიზაცია Emigrantbook-ის მარკეტპლეისსა თუ პოსტებში.</span>
       </div>
 
       <div class="rule-item-box">
-        <strong>ფან-გვერდები და მიმოხილვები</strong>
-        <span>ნებადართულია ბრენდის პროდუქტზე ობიექტური მიმოხილვის დაწერა ან ფან-გვერდის შექმნა იმ პირობით, რომ გარკვევით იქნება მითითებული, რომ გვერდი არაოფიციალურია.</span>
+        <strong id="txt-tm3-title">ფან-გვერდები და მიმოხილვები</strong>
+        <span id="txt-tm3-desc">ნებადართულია ბრენდის პროდუქტზე ობიექტური მიმოხილვის დაწერა ან ფან-გვერდის შექმნა იმ პირობით, რომ გარკვევით იქნება მითითებული, რომ გვერდი არაოფიციალურია.</span>
       </div>
     </section>
 
     <!-- 3. ზოგადი შენიშვნა -->
     <section class="content-card" id="sec-general">
-      <h2>ზოგადი შენიშვნა</h2>
-      <p>როგორც Emigrantbook-ის მომხმარებელი, თქვენ სრულად ხართ პასუხისმგებელი თქვენ მიერ გამოქვეყნებულ მასალაზე. თუ გაქვთ ეჭვი საავტორო უფლებებთან დაკავშირებით, გირჩევთ კონსულტაცია გაიაროთ იურისტთან მასალის ატვირთვამდე.</p>
+      <h2 id="txt-gen-title">ზოგადი შენიშვნა</h2>
+      <p id="txt-gen-desc">როგორც Emigrantbook-ის მომხმარებელი, თქვენ სრულად ხართ პასუხისმგებელი თქვენ მიერ გამოქვეყნებულ მასალაზე. თუ გაქვთ ეჭვი საავტორო უფლებებთან დაკავშირებით, გირჩევთ კონსულტაცია გაიაროთ იურისტთან მასალის ატვირთვამდე.</p>
       <div class="rule-item-box">
-        <strong>მხარდაჭერა და დავები</strong>
-        <span>Emigrantbook უზრუნველყოფს საჩივრებისა და აპელაციების გამჭვირვალე მექანიზმს. ნებისმიერი საავტორო პრეტენზიის შემთხვევაში შეგიძლიათ დაგვიკავშირდეთ პლატფორმის უკუკავშირის მეშვეობით.</span>
+        <strong id="txt-gen-box-title">მხარდაჭერა და დავები</strong>
+        <span id="txt-gen-box-desc">Emigrantbook უზრუნველყოფს საჩივრებისა და აპელაციების გამჭვირვალე მექანიზმს. ნებისმიერი საავტორო პრეტენზიის შემთხვევაში შეგიძლიათ დაგვიკავშირდეთ პლატფორმის უკუკავშირის მეშვეობით.</span>
       </div>
     </section>
 
   </main>
 
   <script>
+    const i18n = {
+      ka: {
+        pageTitle: "ინტელექტუალური საკუთრება | Emigrantbook",
+        headerTitle: "ინტელექტუალური საკუთრება",
+        hero: "ინტელექტუალური<br>საკუთრება",
+        publishDate: "გამოცემის თარიღი: 27 მარტი, 2025",
+        effectiveDate: "ძალაში შესვლის თარიღი: 26 აპრილი, 2025",
+        notice: "<strong>Emigrantbook</strong> პატივს სცემს სხვათა ინტელექტუალური საკუთრების უფლებებს და მკაცრად მოითხოვს მომხმარებლის შეთანხმებისა და საზოგადოების წესების დაცვას. დაუშვებელია ისეთი კონტენტის განთავსება, რომელიც არღვევს მესამე პირების საავტორო ან სასაქონლო ნიშნის უფლებებს.",
+        ddCopyright: "საავტორო უფლებები",
+        ddTrademark: "სასაქონლო ნიშანი",
+        ddGeneral: "ზოგადი შენიშვნა",
+        cTitle: "საავტორო უფლებები (Copyright)",
+        cDesc: "საავტორო უფლება იცავს ორიგინალურ ნაწარმოებებს (მუსიკა, ვიდეოები, ტექსტი, ფოტოები). ის იცავს იდეის ორიგინალურ გამოხატულებას (მაგალითად, ვიდეოს შექმნის ან გადაღების უნიკალურ გზას), თუმცა არ იცავს თავად იდეას ან ფაქტს.",
+        r1Title: "საავტორო უფლებების დარღვევა",
+        r1Desc: "სხვისი დაცული მასალის უნებართვო ან უკანონო გამოყენება წარმოადგენს Emigrantbook-ის წესების უხეშ დარღვევას.",
+        r2Title: "კეთილსინდისიერი გამოყენება (გამონაკლისები)",
+        r2Desc: "ყველა უნებართვო გამოყენება არ ითვლება დარღვევად. საერთაშორისო პრაქტიკით დასაშვებია მასალის გამოყენება ციტირებისთვის, კრიტიკისთვის, ანალიზისთვის, პაროდიისა და კარიკატურისთვის, თუ ეს არ აყენებს უსაფუძვლო ზიანს ავტორს.",
+        r3Title: "კონტენტის წაშლა და ანგარიშის შეზღუდვა",
+        r3Desc: "დარღვევით ატვირთული ვიდეოები და პოსტები დაუყოვნებლივ წაიშლება. მომხმარებელს, რომელიც სისტემატურად არღვევს საავტორო უფლებებს, სამუდამოდ გაუუქმდება ანგარიში.",
+        hTitle: "ინფორმაცია უფლებათა მფლობელებისთვის",
+        hDesc: "თუ მიგაჩნიათ, რომ თქვენი ნამუშევარი უნებართვოდ განთავსდა Emigrantbook-ზე, შეგიძლიათ მოგვმართოთ საჩივრით (DMCA / EU საავტორო დირექტივის შესაბამისად). საჩივარში აუცილებელია მიუთითოთ ზუსტი ბმული და თქვენი უფლებამოსილების დამადასტურებელი დეტალები.",
+        aTitle: "აპელაცია მომხმარებლებისთვის",
+        aDesc: "თუ თქვენი ვიდეო ან პოსტი წაიშალა საავტორო საჩივრის გამო, მაგრამ დარწმუნებული ხართ, რომ გაქვთ მისი გამოყენების უფლება (ან საქმე გვაქვს შეცდომასთან), შეგიძლიათ გამოგზავნოთ აპელაცია საპასუხო არგუმენტებით.",
+        tmTitle: "სასაქონლო ნიშანი (Trademark)",
+        tmDesc: "სასაქონლო ნიშანი არის სიტყვა, სიმბოლო, ლოგო ან ლოზუნგი, რომელიც განასხვავებს კონკრეტული ბრენდის საქონელსა და მომსახურებას სხვებისგან.",
+        tm1Title: "უფლებების დარღვევა",
+        tm1Desc: "აკრძალულია სხვისი სასაქონლო ნიშნის ან იდენტური ლოგოს ისეთი გამოყენება, რამაც შეიძლება შეცდომაში შეიყვანოს მომხმარებლები და შექმნას მცდარი შთაბეჭდილება, თითქოს თქვენ ოფიციალურად წარმოადგენთ ამ ბრენდს.",
+        tm2Title: "კონტრაფაქცია (ყალბი პროდუქცია)",
+        tm2Desc: "მკაცრად აკრძალულია ყალბი (ფალსიფიცირებული) ბრენდული ნივთების რეკლამირება, ყიდვა, გაყიდვა ან პოპულარიზაცია Emigrantbook-ის მარკეტპლეისსა თუ პოსტებში.",
+        tm3Title: "ფან-გვერდები და მიმოხილვები",
+        tm3Desc: "ნებადართულია ბრენდის პროდუქტზე ობიექტური მიმოხილვის დაწერა ან ფან-გვერდის შექმნა იმ პირობით, რომ გარკვევით იქნება მითითებული, რომ გვერდი არაოფიციალურია.",
+        genTitle: "ზოგადი შენიშვნა",
+        genDesc: "როგორც Emigrantbook-ის მომხმარებელი, თქვენ სრულად ხართ პასუხისმგებელი თქვენ მიერ გამოქვეყნებულ მასალაზე. თუ გაქვთ ეჭვი საავტორო უფლებებთან დაკავშირებით, გირჩევთ კონსულტაცია გაიაროთ იურისტთან მასალის ატვირთვამდე.",
+        genBoxTitle: "მხარდაჭერა და დავები",
+        genBoxDesc: "Emigrantbook უზრუნველყოფს საჩივრებისა და აპელაციების გამჭვირვალე მექანიზმს. ნებისმიერი საავტორო პრეტენზიის შემთხვევაში შეგიძლიათ დაგვიკავშირდეთ პლატფორმის უკუკავშირის მეშვეობით."
+      },
+      en: {
+        pageTitle: "Intellectual Property | Emigrantbook",
+        headerTitle: "Intellectual Property",
+        hero: "Intellectual<br>Property",
+        publishDate: "Publication Date: March 27, 2025",
+        effectiveDate: "Effective Date: April 26, 2025",
+        notice: "<strong>Emigrantbook</strong> respects the intellectual property rights of others and strictly demands compliance with the User Agreement and Community Guidelines. Posting content that infringes upon third-party copyrights or trademark rights is prohibited.",
+        ddCopyright: "Copyright",
+        ddTrademark: "Trademark",
+        ddGeneral: "General Notice",
+        cTitle: "Copyright",
+        cDesc: "Copyright protects original works of authorship (music, videos, text, photos). It protects the original expression of an idea (for example, the unique way a video is created or shot), but does not protect the idea itself or facts.",
+        r1Title: "Copyright Infringement",
+        r1Desc: "Unauthorized or unlawful use of someone else's protected material constitutes a severe violation of Emigrantbook's policies.",
+        r2Title: "Fair Use (Exceptions)",
+        r2Desc: "Not all unauthorized uses constitute infringement. Under international practice, use of material for criticism, comment, analysis, parody, and caricature is permissible, provided it does not cause unreasonable harm to the author.",
+        r3Title: "Content Removal and Account Penalties",
+        r3Desc: "Infringing videos and posts will be removed promptly. Users who systematically violate copyright policies will face permanent account termination.",
+        hTitle: "Information for Rights Holders",
+        hDesc: "If you believe your copyrighted work has been posted on Emigrantbook without authorization, you may submit a report (in accordance with DMCA / EU Copyright Directive). Your notice must include exact links and proof of authorization.",
+        aTitle: "Appeals for Users",
+        aDesc: "If your video or post was removed due to a copyright complaint, but you are confident you have the right to use it (or an error occurred), you may submit a counter-notice with supporting arguments.",
+        tmTitle: "Trademark",
+        tmDesc: "A trademark is a word, symbol, design, or slogan that distinguishes the goods or services of one brand from those of others.",
+        tm1Title: "Trademark Infringement",
+        tm1Desc: "Using another party's trademark or identical logo in a manner that may confuse consumers and falsely imply official affiliation or endorsement with the brand is prohibited.",
+        tm2Title: "Counterfeit Goods",
+        tm2Desc: "Promoting, buying, selling, or advertising counterfeit brand-name items on Emigrantbook's marketplace or posts is strictly prohibited.",
+        tm3Title: "Fan Pages and Product Reviews",
+        tm3Desc: "Writing objective reviews of a brand's products or operating a fan page is permitted, provided that the page clearly states its unofficial status.",
+        genTitle: "General Notice",
+        genDesc: "As an Emigrantbook user, you are solely responsible for the material you publish. If you have doubts regarding copyright or trademark permissions, we recommend consulting a legal professional prior to uploading.",
+        genBoxTitle: "Support and Inquiries",
+        genBoxDesc: "Emigrantbook maintains transparent dispute and appeal processes. For any intellectual property concerns, you can contact us via platform feedback channels."
+      },
+      it: {
+        pageTitle: "Proprietà Intellettuale | Emigrantbook",
+        headerTitle: "Proprietà Intellettuale",
+        hero: "Proprietà<br>Intellettuale",
+        publishDate: "Data di pubblicazione: 27 marzo 2025",
+        effectiveDate: "Data di entrata in vigore: 26 aprile 2025",
+        notice: "<strong>Emigrantbook</strong> rispetta i diritti di proprietà intellettuale altrui e richiede rigorosamente il rispetto del Contratto di licenza e delle Norme della community. È vietato pubblicare contenuti che violino i diritti d'autore o i marchi registrati di terze parti.",
+        ddCopyright: "Diritto d'autore",
+        ddTrademark: "Marchio registrato",
+        ddGeneral: "Nota generale",
+        cTitle: "Diritto d'autore (Copyright)",
+        cDesc: "Il diritto d'autore protegge le opere originali (musica, video, testi, foto). Tutela l'espressione originale di un'idea (ad esempio, il modo unico in cui un video viene creato o girato), ma non protegge l'idea in sé o i fatti.",
+        r1Title: "Violazione del diritto d'autore",
+        r1Desc: "L'uso non autorizzato o illegale di materiale protetto altrui costituisce una grave violazione delle regole di Emigrantbook.",
+        r2Title: "Uso lecito (Eccezioni)",
+        r2Desc: "Non tutti gli usi non autorizzati costituiscono violazione. Secondo la prassi internazionale, l'uso di materiale per citazione, critica, analisi, parodia e caricatura è consentito, a condizione che non arrechi ingiusto pregiudizio all'autore.",
+        r3Title: "Rimozione dei contenuti e restrizioni dell'account",
+        r3Desc: "I video e i post caricati in violazione verranno rimossi immediatamente. Gli utenti che violano sistematicamente il copyright subiranno la chiusura permanente dell'account.",
+        hTitle: "Informazioni per i titolari dei diritti",
+        hDesc: "Se ritieni che la tua opera sia stata pubblicata su Emigrantbook senza autorizzazione, puoi inviarci un reclamo (in conformità con la DMCA / Direttiva UE sul copyright). Nel reclamo è obbligatorio specificare il link esatto e i dettagli che attestano la titolarità dei diritti.",
+        aTitle: "Ricorso per gli utenti",
+        aDesc: "Se il tuo video o post è stato rimosso a causa di un reclamo sul copyright, ma sei sicuro di avere il diritto di utilizzarlo (o si tratta di un errore), puoi inviare un ricorso con le tue controdeduzioni.",
+        tmTitle: "Marchio registrato (Trademark)",
+        tmDesc: "Un marchio è una parola, un simbolo, un logo o uno slogan che distingue i prodotti e i servizi di un brand specifico da quelli altrui.",
+        tm1Title: "Violazione dei diritti di marchio",
+        tm1Desc: "È vietato utilizzare il marchio altrui o un logo identico in modo tale da trarre in inganno gli utenti e creare la falsa impressione di rappresentare ufficialmente tale brand.",
+        tm2Title: "Contraffazione (Prodotti falsi)",
+        tm2Desc: "È severamente vietato pubblicizzare, acquistare, vendere o promuovere articoli di marca contraffatti sul marketplace o nei post di Emigrantbook.",
+        tm3Title: "Fan page e recensioni",
+        tm3Desc: "È consentito scrivere recensioni obiettive sui prodotti di un brand o creare una fan page, a condizione che sia chiaramente indicato che la pagina non è ufficiale.",
+        genTitle: "Nota generale",
+        genDesc: "In qualità di utente di Emigrantbook, sei l'unico responsabile dei contenuti pubblicati. In caso di dubbi sui diritti di proprietà intellettuale, ti consigliamo di consultare un legale prima di caricare il materiale.",
+        genBoxTitle: "Supporto e controversie",
+        genBoxDesc: "Emigrantbook garantisce una procedura trasparente per reclami e ricorsi. In caso di controversie relative al copyright, puoi contattarci tramite i canali di feedback della piattaforma."
+      },
+      ru: {
+        pageTitle: "Интеллектуальная собственность | Emigrantbook",
+        headerTitle: "Интеллектуальная собственность",
+        hero: "Интеллектуальная<br>собственность",
+        publishDate: "Дата публикации: 27 марта 2025 г.",
+        effectiveDate: "Дата вступления в силу: 26 апреля 2025 г.",
+        notice: "<strong>Emigrantbook</strong> уважает права на интеллектуальную собственность других лиц и строго требует соблюдения Пользовательского соглашения и Правил сообщества. Запрещается публикация контента, нарушающего авторские права или права на товарные знаки третьих лиц.",
+        ddCopyright: "Авторские права",
+        ddTrademark: "Товарный знак",
+        ddGeneral: "Общие положения",
+        cTitle: "Авторские права (Copyright)",
+        cDesc: "Авторское право защищает оригинальные произведения (музыку, видео, текст, фотографии). Оно защищает оригинальное выражение идеи (например, уникальный способ создания или съемки видео), но не защищает саму идею или факты.",
+        r1Title: "Нарушение авторских прав",
+        r1Desc: "Несанкционированное или незаконное использование чужих защищенных материалов является грубым нарушением правил Emigrantbook.",
+        r2Title: "Добросовестное использование (Исключения)",
+        r2Desc: "Не всякое несанкционированное использование считается нарушением. Согласно международной практике, допускается использование материалов для цитирования, критики, анализа, пародии и карикатуры, если это не наносит необоснованного ущерба автору.",
+        r3Title: "Удаление контента и блокировка аккаунта",
+        r3Desc: "Видеоролики и публикации, загруженные с нарушениями, подлежат немедленному удалению. Пользователи, систематически нарушающие авторские права, будут заблокированы навсегда.",
+        hTitle: "Информация для правообладателей",
+        hDesc: "Если вы считаете, что ваша работа была размещена на Emigrantbook без разрешения, вы можете подать жалобу (в соответствии с DMCA / Директивой ЕС об авторском праве). В жалобе обязательно укажите точную ссылку и документы, подтверждающие ваши полномочия.",
+        aTitle: "Апелляция для пользователей",
+        aDesc: "Если ваше видео или публикация были удалены по жалобе на авторские права, но вы уверены, что имеете право на использование (или произошла ошибка), вы можете подать апелляцию со своими аргументами.",
+        tmTitle: "Товарный знак (Trademark)",
+        tmDesc: "Товарный знак — это слово, символ, логотип или слоган, отличающий товары и услуги одного бренда от других.",
+        tm1Title: "Нарушение прав на товарный знак",
+        tm1Desc: "Запрещается использование чужого товарного знака или идентичного логотипа, которое может ввести пользователей в заблуждение и создать ложное впечатление официального представительства бренда.",
+        tm2Title: "Контрафакт (Поддельная продукция)",
+        tm2Desc: "Категорически запрещается рекламировать, покупать, продавать или продвигать контрафактные брендовые товары на торговой площадке или в публикациях Emigrantbook.",
+        tm3Title: "Фан-страницы и обзоры",
+        tm3Desc: "Разрешается публиковать объективные обзоры продукции бренда или создавать фан-страницы при условии четкого указания на неофициальный статус страницы.",
+        genTitle: "Общие положения",
+        genDesc: "Как пользователь Emigrantbook, вы несете полную ответственность за публикуемые материалы. Если у вас есть сомнения относительно авторских прав, рекомендуем проконсультироваться с юристом перед загрузкой контента.",
+        genBoxTitle: "Поддержка и споры",
+        genBoxDesc: "Emigrantbook обеспечивает прозрачный механизм рассмотрения жалоб и апелляций. По любым претензиям относительно авторских прав вы можете связаться с нами через форму обратной связи на платформе."
+      },
+      el: {
+        pageTitle: "Πνευματική Ιδιοκτησία | Emigrantbook",
+        headerTitle: "Πνευματική Ιδιοκτησία",
+        hero: "Πνευματική<br>Ιδιοκτησία",
+        publishDate: "Ημερομηνία δημοσίευσης: 27 Μαρτίου 2025",
+        effectiveDate: "Ημερομηνία έναρξης ισχύος: 26 Απριλίου 2025",
+        notice: "Το <strong>Emigrantbook</strong> σέβεται τα δικαιώματα πνευματικής ιδιοκτησίας των άλλων και απαιτεί αυστηρά τη συμμόρφωση με τη Συμφωνία Χρήστη και τους Κανόνες Κοινότητας. Απαγορεύεται η ανάρτηση περιεχομένου που παραβιάζει πνευματικά δικαιώματα ή εμπορικά σήματα τρίτων.",
+        ddCopyright: "Πνευματικά δικαιώματα",
+        ddTrademark: "Εμπορικό σήμα",
+        ddGeneral: "Γενική σημείωση",
+        cTitle: "Πνευματικά δικαιώματα (Copyright)",
+        cDesc: "Τα πνευματικά δικαιώματα προστατεύουν πρωτότυπα έργα (μουσική, βίντεο, κείμενα, φωτογραφίες). Προστατεύουν την πρωτότυπη έκφραση μιας ιδέας (για παράδειγμα, τον μοναδικό τρόπο δημιουργίας ή λήψης ενός βίντεο), αλλά δεν προστατεύουν την ίδια την ιδέα ή τα γεγονότα.",
+        r1Title: "Παραβίαση πνευματικών δικαιωμάτων",
+        r1Desc: "Η μη εξουσιοδοτημένη ή παράνομη χρήση προστατευόμενου υλικού τρίτων αποτελεί σοβαρή παραβίαση των κανόνων του Emigrantbook.",
+        r2Title: "Θεμιτή χρήση (Εξαιρέσεις)",
+        r2Desc: "Δεν θεωρείται κάθε μη εξουσιοδοτημένη χρήση παραβίαση. Σύμφωνα με τη διεθνή πρακτική, επιτρέπεται η χρήση υλικού για παράθεση, κριτική, ανάλυση, παρωδία και καρικατούρα, εφόσον δεν προκαλεί αδικαιολόγητη ζημία στον δημιουργό.",
+        r3Title: "Αφαίρεση περιεχομένου και περιορισμοί λογαριασμού",
+        r3Desc: "Τα βίντεο και οι αναρτήσεις που παραβιάζουν τους κανόνες θα αφαιρούνται αμέσως. Οι χρήστες που παραβιάζουν συστηματικά τα πνευματικά δικαιώματα θα αποκλείονται οριστικά από την πλατφόρμα.",
+        hTitle: "Πληροφορίες για κατόχους δικαιωμάτων",
+        hDesc: "Εάν πιστεύετε ότι το έργο σας έχει αναρτηθεί στο Emigrantbook χωρίς άδεια, μπορείτε να υποβάλετε καταγγελία (σύμφωνα με την οδηγία DMCA / ΕΕ για τα πνευματικά δικαιώματα). Στην καταγγελία είναι απαραίτητο να αναφέρετε τον ακριβή σύνδεσμο και στοιχεία που αποδεικνύουν την εξουσιοδότησή σας.",
+        aTitle: "Έφεση για χρήστες",
+        aDesc: "Εάν το βίντεο ή η ανάρτησή σας αφαιρέθηκε λόγω καταγγελίας πνευματικών δικαιωμάτων, αλλά είστε βέβαιοι ότι έχετε το δικαίωμα χρήσης του (ή πρόκειται για λάθος), μπορείτε να υποβάλετε ένσταση με τα επιχειρήματά σας.",
+        tmTitle: "Εμπορικό σήμα (Trademark)",
+        tmDesc: "Ένα εμπορικό σήμα είναι μια λέξη, σύμβολο, λογότυπο ή σύνθημα που διακρίνει τα προϊόντα και τις υπηρεσίες μιας συγκεκριμένης επωνυμίας από άλλες.",
+        tm1Title: "Παραβίαση εμπορικού σήματος",
+        tm1Desc: "Απαγορεύεται η χρήση εμπορικού σήματος άλλου ή πανομοιότυπου λογότυπου με τρόπο που ενδέχεται να παραπλανήσει τους χρήστες και να δημιουργήσει την ψευδή εντύπωση ότι εκπροσωπείτε επίσημα τη συγκεκριμένη επωνυμία.",
+        tm2Title: "Προϊόντα απομίμησης (Παραποίηση)",
+        tm2Desc: "Απαγορεύεται αυστηρά η διαφήμιση, αγορά, πώληση ή προώθηση πλαστών επώνυμων προϊόντων στην αγορά ή στις αναρτήσεις του Emigrantbook.",
+        tm3Title: "Σελίδες θαυμαστών και αξιολογήσεις",
+        tm3Desc: "Επιτρέπεται η σύνταξη αντικειμενικών κριτικών για τα προϊόντα μιας επωνυμίας ή η δημιουργία σελίδας θαυμαστών, υπό την προϋπόθεση ότι δηλώνεται σαφώς ότι η σελίδα είναι ανεπίσημη.",
+        genTitle: "Γενική σημείωση",
+        genDesc: "Ως χρήστης του Emigrantbook, είστε αποκλειστικά υπεύθυνοι για το περιεχόμενο που δημοσιεύετε. Εάν έχετε αμφιβολίες σχετικά με τα πνευματικά δικαιώματα, σας συνιστούμε να συμβουλευτείτε έναν νομικό πριν ανεβάσετε το υλικό.",
+        genBoxTitle: "Υποστήριξη και διαφορές",
+        genBoxDesc: "Το Emigrantbook παρέχει έναν διαφανή μηχανισμό παραπόνων και ενστάσεων. Για οποιεσδήποτε αξιώσεις πνευματικής ιδιοκτησίας, μπορείτε να επικοινωνήσετε μαζί μας μέσω των καναλιών ανατροφοδότησης της πλατφόρμας."
+      },
+      fr: {
+        pageTitle: "Propriété Intellectuelle | Emigrantbook",
+        headerTitle: "Propriété Intellectuelle",
+        hero: "Propriété<br>Intellectuelle",
+        publishDate: "Date de publication : 27 mars 2025",
+        effectiveDate: "Date d'entrée en vigueur : 26 avril 2025",
+        notice: "<strong>Emigrantbook</strong> respecte les droits de propriété intellectuelle d'autrui et exige strictement le respect des Conditions d'utilisation et des Règles de la communauté. Il est interdit de publier des contenus qui portent atteinte aux droits d'auteur ou aux marques déposées de tiers.",
+        ddCopyright: "Droit d'auteur",
+        ddTrademark: "Marque déposée",
+        ddGeneral: "Remarque générale",
+        cTitle: "Droit d'auteur (Copyright)",
+        cDesc: "Le droit d'auteur protège les œuvres originales (musique, vidéos, textes, photographies). Il protège l'expression originale d'une idée (par exemple, la manière unique dont une vidéo est créée ou filmée), mais ne protège pas l'idée elle-même ou les faits.",
+        r1Title: "Violation du droit d'auteur",
+        r1Desc: "L'utilisation non autorisée ou illégale d'un contenu protégé appartenant à autrui constitue une violation grave des règles d'Emigrantbook.",
+        r2Title: "Usage loyal (Exceptions)",
+        r2Desc: "Toute utilisation non autorisée ne constitue pas nécessairement une infraction. Conformément aux pratiques internationales, l'utilisation d'un contenu à des fins de citation, de critique, d'analyse, de parodie et de caricature est autorisée, à condition qu'elle ne cause pas un préjudice injustifié à l'auteur.",
+        r3Title: "Suppression de contenu et sanctions de compte",
+        r3Desc: "Les vidéos et publications non conformes seront immédiatement supprimées. Les utilisateurs qui enfreignent systématiquement les droits d'auteur verront leur compte définitivement résilié.",
+        hTitle: "Informations pour les titulaires de droits",
+        hDesc: "Si vous estimez que votre œuvre a été publiée sur Emigrantbook sans autorisation, vous pouvez nous adresser une réclamation (conformément au DMCA / à la directive européenne sur le droit d'auteur). La réclamation doit obligatoirement inclure le lien exact ainsi que les preuves attestant de vos droits.",
+        aTitle: "Recours pour les utilisateurs",
+        aDesc: "Si votre vidéo ou publication a été supprimée suite à une réclamation pour atteinte aux droits d'auteur, mais que vous êtes certain d'avoir le droit de l'utiliser (ou qu'il s'agit d'une erreur), vous pouvez soumettre un recours avec vos contre-arguments.",
+        tmTitle: "Marque déposée (Trademark)",
+        tmDesc: "Une marque est un mot, un symbole, un logo ou un slogan qui distingue les produits et services d'une marque spécifique de ceux des autres.",
+        tm1Title: "Atteinte à la marque",
+        tm1Desc: "Il est interdit d'utiliser la marque d'un tiers ou un logo identique d'une manière susceptible d'induire les utilisateurs en erreur et de créer la fausse impression que vous représentez officiellement cette marque.",
+        tm2Title: "Contrefaçon (Produits contrefaits)",
+        tm2Desc: "Il est strictement interdit de faire de la publicité, d'acheter, de vendre ou de promouvoir des articles de marque contrefaits sur la place de marché ou dans les publications d'Emigrantbook.",
+        tm3Title: "Pages de fans et avis",
+        tm3Desc: "Il est permis de rédiger un avis objectif sur les produits d'une marque ou de créer une page de fans, à condition d'indiquer clairement que la page n'est pas officielle.",
+        genTitle: "Remarque générale",
+        genDesc: "En tant qu'utilisateur d'Emigrantbook, vous êtes entièrement responsable du contenu que vous publiez. Si vous avez des doutes concernant les droits d'auteur, nous vous conseillons de consulter un juriste avant de mettre en ligne votre contenu.",
+        genBoxTitle: "Assistance et litiges",
+        genBoxDesc: "Emigrantbook garantit un mécanisme transparent de réclamation et de recours. Pour toute contestation relative aux droits d'auteur, vous pouvez nous contacter via les canaux de retour de la plateforme."
+      },
+      de: {
+        pageTitle: "Geistiges Eigentum | Emigrantbook",
+        headerTitle: "Geistiges Eigentum",
+        hero: "Geistiges<br>Eigentum",
+        publishDate: "Veröffentlichungsdatum: 27. März 2025",
+        effectiveDate: "Inkrafttreten: 26. April 2025",
+        notice: "<strong>Emigrantbook</strong> respektiert die geistigen Eigentumsrechte anderer und verlangt strikt die Einhaltung der Nutzervereinbarung und der Gemeinschaftsrichtlinien. Das Veröffentlichen von Inhalten, die Urheberrechte oder Markenrechte Dritter verletzen, ist unzulässig.",
+        ddCopyright: "Urheberrecht",
+        ddTrademark: "Markenzeichen",
+        ddGeneral: "Allgemeiner Hinweis",
+        cTitle: "Urheberrecht (Copyright)",
+        cDesc: "Das Urheberrecht schützt Originalwerke (Musik, Videos, Texte, Fotos). Es schützt den originären Ausdruck einer Idee (z. B. die einzigartige Art und Weise, wie ein Video erstellt oder gefilmt wird), schützt jedoch nicht die Idee selbst oder Fakten.",
+        r1Title: "Urheberrechtsverletzung",
+        r1Desc: "Die unbefugte oder rechtswidrige Nutzung von geschütztem Material Dritter stellt einen schwerwiegenden Verstoß gegen die Richtlinien von Emigrantbook dar.",
+        r2Title: "Faire Nutzung (Ausnahmen)",
+        r2Desc: "Nicht jede unbefugte Nutzung gilt als Rechtsverletzung. Nach internationaler Praxis ist die Nutzung von Material für Zitate, Kritik, Analysen, Parodien und Karikaturen zulässig, sofern dem Urheber kein unbegründeter Schaden zugefügt wird.",
+        r3Title: "Löschung von Inhalten und Kontoeinschränkungen",
+        r3Desc: "Rechtswidrig hochgeladene Videos und Beiträge werden unverzüglich entfernt. Nutzer, die systematisch Urheberrechte verletzen, werden dauerhaft gesperrt.",
+        hTitle: "Informationen für Rechteinhaber",
+        hDesc: "Wenn Sie der Ansicht sind, dass Ihr Werk ohne Genehmigung auf Emigrantbook veröffentlicht wurde, können Sie eine Beschwerde einreichen (gemäß DMCA / EU-Urheberrechtsrichtlinie). In der Beschwerde müssen der genaue Link und Nachweise über Ihre Berechtigung zwingend angegeben werden.",
+        aTitle: "Widerspruch für Nutzer",
+        aDesc: "Wenn Ihr Video oder Beitrag aufgrund einer Urheberrechtsbeschwerde entfernt wurde, Sie jedoch sicher sind, dass Sie zur Nutzung berechtigt sind (oder ein Fehler vorliegt), können Sie einen Widerspruch mit entsprechenden Argumenten einreichen.",
+        tmTitle: "Markenzeichen (Trademark)",
+        tmDesc: "Eine Marke ist ein Wort, Symbol, Logo oder Slogan, das die Waren und Dienstleistungen einer bestimmten Marke von anderen unterscheidet.",
+        tm1Title: "Markenrechtsverletzung",
+        tm1Desc: "Die Verwendung fremder Marken oder identischer Logos in einer Weise, die Nutzer irreführen und den falschen Eindruck erwecken könnte, Sie würden die Marke offiziell vertreten, ist verboten.",
+        tm2Title: "Produktpiraterie (Gefälschte Produkte)",
+        tm2Desc: "Das Bewerben, Kaufen, Verkaufen oder Fördern gefälschter Markenartikel auf dem Marktplatz oder in Beiträgen von Emigrantbook ist strengstens untersagt.",
+        tm3Title: "Fanseiten und Produktbewertungen",
+        tm3Desc: "Das Verfassen objektiver Rezensionen über Markenprodukte oder das Erstellen einer Fanseite ist gestattet, sofern deutlich angegeben wird, dass die Seite inoffiziell ist.",
+        genTitle: "Allgemeiner Hinweis",
+        genDesc: "Als Nutzer von Emigrantbook tragen Sie die alleinige Verantwortung für die von Ihnen veröffentlichten Inhalte. Bei Zweifeln bezüglich Urheberrechten empfehlen wir, vor dem Hochladen von Material rechtlichen Rat einzuholen.",
+        genBoxTitle: "Support und Streitigkeiten",
+        genBoxDesc: "Emigrantbook gewährleistet ein transparentes Beschwerde- und Einspruchsverfahren. Bei urheberrechtlichen Streitigkeiten können Sie uns über die Feedback-Kanäle der Plattform kontaktieren."
+      }
+    };
+
+    let activeSectionMode = 'copyright';
+
+    function applyLanguage() {
+      // ენის ავტომატური ამოღება ძირითადი საიტის localStorage-იდან
+      let currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+      if (!i18n[currentLang]) {
+        currentLang = 'ka';
+      }
+
+      const t = i18n[currentLang];
+
+      document.documentElement.lang = currentLang;
+      document.getElementById('doc-title').innerText = t.pageTitle;
+      document.getElementById('txt-header-title').innerText = t.headerTitle;
+      document.getElementById('txt-hero').innerHTML = t.hero;
+      document.getElementById('txt-publish-date').innerText = t.publishDate;
+      document.getElementById('txt-effective-date').innerText = t.effectiveDate;
+      document.getElementById('txt-notice').innerHTML = t.notice;
+
+      // Dropdown მენიუს ელემენტები
+      document.getElementById('opt-copyright').innerText = t.ddCopyright;
+      document.getElementById('opt-trademark').innerText = t.ddTrademark;
+      document.getElementById('opt-general').innerText = t.ddGeneral;
+
+      // Dropdown-ის აქტიური ღილაკის ტექსტი
+      if (activeSectionMode === 'copyright') {
+        document.getElementById('dropdownCurrentLabel').innerText = t.ddCopyright;
+      } else if (activeSectionMode === 'trademark') {
+        document.getElementById('dropdownCurrentLabel').innerText = t.ddTrademark;
+      } else if (activeSectionMode === 'general') {
+        document.getElementById('dropdownCurrentLabel').innerText = t.ddGeneral;
+      }
+
+      // 1. საავტორო უფლებები
+      document.getElementById('txt-c-title').innerText = t.cTitle;
+      document.getElementById('txt-c-desc').innerText = t.cDesc;
+      document.getElementById('txt-r1-title').innerText = t.r1Title;
+      document.getElementById('txt-r1-desc').innerText = t.r1Desc;
+      document.getElementById('txt-r2-title').innerText = t.r2Title;
+      document.getElementById('txt-r2-desc').innerText = t.r2Desc;
+      document.getElementById('txt-r3-title').innerText = t.r3Title;
+      document.getElementById('txt-r3-desc').innerText = t.r3Desc;
+      document.getElementById('txt-h-title').innerText = t.hTitle;
+      document.getElementById('txt-h-desc').innerText = t.hDesc;
+      document.getElementById('txt-a-title').innerText = t.aTitle;
+      document.getElementById('txt-a-desc').innerText = t.aDesc;
+
+      // 2. სასაქონლო ნიშანი
+      document.getElementById('txt-tm-title').innerText = t.tmTitle;
+      document.getElementById('txt-tm-desc').innerText = t.tmDesc;
+      document.getElementById('txt-tm1-title').innerText = t.tm1Title;
+      document.getElementById('txt-tm1-desc').innerText = t.tm1Desc;
+      document.getElementById('txt-tm2-title').innerText = t.tm2Title;
+      document.getElementById('txt-tm2-desc').innerText = t.tm2Desc;
+      document.getElementById('txt-tm3-title').innerText = t.tm3Title;
+      document.getElementById('txt-tm3-desc').innerText = t.tm3Desc;
+
+      // 3. ზოგადი შენიშვნა
+      document.getElementById('txt-gen-title').innerText = t.genTitle;
+      document.getElementById('txt-gen-desc').innerText = t.genDesc;
+      document.getElementById('txt-gen-box-title').innerText = t.genBoxTitle;
+      document.getElementById('txt-gen-box-desc').innerText = t.genBoxDesc;
+    }
+
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
       const btn = document.getElementById('dropdownBtn');
@@ -388,31 +677,43 @@
       btn.classList.toggle('open');
     }
 
-    function selectSection(sectionId, label) {
-      document.getElementById('dropdownCurrentLabel').innerText = label;
+    function selectSection(sectionId, mode) {
+      activeSectionMode = mode;
+      let currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+      if (!i18n[currentLang]) currentLang = 'ka';
+      const t = i18n[currentLang];
+
+      if (mode === 'copyright') {
+        document.getElementById('dropdownCurrentLabel').innerText = t.ddCopyright;
+      } else if (mode === 'trademark') {
+        document.getElementById('dropdownCurrentLabel').innerText = t.ddTrademark;
+      } else if (mode === 'general') {
+        document.getElementById('dropdownCurrentLabel').innerText = t.ddGeneral;
+      }
+
       toggleDropdown();
 
-      // აქტიური კლასის მონიშვნა
-      const items = document.querySelectorAll('.dropdown-item');
-      items.forEach(item => {
-        item.classList.toggle('active', item.innerText === label);
-      });
+      document.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('active'));
+      if (mode === 'copyright') document.getElementById('opt-copyright').classList.add('active');
+      if (mode === 'trademark') document.getElementById('opt-trademark').classList.add('active');
+      if (mode === 'general') document.getElementById('opt-general').classList.add('active');
 
-      // შეუფერხებელი გადასვლა სექციაზე
       const target = document.getElementById(sectionId);
       if (target) {
         target.scrollIntoView({ behavior: 'smooth' });
       }
     }
 
-    // მენიუს დახურვა ეკრანზე სხვა ადგილას დაჭერისას
     document.addEventListener('click', function(event) {
       const wrapper = document.querySelector('.dropdown-wrapper');
-      if (!wrapper.contains(event.target)) {
+      if (wrapper && !wrapper.contains(event.target)) {
         document.getElementById('dropdownMenu').classList.remove('visible');
         document.getElementById('dropdownBtn').classList.remove('open');
       }
     });
+
+    // გვერდის ჩატვირთვისას მომენტალური თარგმნა მთავარ საიტზე არჩეულ ენაზე
+    document.addEventListener('DOMContentLoaded', applyLanguage);
   </script>
 
 </body>
