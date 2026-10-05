@@ -7791,14 +7791,21 @@ console.error("Like check error:", err);
     }
 
     function logout() {
-      if (currentUser) {
-        updateUserPresence(currentUser.uid, false);
-      }
-      auth.signOut().then(function() {
-        localStorage.removeItem('emigrantbook_lang');
-        location.reload();
-      });
-    }
+  if (currentUser) {
+    updateUserPresence(currentUser.uid, false);
+  }
+
+  // OneSignal-ის სესიის გათიშვა
+  if (window.OneSignal) {
+    OneSignal.logout();
+  }
+
+  auth.signOut().then(function() {
+    localStorage.removeItem('emigrantbook_lang');
+    location.reload();
+  });
+}
+
 
     function triggerStoryUpload() {
       var input = document.getElementById('story-file-input');
