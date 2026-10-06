@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title id="meta-title">Contact & Feedback | Emigrantbook</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f0f2f5;
+      color: #050505;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .contact-header {
+      position: sticky;
+      top: 0;
+      background-color: #ffffff;
+      border-bottom: 1px solid #dadde1;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: #1877f2;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 50%;
+    }
+
+    .back-btn:active {
+      background-color: #e4e6eb;
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #050505;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-logo {
+      font-size: 17px;
+      font-weight: 800;
+      color: #1877f2;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+    }
+
+    .contact-container {
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .hero-banner {
+      background: linear-gradient(135deg, #0d233a 0%, #183b5e 100%);
+      border-radius: 24px;
+      padding: 36px 24px;
+      display: flex;
+      align-items: flex-end;
+      min-height: 150px;
+      box-shadow: 0 4px 14px rgba(13, 35, 58, 0.15);
+    }
+
+    .hero-banner h1 {
+      color: #ffffff;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+    }
+
+    .content-card {
+      background-color: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #dadde1;
+      padding: 24px 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: #65676b;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #ccd0d5;
+      font-size: 14.5px;
+      outline: none;
+      font-family: inherit;
+      background-color: #f8f9fa;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #1877f2;
+      background-color: #ffffff;
+    }
+
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .submit-btn {
+      background-color: #1877f2;
+      color: #ffffff;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.2s;
+      margin-top: 6px;
+    }
+
+    .submit-btn:active {
+      background-color: #166fe5;
+    }
+
+    .status-msg {
+      display: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .status-success {
+      background-color: #e7f8ee;
+      color: #1e7e34;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-error {
+      background-color: #fde8e8;
+      color: #c81e1e;
+      border: 1px solid #f8b4b4;
+    }
+
+    .direct-info {
+      background-color: #f8f9fa;
+      border-radius: 12px;
+      padding: 14px 16px;
+      border-left: 3.5px solid #1877f2;
+      font-size: 13px;
+      color: #555555;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .direct-info strong {
+      color: #050505;
+      font-size: 13.5px;
+    }
+
+    .direct-info a {
+      color: #1877f2;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="contact-header">
+    <div class="header-left">
+      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='terms-and-policies.html'" aria-label="Back" id="btn-back">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <span class="header-title" id="txt-header-title">Feedback</span>
+    </div>
+    <a href="index.html" class="header-logo">Emigrantbook</a>
+  </header>
+
+  <main class="contact-container">
+
+    <div class="hero-banner">
+      <h1 id="txt-hero">Contact Us /<br>Feedback</h1>
+    </div>
+
+    <section class="content-card">
+      <p class="card-desc" id="txt-desc">
+        Have a question, feedback, or need to report a safety violation? Fill out the form below and our team will get back to you.
+      </p>
+
+      <form id="feedback-form" action="https://formspree.io/f/xyzkqwer" method="POST">
+        <div class="form-group">
+          <label for="user-name" id="lbl-name">Your Name</label>
+          <input type="text" id="user-name" name="name" class="form-control" required placeholder="John Doe">
+        </div>
+
+        <div class="form-group">
+          <label for="user-email" id="lbl-email">Email Address</label>
+          <input type="email" id="user-email" name="email" class="form-control" required placeholder="user@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="user-subject" id="lbl-subject">Subject</label>
+          <select id="user-subject" name="subject" class="form-control">
+            <option value="General" id="opt-1">General Inquiry</option>
+            <option value="Safety" id="opt-2">Safety / Report Violation</option>
+            <option value="Technical" id="opt-3">Technical Issue</option>
+            <option value="Account" id="opt-4">Account / Data Deletion</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="user-message" id="lbl-message">Message</label>
+          <textarea id="user-message" name="message" class="form-control" required placeholder="Write your message details here..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="btn-submit">
+          <span id="txt-submit-btn">Send Message</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+
+        <div id="status-success" class="status-msg status-success">Message sent successfully! Thank you.</div>
+        <div id="status-error" class="status-msg status-error">An error occurred. Please try again later.</div>
+      </form>
+
+      <div class="direct-info">
+        <strong id="txt-direct-title">Direct Contact Email:</strong>
+        <span><a href="mailto:emigrantbook@gmail.com">emigrantbook@gmail.com</a></span>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const translations = {
+      en: {
+        pageTitle: "Contact & Feedback | Emigrantbook",
+        backAria: "Back",
+        headerTitle: "Feedback",
+        hero: "Contact Us /<br>Feedback",
+        desc: "Have a question, feedback, or need to report a safety violation? Fill out the form below and our team will get back to you.",
+        lblName: "Your Name",
+        lblEmail: "Email Address",
+        lblSubject: "Subject",
+        opt1: "General Inquiry",
+        opt2: "Safety / Report Violation",
+        opt3: "Technical Issue",
+        opt4: "Account / Data Deletion",
+        lblMessage: "Message",
+        submitBtn: "Send Message",
+        directTitle: "Direct Contact Email:",
+        successMsg: "Message sent successfully! Thank you.",
+        errorMsg: "An error occurred. Please try again later."
+      },
+      ka: {
+        pageTitle: "უკუკავშირი და კონტაქტი | Emigrantbook",
+        backAria: "უკან",
+        headerTitle: "უკუკავშირი",
+        hero: "დაგვიკავშირდით /<br>უკუკავშირი",
+        desc: "გაქვთ შეკითხვა, იდეა ან გსურთ დარღვევის დარეპორტება? შეავსეთ ქვემოთ მოცემული ფორმა და ჩვენი გუნდი დაგიკავშირდებათ.",
+        lblName: "თქვენი სახელი",
+        lblEmail: "ელექტრონული ფოსტა",
+        lblSubject: "თემა",
+        opt1: "ზოგადი შეკითხვა",
+        opt2: "უსაფრთხოება / დარღვევის რეპორტი",
+        opt3: "ტექნიკური პრობლემა",
+        opt4: "ანგარიშის / მონაცემთა წაშლა",
+        lblMessage: "შეტყობინება",
+        submitBtn: "გაგზავნა",
+        directTitle: "პირდაპირი საკონტაქტო ფოსტა:",
+        successMsg: "შეტყობინება წარმატებით გაიგზავნა! მადლობა.",
+        errorMsg: "დაფიქსირდა შეცდომა. გთხოვთ სცადოთ მოგვიანებით."
+      },
+      it: {
+        pageTitle: "Contatti e Feedback | Emigrantbook",
+        backAria: "Indietro",
+        headerTitle: "Feedback",
+        hero: "Contattaci /<br>Feedback",
+        desc: "Hai una domanda, un feedback o devi segnalare una violazione della sicurezza? Compila il modulo sottostante.",
+        lblName: "Il tuo nome",
+        lblEmail: "Indirizzo Email",
+        lblSubject: "Oggetto",
+        opt1: "Domanda generale",
+        opt2: "Sicurezza / Segnala violazione",
+        opt3: "Problema tecnico",
+        opt4: "Eliminazione account / Dati",
+        lblMessage: "Messaggio",
+        submitBtn: "Invia messaggio",
+        directTitle: "Email di contatto diretto:",
+        successMsg: "Messaggio inviato con successo! Grazie.",
+        errorMsg: "Si è verificato un errore. Riprova più tardi."
+      },
+      ru: {
+        pageTitle: "Обратная связь и контакты | Emigrantbook",
+        backAria: "Назад",
+        headerTitle: "Обратная связь",
+        hero: "Связаться с нами /<br>Отзывы",
+        desc: "Есть вопрос, предложение или нужно сообщить о нарушении безопасности? Заполните форму ниже.",
+        lblName: "Ваше имя",
+        lblEmail: "Электронная почта",
+        lblSubject: "Тема",
+        opt1: "Общий вопрос",
+        opt2: "Безопасность / Жалоба на нарушение",
+        opt3: "Техническая проблема",
+        opt4: "Удаление аккаунта / Данных",
+        lblMessage: "Сообщение",
+        submitBtn: "Отправить сообщение",
+        directTitle: "Прямой контактный email:",
+        successMsg: "Сообщение успешно отправлено! Спасибо.",
+        errorMsg: "Произошла ошибка. Пожалуйста, попробуйте позже."
+      },
+      el: {
+        pageTitle: "Επικοινωνία & Σχόλια | Emigrantbook",
+        backAria: "Πίσω",
+        headerTitle: "Σχόλια",
+        hero: "Επικοινωνήστε /<br>Σχόλια",
+        desc: "Έχετε ερώτηση, σχόλιο ή θέλετε να αναφέρετε παραβίαση ασφάλειας; Συμπληρώστε την παρακάτω φόρμα.",
+        lblName: "Το όνομά σας",
+        lblEmail: "Διεύθυνση Email",
+        lblSubject: "Θέμα",
+        opt1: "Γενική ερώτηση",
+        opt2: "Ασφάλεια / Αναφορά παραβίασης",
+        opt3: "Τεχνικό πρόβλημα",
+        opt4: "Διαγραφή λογαριασμού / Δεδομένων",
+        lblMessage: "Μήνυμα",
+        submitBtn: "Αποστολή μηνύματος",
+        directTitle: "Άμεσο email επικοινωνίας:",
+        successMsg: "Το μήνυμα στάλθηκε με επιτυχία! Ευχαριστούμε.",
+        errorMsg: "Παρουσιάστηκε σφάλμα. Παρακαλώ δοκιμάστε ξανά αργότερα."
+      },
+      fr: {
+        pageTitle: "Contact et Retours | Emigrantbook",
+        backAria: "Retour",
+        headerTitle: "Retours",
+        hero: "Contactez-nous /<br>Retours",
+        desc: "Vous avez une question, une suggestion ou souhaitez signaler une violation ? Remplissez le formulaire ci-dessous.",
+        lblName: "Votre nom",
+        lblEmail: "Adresse e-mail",
+        lblSubject: "Sujet",
+        opt1: "Question générale",
+        opt2: "Sécurité / Signaler une infraction",
+        opt3: "Problème technique",
+        opt4: "Suppression de compte / Données",
+        lblMessage: "Message",
+        submitBtn: "Envoyer le message",
+        directTitle: "E-mail de contact direct :",
+        successMsg: "Message envoyé avec succès ! Merci.",
+        errorMsg: "Une erreur est survenue. Veuillez réessayer plus tard."
+      },
+      de: {
+        pageTitle: "Kontakt & Feedback | Emigrantbook",
+        backAria: "Zurück",
+        headerTitle: "Feedback",
+        hero: "Kontakt /<br>Feedback",
+        desc: "Haben Sie eine Frage, Feedback oder möchten einen Sicherheitsverstoß melden? Füllen Sie das Formular aus.",
+        lblName: "Ihr Name",
+        lblEmail: "E-Mail-Adresse",
+        lblSubject: "Betreff",
+        opt1: "Allgemeine Anfrage",
+        opt2: "Sicherheit / Verstoß melden",
+        opt3: "Technisches Problem",
+        opt4: "Konto- / Datenlöschung",
+        lblMessage: "Nachricht",
+        submitBtn: "Nachricht senden",
+        directTitle: "Direkte Kontakt-E-Mail:",
+        successMsg: "Nachricht erfolgreich gesendet! Danke.",
+        errorMsg: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+      }
+    };
+
+    function getActiveLanguage() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlLang = urlParams.get('lang');
+      if (urlLang && translations[urlLang]) return urlLang;
+      const stored = localStorage.getItem('emigrantbook_lang');
+      if (stored && translations[stored]) return stored;
+      return 'en';
+    }
+
+    function applyLanguage(lang) {
+      const t = translations[lang] || translations['en'];
+      document.documentElement.lang = lang;
+      document.getElementById('meta-title').innerText = t.pageTitle;
+      document.getElementById('btn-back').setAttribute('aria-label', t.backAria);
+      document.getElementById('txt-header-title').innerText = t.headerTitle;
+      document.getElementById('txt-hero').innerHTML = t.hero;
+      document.getElementById('txt-desc').innerText = t.desc;
+      document.getElementById('lbl-name').innerText = t.lblName;
+      document.getElementById('lbl-email').innerText = t.lblEmail;
+      document.getElementById('lbl-subject').innerText = t.lblSubject;
+      document.getElementById('opt-1').innerText = t.opt1;
+      document.getElementById('opt-2').innerText = t.opt2;
+      document.getElementById('opt-3').innerText = t.opt3;
+      document.getElementById('opt-4').innerText = t.opt4;
+      document.getElementById('lbl-message').innerText = t.lblMessage;
+      document.getElementById('txt-submit-btn').innerText = t.submitBtn;
+      document.getElementById('txt-direct-title').innerText = t.directTitle;
+      document.getElementById('status-success').innerText = t.successMsg;
+      document.getElementById('status-error').innerText = t.errorMsg;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      applyLanguage(getActiveLanguage());
+
+      const form = document.getElementById('feedback-form');
+      const successBox = document.getElementById('status-success');
+      const errorBox = document.getElementById('status-error');
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const data = new FormData(form);
+        const action = form.action;
+
+        if (action.includes('xyzkqwer')) {
+          const name = document.getElementById('user-name').value;
+          const subject = document.getElementById('user-subject').value;
+          const msg = document.getElementById('user-message').value;
+          window.location.href = `mailto:emigrantbook@gmail.com?subject=[${subject}] from ${name}&body=${encodeURIComponent(msg)}`;
+          return;
+        }
+
+        try {
+          const response = await fetch(action, {
+            method: 'POST',
+            body: data,
+            headers: { 'Accept': 'application/json' }
+          });
+          if (response.ok) {
+            form.reset();
+            successBox.style.display = 'block';
+            errorBox.style.display = 'none';
+          } else {
+            errorBox.style.display = 'block';
+            successBox.style.display = 'none';
+          }
+        } catch (error) {
+          errorBox.style.display = 'block';
+          successBox.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
