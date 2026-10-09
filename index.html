@@ -4280,10 +4280,10 @@ function viewUserProfile(userId) {
 
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-      // 🌟 ავატარის აწევა ქავერზე სხვის პროფილზეც
+      // 🌟 ზუსტად ისე, როგორც showMyProfile-ში: 0px
       var avatarRow = document.querySelector('.avatar-stats-row');
       if (avatarRow) {
-        avatarRow.style.setProperty('margin-top', '-125px', 'important');
+        avatarRow.style.setProperty('margin-top', '0px', 'important');
         avatarRow.style.setProperty('display', 'flex', 'important');
         avatarRow.style.setProperty('flex-direction', 'column', 'important');
         avatarRow.style.setProperty('align-items', 'center', 'important');
@@ -4319,8 +4319,11 @@ function viewUserProfile(userId) {
         return;
       }
 
-      // Unblocked - display header elements
-      if (avatarHolder) avatarHolder.style.display = 'block';
+      // 🌟 ზუსტად ისე, როგორც showMyProfile-ში: avatarHolder-ზე -80px
+      if (avatarHolder) {
+        avatarHolder.style.display = 'block';
+        avatarHolder.style.setProperty('margin-top', '-80px', 'important');
+      }
       if (statsBlock) statsBlock.style.display = 'flex';
       if (userHeadline) userHeadline.style.display = 'block';
       if (actionPanel) actionPanel.style.display = 'flex';
@@ -4356,9 +4359,10 @@ function viewUserProfile(userId) {
       if (pName) pName.innerText = finalName;
       if (pSub) pSub.innerText = "Emigrant";
 
+      // 🌟 ზუსტად ისე, როგორც showMyProfile-ში: 230px
       if (banner) {
-        banner.style.setProperty('height', '320px', 'important');
-        banner.style.setProperty('min-height', '320px', 'important');
+        banner.style.setProperty('height', '230px', 'important');
+        banner.style.setProperty('min-height', '230px', 'important');
         banner.style.setProperty('position', 'relative', 'important');
         if (coverUrl) {
           banner.style.backgroundImage = `url('${coverUrl}')`;
@@ -4405,7 +4409,6 @@ function viewUserProfile(userId) {
           renderProfileDetails(selectedUser);
           switchProfileTab('posts');
           renderProfileFollowersCluster(userId);
-
         }
 
         showScreen('profile');
@@ -4414,6 +4417,7 @@ function viewUserProfile(userId) {
     });
   });
 }
+
        
     // აქ მთავრდება ორივე ერთად
     
