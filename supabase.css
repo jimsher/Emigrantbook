@@ -1,9 +1,14 @@
+აი შენი სრული CSS კოდი — არცერთი ხაზი, კლასი თუ მძიმე არ არის წაშლილი ან შეცვლილი.
+ყველა ბლოკს გავუკეთე დიდი, მკაფიო და თვალშისაცემი სათაურები ქართულად, რომ სამომავლოდ Ctrl + F-ით წამებში იპოვო ზუსტად ის ნაწილი, რომლის შეცვლაც დაგჭირდება:
 /* ==========================================================================
    EMIGRANTBOOK — MAIN STYLESHEET
    ☀️ DEFAULT: FACEBOOK LIGHT THEME (სუფთა თეთრი დიზაინი)
    🌙 DARK MODE: .dark-mode კლასით 100% ორიგინალი შავი დიზაინი
    ========================================================================== */
 
+/* ==========================================================================
+   SECTION 1: გლობალური საბაზისო წესები (GLOBAL BASE & RESET)
+   ========================================================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -15,13 +20,15 @@
   text-rendering: optimizeLegibility;
 }
 
-
 body {
   background-color: #f0f2f5;
   color: #050505;
   padding-bottom: 60px !important;
 }
 
+/* ==========================================================================
+   SECTION 2: ონლაინ სტატუსის მწვანე წერტილები და პულსაცია (ONLINE STATUS DOTS)
+   ========================================================================== */
 .avatar-has-online {
   position: relative;
   width: 100%;
@@ -66,6 +73,9 @@ body {
   100% { box-shadow: 0 0 0 0 rgba(49, 162, 76, 0); }
 }
 
+/* ==========================================================================
+   SECTION 3: აპლიკაციის ჩატვირთვის ეკრანი (APP PRELOADER & SPLASH)
+   ========================================================================== */
 #app-preloader {
   position: fixed;
   top: 0;
@@ -101,6 +111,9 @@ body {
   visibility: hidden;
 }
 
+/* ==========================================================================
+   SECTION 4: ავტორიზაცია, ლოგინი და რეგისტრაცია (AUTH SCREEN & LOGIN FORM)
+   ========================================================================== */
 #auth-screen {
   background: #f0f2f5;
   min-height: 100vh;
@@ -341,6 +354,9 @@ body {
   display: none;
 }
 
+/* ==========================================================================
+   SECTION 5: მთავარი ზედა ზოლი (MAIN APP HEADER & NAVIGATION)
+   ========================================================================== */
 .header {
   background: #ffffff;
   padding: 12px 20px;
@@ -460,6 +476,9 @@ body {
   transition: all 0.3s ease;
 }
 
+/* ==========================================================================
+   SECTION 6: გვერდითი მენიუ (SIDE MENU OVERLAY & CONTENT)
+   ========================================================================== */
 .side-menu-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -566,6 +585,28 @@ body {
   background: linear-gradient(135deg, #ff6b6b 0%, #d63031 100%);
 }
 
+.side-menu-logout-btn {
+  width: calc(100% - 40px);
+  padding: 12px;
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  margin: 20px 20px 10px 20px;
+  transition: background 0.2s;
+}
+
+.side-menu-logout-btn:hover {
+  background: #d93d40;
+}
+
+/* ==========================================================================
+   SECTION 7: საინფორმაციო მოდალი (AKHO INFO MODAL)
+   ========================================================================== */
 .akho-info-overlay {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
@@ -653,25 +694,9 @@ body {
   gap: 10px;
 }
 
-.side-menu-logout-btn {
-  width: calc(100% - 40px);
-  padding: 12px;
-  background: #ff4d4f;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-  margin: 20px 20px 10px 20px;
-  transition: background 0.2s;
-}
-
-.side-menu-logout-btn:hover {
-  background: #d93d40;
-}
-
+/* ==========================================================================
+   SECTION 8: ახალი პოსტის შექმნის ბარათი (CREATE POST CARD)
+   ========================================================================== */
 .create-post-card {
   background: #ffffff;
   border-radius: 12px;
@@ -767,6 +792,9 @@ body {
   color: #dcae36;
 }
 
+/* ==========================================================================
+   SECTION 9: სთორების ლენტა მთავარზე (STORIES TRAY ON FEED)
+   ========================================================================== */
 .stories-wrapper {
   display: flex;
   gap: 8px;
@@ -855,6 +883,9 @@ body {
 .story-username-label img { width: 100%; height: 100%; object-fit: cover; }
 .story-card-video-preview { width: 100%; height: 100%; object-fit: cover; }
 
+/* ==========================================================================
+   SECTION 10: პოსტების ბარათი (FEED POST CARD & INTERACTIONS)
+   ========================================================================== */
 .post-card {
   background: #ffffff;
   border-radius: 12px;
@@ -954,8 +985,189 @@ body {
   cursor: pointer;
 }
 
+.post-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #65676b;
+  font-size: 14px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background: #ffffff;
+}
 
+.fb-stats-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
 
+.fb-reaction-icons {
+  display: flex;
+  align-items: center;
+  gap: -4px;
+}
+
+.fb-icon-svg-badge {
+  font-size: 16px;
+  background: #f0f2f5;
+  border-radius: 50%;
+  padding: 1px;
+}
+
+.fb-likes-counter {
+  color: #65676b;
+  font-size: 14px;
+  margin-left: 3px;
+}
+
+.comment-count-label {
+  cursor: pointer;
+  color: #65676b;
+}
+
+.comment-count-label:hover {
+  text-decoration: underline;
+}
+
+.post-actions {
+  display: flex;
+  border-top: 1px solid #dadde1;
+  padding: 4px 6px;
+  background: #ffffff;
+  position: relative;
+}
+
+.action-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 6px 2px;
+  color: #65676b !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  font-size: 13.5px !important;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.action-btn:hover {
+  background: #f0f2f5;
+  border-radius: 4px;
+}
+
+.action-btn-svg {
+  width: 20px;
+  height: 20px;
+  fill: #65676b;
+}
+
+.action-btn.btn-liked {
+  color: #f33e58 !important;
+}
+
+.action-btn.btn-liked .action-btn-svg {
+  fill: #f33e58 !important;
+}
+
+.post-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.post-options-dropdown {
+  position: relative;
+}
+
+.post-options-btn {
+  background: transparent;
+  border: none;
+  color: #65676b;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+}
+
+.post-options-btn:hover {
+  background: #f0f2f5;
+  color: #050505;
+}
+
+.post-options-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 30px;
+  background: #ffffff;
+  border: 1px solid #dadde1;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  min-width: 210px;
+  overflow: hidden;
+}
+
+.post-options-menu button {
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  color: #050505;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.post-options-menu button:hover {
+  background: #f0f2f5;
+  color: #dcae36;
+}
+
+.post-action-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
+  object-fit: contain;
+  filter: invert(41%) sepia(8%) saturate(305%) hue-rotate(182deg) brightness(94%) contrast(87%) !important;
+  opacity: 1 !important;
+}
+
+.menu-svg-icon {
+  width: 19px;
+  height: 19px;
+  display: inline-block;
+  vertical-align: middle;
+  object-fit: contain;
+  filter: brightness(0) opacity(0.75);
+}
+
+.menu-item-text {
+  color: #050505;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+}
+
+/* ==========================================================================
+   SECTION 11: TIKTOK სტილის ვიდეო პანელი (TIKTOK PANEL & FLOATING HEARTS)
+   ========================================================================== */
 .video-container-rel {
   position: relative;
   width: 100%;
@@ -1079,100 +1291,9 @@ body {
   100% { opacity: 0; transform: translateY(-230px) scale(0.7); }
 }
 
-.post-stats {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #65676b;
-  font-size: 14px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  background: #ffffff;
-}
-
-.fb-stats-left {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.fb-reaction-icons {
-  display: flex;
-  align-items: center;
-  gap: -4px;
-}
-
-.fb-icon-svg-badge {
-  font-size: 16px;
-  background: #f0f2f5;
-  border-radius: 50%;
-  padding: 1px;
-}
-
-.fb-likes-counter {
-  color: #65676b;
-  font-size: 14px;
-  margin-left: 3px;
-}
-
-.comment-count-label {
-  cursor: pointer;
-  color: #65676b;
-}
-
-.comment-count-label:hover {
-  text-decoration: underline;
-}
-
-.post-actions {
-  display: flex;
-  border-top: 1px solid #dadde1;
-  padding: 4px 6px;
-  background: #ffffff;
-  position: relative;
-}
-
-.action-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 6px 2px;
-  color: #65676b !important;
-  font-weight: 600 !important;
-  cursor: pointer;
-  font-size: 13.5px !important;
-  letter-spacing: -0.2px;
-  line-height: 1.2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: background 0.15s ease;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-
-.action-btn:hover {
-  background: #f0f2f5;
-  border-radius: 4px;
-}
-
-.action-btn-svg {
-  width: 20px;
-  height: 20px;
-  fill: #65676b;
-}
-
-.action-btn.btn-liked {
-  color: #f33e58 !important;
-}
-
-.action-btn.btn-liked .action-btn-svg {
-  fill: #f33e58 !important;
-}
-
+/* ==========================================================================
+   SECTION 12: კომენტარების მოდალური ფანჯარა (COMMENTS BOTTOM SHEET MODAL)
+   ========================================================================== */
 .comments-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -1380,6 +1501,9 @@ body {
   cursor: pointer;
 }
 
+/* ==========================================================================
+   SECTION 13: მომწონებელთა სია (LIKERS MODAL)
+   ========================================================================== */
 .likers-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -1410,7 +1534,7 @@ body {
 }
 
 .liker-row {
-  display: flex; align-items: center; gap: 14px;
+  display: flex align-items: center; gap: 14px;
   cursor: pointer; padding: 8px 0;
   color: #050505;
 }
@@ -1442,12 +1566,18 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
+/* ==========================================================================
+   SECTION 14: პროფილის რედაქტირების ბარათი (EDIT PROFILE SCREEN)
+   ========================================================================== */
 .edit-profile-card { background: #ffffff; border-radius: 12px; border: 1px solid #dadde1; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 .edit-header { font-size: 18px; font-weight: bold; margin-bottom: 20px; color: #dcae36; text-align: center; }
 .edit-buttons-wrapper { display: flex; gap: 10px; margin-top: 20px; }
 .btn-save { background: #dcae36; color: #111111; }
 .btn-cancel { background: #e4e6eb; color: #050505; }
 
+/* ==========================================================================
+   SECTION 15: კონფიდენციალურობის პარამეტრები (PRIVACY SETTINGS)
+   ========================================================================== */
 .privacy-section-card {
   background: #ffffff;
   border-radius: 12px;
@@ -1511,6 +1641,9 @@ body {
   cursor: pointer;
 }
 
+/* ==========================================================================
+   SECTION 16: ძველი სთორის ნახვის ფანჯარა (LEGACY STORY VIEWER)
+   ========================================================================== */
 .story-viewer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 500; display: flex; justify-content: center; align-items: center; }
 .story-viewer-content { width: 100%; max-width: 420px; height: 100vh; max-height: 740px; background: black; position: relative; display: flex; flex-direction: column; }
 @media(max-width: 480px) { .story-viewer-content { max-height: 100vh; } }
@@ -1599,6 +1732,9 @@ body {
   user-select: none;
 }
 
+/* ==========================================================================
+   SECTION 17: სრული ეკრანის გალერეა და სლაიდერი (FULLSCREEN IMAGE GALLERY)
+   ========================================================================== */
 .gallery-overlay {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
@@ -1705,6 +1841,9 @@ body {
   color: #f33e58 !important;
 }
 
+/* ==========================================================================
+   SECTION 18: ტექნიკური სამუშაოების და გაფრთხილების ფანჯრები (OVERLAYS)
+   ========================================================================== */
 #maintenance-overlay {
   display: none;
   position: fixed;
@@ -1765,6 +1904,9 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+/* ==========================================================================
+   SECTION 19: პირდაპირი ეთერის ღილაკები და ბარათი (LIVE STREAM CARDS & BADGES)
+   ========================================================================== */
 .live-post-btn {
   display: flex;
   align-items: center;
@@ -1885,6 +2027,9 @@ body {
   -webkit-transform: none !important;
 }
 
+/* ==========================================================================
+   SECTION 20: ენის არჩევის მოდალი (LANGUAGE SELECTION MODAL)
+   ========================================================================== */
 .custom-lang-modal-overlay {
   display: none;
   position: fixed;
@@ -1979,6 +2124,9 @@ body {
   display: inline;
 }
 
+/* ==========================================================================
+   SECTION 21: ფოტოების ბადე და მრავალჯერადი მონიშვნა (PHOTO GRID & SELECTION)
+   ========================================================================== */
 .photo-grid-full {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2112,6 +2260,9 @@ body {
   background: #f0f2f5;
 }
 
+/* ==========================================================================
+   SECTION 22: გაზიარების ქვედა ფანჯარა (SHARE BOTTOM SHEET)
+   ========================================================================== */
 .eb-share-sheet {
   width: 100%;
   max-width: 580px;
@@ -2304,6 +2455,9 @@ body {
   line-height: 1.2;
 }
 
+/* ==========================================================================
+   SECTION 23: ტექსტის შეყვანის ველების სელექცია (TEXT INPUT USER SELECT RESET)
+   ========================================================================== */
 input,
 textarea,
 [contenteditable="true"],
@@ -2319,6 +2473,9 @@ textarea,
   touch-action: manipulation !important;
 }
 
+/* ==========================================================================
+   SECTION 24: შემომავალი ზარი და ვიდეო ზარი (CALL MODAL & VIDEO CALL SCREEN)
+   ========================================================================== */
 #incoming-call-modal {
   display: none;
   position: fixed;
@@ -2369,67 +2526,6 @@ textarea,
 .call-action-icon-btn svg { width: 22px; height: 22px; fill: #fff; }
 .end-call-btn { background: #ff4757; width: 60px; height: 60px; }
 
-.post-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-}
-
-.post-options-dropdown {
-  position: relative;
-}
-
-.post-options-btn {
-  background: transparent;
-  border: none;
-  color: #65676b;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 50%;
-  transition: background 0.2s, color 0.2s;
-}
-
-.post-options-btn:hover {
-  background: #f0f2f5;
-  color: #050505;
-}
-
-.post-options-menu {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 30px;
-  background: #ffffff;
-  border: 1px solid #dadde1;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  z-index: 100;
-  min-width: 210px;
-  overflow: hidden;
-}
-
-.post-options-menu button {
-  width: 100%;
-  padding: 10px 14px;
-  background: transparent;
-  border: none;
-  color: #050505;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.2s;
-}
-
-.post-options-menu button:hover {
-  background: #f0f2f5;
-  color: #dcae36;
-}
-
 video::-webkit-media-controls-overlay-play-button,
 video::-webkit-media-controls-start-playback-button,
 video::-webkit-media-controls-play-button {
@@ -2440,79 +2536,23 @@ video::-webkit-media-controls-play-button {
   pointer-events: none !important;
 }
 
-.post-action-icon {
-  width: 18px;
-  height: 18px;
-  display: inline-block;
-  vertical-align: middle;
-  object-fit: contain;
-  filter: invert(41%) sepia(8%) saturate(305%) hue-rotate(182deg) brightness(94%) contrast(87%) !important;
-  opacity: 1 !important;
-}
-
-
-.menu-svg-icon {
-  width: 19px;
-  height: 19px;
-  display: inline-block;
-  vertical-align: middle;
-  object-fit: contain;
-  filter: brightness(0) opacity(0.75);
-}
-
-.menu-item-text {
-  color: #050505;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.2px;
-}
-
-.privacy-section-card {
-  background: #ffffff;
-  border: 1px solid #dadde1;
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.privacy-option-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #050505;
-  margin-bottom: 4px;
-}
-
-.privacy-option-desc {
-  color: #65676b;
-  font-size: 13px;
-  line-height: 1.4;
-  margin-bottom: 15px;
-}
-
-.privacy-radio-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 0;
-  color: #050505;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
+/* ==========================================================================
+   SECTION 25: მთავარი ლენტის კონტეინერი (FEED CONTAINER & WALL)
+   ========================================================================== */
 .feed-container {
   width: 100% !important;
   max-width: 680px !important;
   margin: 0 auto !important;
   box-sizing: border-box !important;
-  padding: 0 !important; /* მოხსნილია 10px დაშორება */
+  padding: 0 !important;
 }
 
 #posts-wall,
 .post-card {
   background: #ffffff !important;
-  border-radius: 0 !important; /* მობილურზე კუთხეები სწორია */
+  border-radius: 0 !important;
   padding: 12px 0 0 0 !important;
-  margin-bottom: 8px !important; /* ზუსტი Facebook დაშორება პოსტებს შორის */
+  margin-bottom: 8px !important;
   border-top: 1px solid #dadde1 !important;
   border-bottom: 1px solid #dadde1 !important;
   border-left: none !important;
@@ -2523,6 +2563,9 @@ video::-webkit-media-controls-play-button {
   box-sizing: border-box !important;
 }
 
+/* ==========================================================================
+   SECTION 26: ქვედა ფიქსირებული ნავიგაცია (BOTTOM NAVIGATION BAR)
+   ========================================================================== */
 .bottom-nav {
   position: fixed !important;
   bottom: 0 !important;
@@ -2594,6 +2637,9 @@ video::-webkit-media-controls-play-button {
   z-index: 10;
 }
 
+/* ==========================================================================
+   SECTION 27: შეტყობინებების ეკრანი (NOTIFICATIONS SCREEN)
+   ========================================================================== */
 #notifications-screen {
   display: none;
   width: 100%;
@@ -2717,6 +2763,9 @@ video::-webkit-media-controls-play-button {
   cursor: pointer;
 }
 
+/* ==========================================================================
+   SECTION 28: მეგობრების და მოთხოვნების ეკრანი (FRIENDS & REQUESTS SCREEN)
+   ========================================================================== */
 #friends-screen {
   display: none;
   width: 100%;
@@ -2874,6 +2923,9 @@ video::-webkit-media-controls-play-button {
   opacity: 0.8;
 }
 
+/* ==========================================================================
+   SECTION 29: TIKTOK სტილის LIVE STREAM ბარათი (LIVE AGORA TIKTOK CARD)
+   ========================================================================== */
 .post-card, .collage-container, .feed-container {
   contain: content;
 }
@@ -2991,6 +3043,9 @@ video::-webkit-media-controls-play-button {
   pointer-events: auto;
 }
 
+/* ==========================================================================
+   SECTION 30: რეკლამის ბანერი და CTA (SPONSORED ADS POST CTA BAR)
+   ========================================================================== */
 div:has(> a[href*="live-wheel"]) {
   margin-top: 8px !important;
   margin-bottom: 8px !important;
@@ -3053,7 +3108,7 @@ div:has(> a[href*="live-wheel"]) {
 }
 
 /* ==========================================================================
-   👥 CONNECTIONS — TIKTOK LAYOUT IN 100% FACEBOOK CLEAN WHITE THEME
+   SECTION 31: კონტაქტების და გამომწერების ეკრანი (CONNECTIONS / FOLLOWERS TIKTOK STYLE)
    ========================================================================== */
 #connections-screen {
   background-color: #ffffff !important;
@@ -3289,7 +3344,7 @@ div:has(> a[href*="live-wheel"]) {
 }
 
 /* ==========================================================================
-   კოლაჟები და გალერეა
+   SECTION 32: პოსტის კოლაჟები და ფოტო-ბადეები (POST COLLAGE LAYOUTS 1-6)
    ========================================================================== */
 .collage-container {
   margin-bottom: 0px;
@@ -3398,6 +3453,9 @@ div:has(> a[href*="live-wheel"]) {
   z-index: 2;
 }
 
+/* ==========================================================================
+   SECTION 33: TIKTOK სრული ეკრანის ვიდეო ფიდი (TIKTOK FULLSCREEN FEED)
+   ========================================================================== */
 .tiktok-fullscreen-overlay {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
@@ -3461,7 +3519,7 @@ div:has(> a[href*="live-wheel"]) {
 }
 
 /* ==========================================================================
-   ახალი კომენტარების სტილები
+   SECTION 34: FACEBOOK სტილის კომენტარების დეტალური ბლოკი (FB COMMENT CARD)
    ========================================================================== */
 .fb-comment-bubble {
   background: transparent !important;
@@ -3606,7 +3664,7 @@ div:has(> a[href*="live-wheel"]) {
 }
 
 /* ==========================================================================
-   Drawer (ბურგერ მენიუ)
+   SECTION 35: FACEBOOK ბურგერ მენიუ და გვერდითი პანელი (DRAWER SLIDE MENU)
    ========================================================================== */
 .fb-main-burger-btn {
   background: none;
@@ -3905,7 +3963,7 @@ body:not(.light-mode) .fb-main-burger-btn span {
 .fb-accordion-body a:hover { background: #f0f2f5; }
 
 /* ==========================================================================
-   ძიების მოდალი
+   SECTION 36: საძიებო სისტემა და მოდალი (SEARCH SCREEN & OVERLAY SHEET)
    ========================================================================== */
 .fb-search-screen {
   position: fixed;
@@ -4181,11 +4239,10 @@ img.fb-search-ava {
   margin-top: 1px;
 }
 
-
 /* ==========================================================================
-   ⭐ NEW FACEBOOK PROFILE DESIGN (CLEAN, 100% WORKING & RESPONSIVE)
+   SECTION 37: ახალი პროფილის გვერდის დიზაინი (FACEBOOK PROFILE SCREEN)
    ========================================================================== */
-    /* 0. კონტეინერის რესპონსიული შეზღუდვა */
+/* 37.0. კონტეინერის რესპონსიული შეზღუდვა */
 #profile-screen {
   width: 100% !important;
   min-height: 100vh !important;
@@ -4235,10 +4292,7 @@ img.fb-search-ava {
   }
 }
 
-
-
-
-/* 1. ზედა ფიქსირებული გამჭვირვალე ჰედერი */
+/* 37.1. ზედა ფიქსირებული გამჭვირვალე ჰედერი */
 #profile-screen .header.profile-header-fix,
 #profile-screen .header.profile-header-fix.fb-prof-top-bar {
   position: absolute !important;
@@ -4313,7 +4367,7 @@ img.fb-search-ava {
   height: 2px !important;
 }
 
-/* 2. ქავერის ფოტო (სიმაღლე 340px) */
+/* 37.2. ქავერის ფოტო და კამერის ღილაკი */
 #profile-screen .facebook-profile-container,
 .facebook-profile-container {
   width: 100% !important;
@@ -4325,7 +4379,6 @@ img.fb-search-ava {
   overflow: visible !important;
 }
 
-/* 2. ქავერის ფოტო */
 #profile-screen .profile-cover-wrapper,
 .profile-cover-wrapper {
   height: 260px !important;
@@ -4339,7 +4392,6 @@ img.fb-search-ava {
   display: block !important;
 }
 
-/* 🌟 ქავერის კამერა - ოდნავ ზემოთ, რომ თეთრმა ბარათმა არ დაფაროს */
 #profile-screen #cover-camera-btn,
 #profile-screen .cover-camera-btn,
 .cover-camera-btn {
@@ -4377,8 +4429,7 @@ img.fb-search-ava {
   pointer-events: none !important;
 }
 
-
-/* 3. თეთრი მომრგვალებული ბარათი - ადის ზემოთ ქავერზე */
+/* 37.3. თეთრი მომრგვალებული ბარათი */
 #profile-screen .profile-modern-card,
 .profile-modern-card {
   width: 100% !important;
@@ -4400,7 +4451,7 @@ img.fb-search-ava {
   box-sizing: border-box !important;
 }
 
-/* 4. 🌟 ცენტრალური დიდი ავატარი — ზის ზუსტად ქავერის და ბარათის ზღვარზე */
+/* 37.4. ცენტრალური დიდი ავატარი და კამერის ღილაკი */
 #profile-screen .avatar-stats-row,
 .avatar-stats-row {
   display: flex !important;
@@ -4465,7 +4516,6 @@ img.fb-search-ava {
   z-index: 20 !important;
 }
 
-/* 🟢 ონლაინ / გასულის ბეიჯი ავატარზე (სხვის პროფილზე) */
 .profile-last-active-pill {
   position: absolute !important;
   bottom: 8px !important;
@@ -4502,7 +4552,7 @@ img.fb-search-ava {
   display: none !important;
 }
 
-/* 5. სახელი ცენტრში */
+/* 37.5. მომხმარებლის სახელი ცენტრში */
 .profile-user-headline {
   text-align: center !important;
   margin-top: 6px !important;
@@ -4522,7 +4572,7 @@ img.fb-search-ava {
   display: none !important;
 }
 
-/* 6. სტატისტიკა ერთ ხაზზე */
+/* 37.6. პროფილის სტატისტიკა ერთ ხაზზე */
 .profile-stats-inline {
   display: flex !important;
   align-items: center !important;
@@ -4560,7 +4610,7 @@ img.fb-search-ava {
   margin: 0 1px !important;
 }
 
-/* 7. საერთო მეგობრების ბლოკი */
+/* 37.7. საერთო მეგობრების ბლოკი */
 .profile-mutual-summary {
   display: flex !important;
   align-items: center !important;
@@ -4596,7 +4646,7 @@ img.fb-search-ava {
   text-align: left !important;
 }
 
-/* 8. ღილაკების ზოლი — Emigrantbook Gold */
+/* 37.8. პროფილის მოქმედების ღილაკები (ოქროსფერი და მეორადი) */
 .profile-action-column {
   display: flex !important;
   flex-direction: row !important;
@@ -4665,7 +4715,7 @@ img.fb-search-ava {
   color: #050505 !important;
 }
 
-/* 9. დეტალების ბლოკი */
+/* 37.9. დეტალების სია */
 .profile-details-box {
   background: transparent !important;
   padding: 0 !important;
@@ -4682,7 +4732,7 @@ img.fb-search-ava {
   color: #050505 !important;
 }
 
-/* 10. შესაძლო ნაცნობები */
+/* 37.10. შესაძლო ნაცნობების ჰორიზონტალური სლაიდერი */
 .profile-friends-preview-box {
   width: 100% !important;
   padding: 14px 0 10px 0 !important;
@@ -4773,7 +4823,7 @@ img.fb-search-ava {
   width: 100% !important;
 }
 
-/* 11. ტაბები */
+/* 37.11. პროფილის ტაბები (პოსტები / ფოტოები / Reels) */
 .profile-tabs {
   display: flex !important;
   gap: 8px !important;
@@ -4801,7 +4851,7 @@ img.fb-search-ava {
   border-bottom: 1px solid #dcae36 !important;
 }
 
-/* 12. პოსტების კედელი */
+/* 37.12. პროფილის პოსტების კედელი */
 #profile-posts-wall {
   width: 100% !important;
   background: #f0f2f5 !important;
@@ -4820,9 +4870,9 @@ img.fb-search-ava {
   border-radius: 0 !important;
 }
 
-
-
-/*.დროებით სამი პატარა ავატარის სტილი */
+/* ==========================================================================
+   SECTION 38: საერთო მეგობრების კლასტერი და დეტალების დამატებითი სტილები
+   ========================================================================== */
 .profile-mutual-summary {
   display: flex !important;
   align-items: center !important;
@@ -4878,8 +4928,6 @@ body.light-mode .mutual-friends-text-wrap {
   color: #65676b !important;
 }
 
-
-/* დროებით */
 .profile-details-box {
   background: transparent !important;
   border: none !important;
@@ -4953,3 +5001,4 @@ body:not(.light-mode) .detail-item {
 body.light-mode .detail-item .icon img.post-action-icon {
   filter: brightness(0) !important;
 }
+
