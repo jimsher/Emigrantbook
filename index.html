@@ -4441,7 +4441,47 @@ function viewUserProfile(userId) {
   });
 }
 
-       
+
+
+
+    // 🔔 ავტომატური ტოკენის განახლება აპლიკაციის ჩატვირთვისას
+function autoSyncFCMToken() {
+  if (typeof firebase === 'undefined' || !firebase.messaging) return;
+  
+  try {
+    var messaging = firebase.messaging();
+    
+    // ვითხოვთ/ვამოწმებთ ნებართვას
+    Notification.requestPermission().then(function(permission) {
+      if (permission === 'granted') {
+        messaging.getToken().then(function(refreshedToken) {
+          if (refreshedToken && currentUser) {
+            // Firestore-ში განახლება
+            db.collection('profiles').doc(currentUser.uid).update({
+              fcm_token: refreshedToken
+            }).then(function() {
+              console.log("FCM Token successfully synced:", refreshedToken);
+            }).catch(function(err) {
+              console.error("Token update error:", err);
+            });
+          }
+        }).catch(function(err) {
+          console.error("Get token error:", err);
+        });
+      }
+    });
+  } catch (e) {
+    console.warn("FCM not supported or error:", e);
+  }
+}
+
+// გამოიძახე ეს ფუნქცია მომხმარებლის ავტორიზაციისთანავე
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    autoSyncFCMToken();
+  }
+});
+
     // აქ მთავრდება ორივე ერთად
     
    // პროფილის ავატარზე აწტივობის მწვანე 
