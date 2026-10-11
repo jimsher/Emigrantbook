@@ -9034,22 +9034,22 @@ function renderSearchHistory() {
 }
 
 // რეალური დროის ძიება (ინპუტზე წერისას)
-async function handleGlobalSearch(query) {
-  const cleanQuery = query.trim().toLowerCase();
+async function handleGlobalSearch(query) { 
+  const cleanQuery = query.trim().toLowerCase(); 
   const subhead = document.getElementById('recentSearchSubhead');
 
-  if (!cleanQuery) {
-    renderSearchHistory();
-    return;
+  if (!cleanQuery) { 
+    renderSearchHistory(); 
+    return; 
   }
 
-  subhead.style.display = 'none';
-  const container = document.getElementById('globalSearchResults');
+  subhead.style.display = 'none'; 
+  const container = document.getElementById('globalSearchResults'); 
   container.innerHTML = '<div style="text-align:center; padding:20px; color:#65676b;">იძებნება...</div>';
 
-  try {
-    const pagesSnap = await db.collection('pages').get();
-    const profilesSnap = await db.collection('profiles').get();
+  try { 
+    const pagesSnap = await db.collection('pages').limit(20).get(); 
+    const profilesSnap = await db.collection('profiles').limit(20).get();
 
     const matches = [];
 
@@ -9089,11 +9089,11 @@ async function handleGlobalSearch(query) {
       `;
       container.appendChild(row);
     });
-
-  } catch (e) {
-    console.error(e);
-  }
+  } catch (e) { 
+    console.error(e); 
+  } 
 }
+
 
 // ისტორიაში შენახვა და გადასვლა
 function saveToHistoryAndNavigate(item) {
