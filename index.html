@@ -7352,16 +7352,23 @@ function stopCallSounds() {
   incomingAudio.currentTime = 0;
 }
 
-function listenForIncomingCalls(myUid) {
-  db.collection('calls')
+let incomingCallsUnsubscribe = null;
+
+function listenForIncomingCalls(myUid) { 
+  if (incomingCallsUnsubscribe) {
+    incomingCallsUnsubscribe();
+  }
+
+  incomingCallsUnsubscribe = db.collection('calls')
     .where('receiverUid', '==', myUid)
     .where('status', '==', 'dialing')
-    .onSnapshot(snapshot => {
-      if (!snapshot || snapshot.empty) {
-        document.getElementById('incoming-call-modal').style.display = 'none';
-        activeIncomingCallData = null;
-        stopCallSounds();
-        return;
+    .limit(1)
+    .onSnapshot(snapshot => { 
+      if (!snapshot || snapshot.empty) { 
+        document.getElementById('incoming-call-modal').style.display = 'none'; 
+        activeIncomingCallData = null; 
+        stopCallSounds(); 
+        return; 
       }
 
       const docSnap = snapshot.docs[0];
@@ -7383,6 +7390,7 @@ function listenForIncomingCalls(myUid) {
       });
     });
 }
+
 
 async function acceptIncomingCall() {
   if (!activeIncomingCallData || !auth.currentUser) return;
