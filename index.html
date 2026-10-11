@@ -6906,15 +6906,17 @@ var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name 
 var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : (currentUser.photoURL || null);
 
 likeRef.set({
-user_id: currentUser.uid,
-full_name: authorName,
-avatar_url: avatarUrl,
-created_at: firebase.firestore.FieldValue.serverTimestamp()
+  user_id: currentUser.uid,
+  full_name: authorName,
+  avatar_url: avatarUrl,
+  created_at: firebase.firestore.FieldValue.serverTimestamp()
 }).then(function() {
-updatePostLikesCount(postId, 1);
-if (!likedPosts.includes(postId)) likedPosts.push(postId);
-toggleLikeUI(postId, true);
-localStorage.removeItem('eb_liked_' + currentUser.uid + '_' + postId);
+  updatePostLikesCount(postId, 1);
+  if (!likedPosts.includes(postId)) likedPosts.push(postId);
+  toggleLikeUI(postId, true);
+  localStorage.setItem('eb_liked_' + currentUser.uid + '_' + postId, 'true');
+
+
  
 
 // 🔔 პუშის გაგზავნა მხოლოდ და მხოლოდ პოსტის რეალურ ავტორთან
