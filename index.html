@@ -7898,21 +7898,39 @@ function shareViaWhatsApp() {
   window.open(`https://wa.me/?text=${text}`, '_blank');
 }
     
- function shareToFacebookFromModal() {
+ // ფეისბუქი
+ async function shareToFacebookFromModal() {
   if (!activePostForShare) return;
+
+  var postText = activePostForShare.content || "";
   var postUrl = "https://emigrantbook.com?post=" + activePostForShare.id;
   var photoUrl = activePostForShare.media_url ? activePostForShare.media_url.split(',')[0].trim() : null;
-  var postText = activePostForShare.content || "";
+
+  if (photoUrl && navigator.canShare) {
+    try {
+      var response = await fetch(photoUrl);
+      var blob = await response.blob();
+      var file = new File([blob], "post-image.jpg", { type: blob.type || "image/jpeg" });
+
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Emigrantbook",
+          text: postText ? (postText + "\n\n" + postUrl) : postUrl
+        });
+        return;
+      }
+    } catch (e) {
+      console.warn("Direct file share failed, fallbacking...", e);
+    }
+  }
 
   if (navigator.share) {
     navigator.share({
-      title: activePostForShare.author_name || "Emigrantbook",
+      title: "Emigrantbook",
       text: postText,
-      url: photoUrl ? photoUrl : postUrl
-    }).catch(function() {
-      var fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(postUrl);
-      window.open(fbUrl, '_blank', 'width=600,height=500');
-    });
+      url: postUrl
+    }).catch(function() {});
   } else {
     var fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(postUrl);
     window.open(fbUrl, '_blank', 'width=600,height=500');
@@ -7921,6 +7939,7 @@ function shareViaWhatsApp() {
 
 var shareViaFacebook = shareToFacebookFromModal;
 
+// აქ მთავრდება
 
    
 
