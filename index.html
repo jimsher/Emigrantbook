@@ -6630,8 +6630,9 @@ function unhidePostFromFeed(postId) {
   }
 
 
-  var hasLiked = likedPosts.includes(post.id);
-  var currentLikesNum = post.likes_count || 0;
+var myLikeKey = (currentUser ? 'eb_liked_' + currentUser.uid + '_' + post.id : '');
+var hasLiked = likedPosts.includes(post.id) || (localStorage.getItem(myLikeKey) === "true"); 
+var currentLikesNum = post.likes_count || 0;
 
   var currentCommentsNum = 0;
   if (post.post_comments) {
