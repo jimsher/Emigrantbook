@@ -7898,15 +7898,22 @@ function shareViaWhatsApp() {
   window.open(`https://wa.me/?text=${text}`, '_blank');
 }
     
- function shareToFacebookFromModal() {
+ function shareViaFacebook() {
   if (!activePostForShare) return;
-   // პოსტის პირდაპირი ბმული
-  var postUrl = encodeURIComponent("https://emigrantbook.com?post=" + activePostForShare.id);
-  // Facebook-ის ოფიციალური დიალოგი
-  var fbShareUrl = "https://www.facebook.com/sharer/sharer.php?u=" + postUrl;
-   // ხსნის პირდაპირ Facebook-ის გასაზიარებელ გვერდს
-  window.open(fbShareUrl, '_blank', 'width=600,height=500');
+  var photoUrl = activePostForShare.media_url ? activePostForShare.media_url.split(',')[0].trim() : null;
+  var postText = activePostForShare.content || "";
+  if (navigator.share) {
+    navigator.share({
+      title: activePostForShare.author_name || "Emigrantbook",
+      text: postText,
+      url: photoUrl ? photoUrl : ("https://emigrantbook.com?post=" + activePostForShare.id)
+    }).catch(function(e) {});
+  } else {
+    var fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent("https://emigrantbook.com?post=" + activePostForShare.id);
+    window.open(fbUrl, '_blank', 'width=600,height=500');
+  }
 }
+
    
 
 // 4. ბმულის პირდაპირ კოპირება
