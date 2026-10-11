@@ -6079,150 +6079,160 @@ function loadPosts(isNextPage) {
 // 🔴 TikTok-ისა და Facebook-ის დამოუკიდებელი ლაივები მთავარ გვერდზე
 var inlineAgoraClients = {};
 var activeLivesUnsubscribe = null;
+var activeLivesTimeout = null;
 
 function subscribeActiveLivesForFeed() { 
   var t = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS['en'] ? TRANSLATIONS['en'] : {});
 
+  // 🛑 1. ძველი მსმენელის მომენტალური და სრული ჩახსნა
   if (activeLivesUnsubscribe) {
     activeLivesUnsubscribe();
+    activeLivesUnsubscribe = null;
+  }
+  if (activeLivesTimeout) {
+    clearTimeout(activeLivesTimeout);
   }
 
-  activeLivesUnsubscribe = db.collection('lives')
-    .where('status', '==', 'active')
-    .onSnapshot(function(snapshot) {
-      var liveContainer = document.getElementById('active-lives-feed-zone'); 
-      var postsWall = document.getElementById('posts-wall');
+  // 🛑 2. დაცვა: აღარ გაიხსნას პარალელური მსმენელი სწრაფი გადართვისას
+  activeLivesTimeout = setTimeout(function() {
+    activeLivesUnsubscribe = db.collection('lives')
+      .where('status', '==', 'active')
+      .onSnapshot(function(snapshot) {
+        var liveContainer = document.getElementById('active-lives-feed-zone'); 
+        var postsWall = document.getElementById('posts-wall');
 
-      if (postsWall && postsWall.parentNode) {
-        if (!liveContainer) {
-          liveContainer = document.createElement('div');
-          liveContainer.id = 'active-lives-feed-zone';
-          postsWall.parentNode.insertBefore(liveContainer, postsWall);
-        } else if (liveContainer.parentNode === postsWall) {
-          postsWall.parentNode.insertBefore(liveContainer, postsWall);
+        if (postsWall && postsWall.parentNode) {
+          if (!liveContainer) {
+            liveContainer = document.createElement('div');
+            liveContainer.id = 'active-lives-feed-zone';
+            postsWall.parentNode.insertBefore(liveContainer, postsWall);
+          } else if (liveContainer.parentNode === postsWall) {
+            postsWall.parentNode.insertBefore(liveContainer, postsWall);
+          }
         }
-      }
 
-      if (!liveContainer) return;
+        if (!liveContainer) return;
 
-      if (!snapshot || snapshot.empty) {
-        liveContainer.innerHTML = "";
-        Object.keys(inlineAgoraClients).forEach(function(id) {
-          try { inlineAgoraClients[id].leave(); } catch(e){}
-        });
-        inlineAgoraClients = {};
-        return;
-      }
-
-      var currentActiveIds = [];
-
-      snapshot.forEach(function(docSnap) {
-        var liveData = docSnap.data();
-        var liveId = docSnap.id;
-        currentActiveIds.push(liveId);
-
-        var hostPhoto = liveData.host_photo || (typeof DEFAULT_AVATAR_URL !== "undefined" ? DEFAULT_AVATAR_URL : "https://ui-avatars.com/api/?name=User&background=fe2c55&color=fff");
-        var hostName = liveData.host_name || (t.userUnit || "User");
-        var liveTitle = liveData.title || (t.liveStreamDefault || "Live Video");
-        var viewersCount = (liveData.viewers && liveData.viewers.length) ? liveData.viewers.length : 1;
-
-        var existingCard = document.getElementById("live-card-" + liveId);
-        if (existingCard) {
-          var nameEl = existingCard.querySelector('.tt-host-real-name');
-          if (nameEl) nameEl.innerText = hostName;
+        if (!snapshot || snapshot.empty) {
+          liveContainer.innerHTML = "";
+          Object.keys(inlineAgoraClients).forEach(function(id) {
+            try { inlineAgoraClients[id].leave(); } catch(e){}
+          });
+          inlineAgoraClients = {};
           return;
         }
 
-        if (liveData.type === 'tiktok') {
-          var ttWrapper = document.createElement('div');
-          ttWrapper.id = "live-card-" + liveId;
-          ttWrapper.innerHTML = `
-            <div class="tt-feed-full-card" onclick="window.location.href='tiktok-live.html?join=${liveId}'">
-              <div id="inline-agora-video-${liveId}" class="tt-feed-video-player"></div>
-              <div class="tt-feed-gradient-overlay"></div>
+        var currentActiveIds = [];
 
-              <div class="tt-feed-top-bar">
-                <div class="tt-feed-live-tv-badge">
-                  <svg viewBox="0 0 24 24" class="tt-tv-svg"><path d="M21 6h-7.58l1.79-1.79L14 3l-3 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 14H3V8h18v12z"/></svg>
-                  <span>LIVE</span>
-                </div>
-                <div class="tt-feed-middle-tabs">
-                  <span class="tt-tab-item">გამომწერები</span>
-                  <span class="tt-tab-item active">რეკომენდაციები</span>
-                </div>
-                <div class="tt-feed-search-icon">
-                  <i class="fas fa-magnifying-glass"></i>
-                </div>
-              </div>
+        snapshot.forEach(function(docSnap) {
+          var liveData = docSnap.data();
+          var liveId = docSnap.id;
+          currentActiveIds.push(liveId);
 
-              <div class="tt-feed-bottom-box">
-                <div class="tt-watch-live-btn-pill">
-                  <div class="tt-eq-bars">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+          var hostPhoto = liveData.host_photo || (typeof DEFAULT_AVATAR_URL !== "undefined" ? DEFAULT_AVATAR_URL : "https://ui-avatars.com/api/?name=User&background=fe2c55&color=fff");
+          var hostName = liveData.host_name || (t.userUnit || "User");
+          var liveTitle = liveData.title || (t.liveStreamDefault || "Live Video");
+          var viewersCount = (liveData.viewers && liveData.viewers.length) ? liveData.viewers.length : 1;
+
+          var existingCard = document.getElementById("live-card-" + liveId);
+          if (existingCard) {
+            var nameEl = existingCard.querySelector('.tt-host-real-name');
+            if (nameEl) nameEl.innerText = hostName;
+            return;
+          }
+
+          if (liveData.type === 'tiktok') {
+            var ttWrapper = document.createElement('div');
+            ttWrapper.id = "live-card-" + liveId;
+            ttWrapper.innerHTML = `
+              <div class="tt-feed-full-card" onclick="window.location.href='tiktok-live.html?join=${liveId}'">
+                <div id="inline-agora-video-${liveId}" class="tt-feed-video-player"></div>
+                <div class="tt-feed-gradient-overlay"></div>
+
+                <div class="tt-feed-top-bar">
+                  <div class="tt-feed-live-tv-badge">
+                    <svg viewBox="0 0 24 24" class="tt-tv-svg"><path d="M21 6h-7.58l1.79-1.79L14 3l-3 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 14H3V8h18v12z"/></svg>
+                    <span>LIVE</span>
                   </div>
-                  <span>დააჭირეთ საყურებლად</span>
-                </div>
-                <div class="tt-live-now-badge">პირდაპირ ეთერშია</div>
-                <div class="tt-host-real-name">${hostName}</div>
-              </div>
-            </div>
-          `;
-          liveContainer.appendChild(ttWrapper);
-          startInlineAgoraStream(liveId);
-        } else {
-          var fbWrapper = document.createElement('div');
-          fbWrapper.id = "live-card-" + liveId;
-          fbWrapper.innerHTML = `
-            <div class="live-tiktok-card">
-              <div class="live-tiktok-header">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <img src="${hostPhoto}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid #e41e3f;">
-                  <div>
-                    <div style="font-weight:700; color:#fff; font-size:14px;">${hostName}</div>
-                    <div style="font-size:11.5px; color:#aaa;">${t.lottoSub || "პირდაპირი ეთერი"}</div>
+                  <div class="tt-feed-middle-tabs">
+                    <span class="tt-tab-item">გამომწერები</span>
+                    <span class="tt-tab-item active">რეკომენდაციები</span>
+                  </div>
+                  <div class="tt-feed-search-icon">
+                    <i class="fas fa-magnifying-glass"></i>
                   </div>
                 </div>
-                <span class="live-pulse-badge">LIVE</span>
+
+                <div class="tt-feed-bottom-box">
+                  <div class="tt-watch-live-btn-pill">
+                    <div class="tt-eq-bars">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <span>დააჭირეთ საყურებლად</span>
+                  </div>
+                  <div class="tt-live-now-badge">პირდაპირ ეთერშია</div>
+                  <div class="tt-host-real-name">${hostName}</div>
+                </div>
               </div>
-
-              <div class="live-tiktok-video-box" onclick="window.location.href='live.html?join=${liveId}'">
-                <div id="inline-agora-video-${liveId}" class="live-agora-stream-player"></div>
-
-                <div class="live-tiktok-overlay">
-                  <div class="live-tiktok-top-pills">
-                    <div class="live-viewers-pill">
-                      <svg viewBox="0 0 24 24" style="width:13px; height:13px; fill:#fff;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                      <span>${viewersCount}</span>
+            `;
+            liveContainer.appendChild(ttWrapper);
+            startInlineAgoraStream(liveId);
+          } else {
+            var fbWrapper = document.createElement('div');
+            fbWrapper.id = "live-card-" + liveId;
+            fbWrapper.innerHTML = `
+              <div class="live-tiktok-card">
+                <div class="live-tiktok-header">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${hostPhoto}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid #e41e3f;">
+                    <div>
+                      <div style="font-weight:700; color:#fff; font-size:14px;">${hostName}</div>
+                      <div style="font-size:11.5px; color:#aaa;">${t.lottoSub || "პირდაპირი ეთერი"}</div>
                     </div>
                   </div>
+                  <span class="live-pulse-badge">LIVE</span>
+                </div>
 
-                  <div class="live-tiktok-bottom-info">
-                    <div class="live-stream-headline">${liveTitle}</div>
-                    <div class="live-enter-btn-bubble">უყურე ეთერს ➔</div>
+                <div class="live-tiktok-video-box" onclick="window.location.href='live.html?join=${liveId}'">
+                  <div id="inline-agora-video-${liveId}" class="live-agora-stream-player"></div>
+
+                  <div class="live-tiktok-overlay">
+                    <div class="live-tiktok-top-pills">
+                      <div class="live-viewers-pill">
+                        <svg viewBox="0 0 24 24" style="width:13px; height:13px; fill:#fff;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        <span>${viewersCount}</span>
+                      </div>
+                    </div>
+
+                    <div class="live-tiktok-bottom-info">
+                      <div class="live-stream-headline">${liveTitle}</div>
+                      <div class="live-enter-btn-bubble">უყურე ეთერს ➔</div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          `;
-          liveContainer.appendChild(fbWrapper);
-          startInlineAgoraStream(liveId);
-        }
-      });
+            `;
+            liveContainer.appendChild(fbWrapper);
+            startInlineAgoraStream(liveId);
+          }
+        });
 
-      Object.keys(inlineAgoraClients).forEach(function(id) {
-        if (!currentActiveIds.includes(id)) {
-          try { inlineAgoraClients[id].leave(); } catch(e){}
-          delete inlineAgoraClients[id];
-          var oldCard = document.getElementById("live-card-" + id);
-          if (oldCard) oldCard.remove();
-        }
+        Object.keys(inlineAgoraClients).forEach(function(id) {
+          if (!currentActiveIds.includes(id)) {
+            try { inlineAgoraClients[id].leave(); } catch(e){}
+            delete inlineAgoraClients[id];
+            var oldCard = document.getElementById("live-card-" + id);
+            if (oldCard) oldCard.remove();
+          }
+        });
+      }, function(err) {
+        console.error("Active lives error:", err);
       });
-    }, function(err) {
-      console.error("Active lives error:", err);
-    });
+  }, 300);
 }
+
 
 
     
