@@ -6914,6 +6914,8 @@ created_at: firebase.firestore.FieldValue.serverTimestamp()
 updatePostLikesCount(postId, 1);
 if (!likedPosts.includes(postId)) likedPosts.push(postId);
 toggleLikeUI(postId, true);
+localStorage.removeItem('eb_liked_' + currentUser.uid + '_' + postId);
+ 
 
 // 🔔 პუშის გაგზავნა მხოლოდ და მხოლოდ პოსტის რეალურ ავტორთან
 postRef.get().then(function(pDoc) {
