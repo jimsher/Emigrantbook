@@ -6037,19 +6037,27 @@ function loadPosts(isNextPage) {
           observeVideos();
           isLoadingMorePosts = false;
 
-          if (!isFeedScrollAttached) {
-            isFeedScrollAttached = true;
-            window.addEventListener('scroll', function() {
-              var homeScr = document.getElementById('home-screen');
-              if (!homeScr || homeScr.style.display !== 'block') return;
+         if (!isFeedScrollAttached) {
+        isFeedScrollAttached = true;
+        var scrollThrottleTimer = null;
 
-              if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
-                if (!isLoadingMorePosts && hasMorePosts) {
-                  loadPosts(true);
-                }
-              }
-            }, { passive: true });
+        window.addEventListener('scroll', function() {
+          var homeScr = document.getElementById('home-screen');
+          if (!homeScr || homeScr.style.display !== 'block') return;
+
+          if (scrollThrottleTimer) return; // ბლოკავს წამიერ სპამს
+
+          scrollThrottleTimer = setTimeout(function() {
+            scrollThrottleTimer = null;
+          }, 400); // 400 მილიწამიანი დაცვა
+
+          if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+            if (!isLoadingMorePosts && hasMorePosts) {
+              loadPosts(true);
+            }
           }
+        }, { passive: true });
+      }
         });
       }).catch(function(err) {
         isLoadingMorePosts = false;
