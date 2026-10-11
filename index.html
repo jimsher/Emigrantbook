@@ -7898,21 +7898,29 @@ function shareViaWhatsApp() {
   window.open(`https://wa.me/?text=${text}`, '_blank');
 }
     
- function shareViaFacebook() {
+ function shareToFacebookFromModal() {
   if (!activePostForShare) return;
+  var postUrl = "https://emigrantbook.com?post=" + activePostForShare.id;
   var photoUrl = activePostForShare.media_url ? activePostForShare.media_url.split(',')[0].trim() : null;
   var postText = activePostForShare.content || "";
+
   if (navigator.share) {
     navigator.share({
       title: activePostForShare.author_name || "Emigrantbook",
       text: postText,
-      url: photoUrl ? photoUrl : ("https://emigrantbook.com?post=" + activePostForShare.id)
-    }).catch(function(e) {});
+      url: photoUrl ? photoUrl : postUrl
+    }).catch(function() {
+      var fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(postUrl);
+      window.open(fbUrl, '_blank', 'width=600,height=500');
+    });
   } else {
-    var fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent("https://emigrantbook.com?post=" + activePostForShare.id);
+    var fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(postUrl);
     window.open(fbUrl, '_blank', 'width=600,height=500');
   }
 }
+
+var shareViaFacebook = shareToFacebookFromModal;
+
 
    
 
