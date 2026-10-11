@@ -6070,32 +6070,33 @@ function loadPosts(isNextPage) {
 // აქტიური ლაივების მოსმენა Feed-ისთვის
 // 🔴 TikTok-ისა და Facebook-ის დამოუკიდებელი ლაივები მთავარ გვერდზე
 var inlineAgoraClients = {};
+var activeLivesUnsubscribe = null;
 
-function subscribeActiveLivesForFeed() {
+function subscribeActiveLivesForFeed() { 
   var t = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS['en'] ? TRANSLATIONS['en'] : {});
 
-  db.collection('lives')
+  if (activeLivesUnsubscribe) {
+    activeLivesUnsubscribe();
+  }
+
+  activeLivesUnsubscribe = db.collection('lives')
     .where('status', '==', 'active')
     .onSnapshot(function(snapshot) {
-      // 1. კონტეინერის უსაფრთხო მოძებნა და განთავსება postsWall-ის გარეთ
-      var liveContainer = document.getElementById('active-lives-feed-zone');
+      var liveContainer = document.getElementById('active-lives-feed-zone'); 
       var postsWall = document.getElementById('posts-wall');
 
       if (postsWall && postsWall.parentNode) {
         if (!liveContainer) {
           liveContainer = document.createElement('div');
           liveContainer.id = 'active-lives-feed-zone';
-          // ✅ ვსვამთ postsWall-ის გარეთ (მის წინ), რომ პოსტების ჩატვირთვამ აღარასდროს წაშალოს!
           postsWall.parentNode.insertBefore(liveContainer, postsWall);
         } else if (liveContainer.parentNode === postsWall) {
-          // ✅ თუ ძველი კოდით postsWall-ის შიგნით იყო ჩამჯდარი, გამოგვაქვს გარეთ!
           postsWall.parentNode.insertBefore(liveContainer, postsWall);
         }
       }
 
       if (!liveContainer) return;
 
-      // თუ აქტიური ლაივები აღარ არის
       if (!snapshot || snapshot.empty) {
         liveContainer.innerHTML = "";
         Object.keys(inlineAgoraClients).forEach(function(id) {
@@ -6117,7 +6118,6 @@ function subscribeActiveLivesForFeed() {
         var liveTitle = liveData.title || (t.liveStreamDefault || "Live Video");
         var viewersCount = (liveData.viewers && liveData.viewers.length) ? liveData.viewers.length : 1;
 
-        // ✅ თუ ბარათი უკვე დგას ეკრანზე, ხელახლა აღარ ვშლით (რომ ვიდეო არ გაითიშოს და არ გაქრეს)
         var existingCard = document.getElementById("live-card-" + liveId);
         if (existingCard) {
           var nameEl = existingCard.querySelector('.tt-host-real-name');
@@ -6125,21 +6125,14 @@ function subscribeActiveLivesForFeed() {
           return;
         }
 
-        var liveCardHtml = "";
-
-        // ========================================================
-        // 🎵 1. თუ არის TIKTOK LIVE (სწორი ჩარჩო, გაწელვის გარეშე)
-        // ========================================================
         if (liveData.type === 'tiktok') {
           var ttWrapper = document.createElement('div');
           ttWrapper.id = "live-card-" + liveId;
           ttWrapper.innerHTML = `
             <div class="tt-feed-full-card" onclick="window.location.href='tiktok-live.html?join=${liveId}'">
-              <!-- Agora ცოცხალი ვიდეო ნაკადი -->
               <div id="inline-agora-video-${liveId}" class="tt-feed-video-player"></div>
               <div class="tt-feed-gradient-overlay"></div>
 
-              <!-- ზედა ნავიგაცია -->
               <div class="tt-feed-top-bar">
                 <div class="tt-feed-live-tv-badge">
                   <svg viewBox="0 0 24 24" class="tt-tv-svg"><path d="M21 6h-7.58l1.79-1.79L14 3l-3 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 14H3V8h18v12z"/></svg>
@@ -6154,9 +6147,7 @@ function subscribeActiveLivesForFeed() {
                 </div>
               </div>
 
-              <!-- ქვედა ინფორმაცია -->
               <div class="tt-feed-bottom-box">
-                <!-- ეკვალაიზერიანი ღილაკი: "დააჭირეთ საყურებლად" -->
                 <div class="tt-watch-live-btn-pill">
                   <div class="tt-eq-bars">
                     <span></span>
@@ -6165,22 +6156,14 @@ function subscribeActiveLivesForFeed() {
                   </div>
                   <span>დააჭირეთ საყურებლად</span>
                 </div>
-
-                <!-- ვარდისფერი ბეიჯი: "პირდაპირ ეთერშია" -->
                 <div class="tt-live-now-badge">პირდაპირ ეთერშია</div>
-
-                <!-- ჰოსტის რეალური სახელი -->
                 <div class="tt-host-real-name">${hostName}</div>
               </div>
             </div>
           `;
           liveContainer.appendChild(ttWrapper);
           startInlineAgoraStream(liveId);
-        } 
-        // ========================================================
-        // 🔵 2. თუ არის FACEBOOK LIVE (ორიგინალი ძველი ბარათი)
-        // ========================================================
-        else {
+        } else {
           var fbWrapper = document.createElement('div');
           fbWrapper.id = "live-card-" + liveId;
           fbWrapper.innerHTML = `
@@ -6220,7 +6203,6 @@ function subscribeActiveLivesForFeed() {
         }
       });
 
-      // დასრულებული ლაივების გაწმენდა
       Object.keys(inlineAgoraClients).forEach(function(id) {
         if (!currentActiveIds.includes(id)) {
           try { inlineAgoraClients[id].leave(); } catch(e){}
@@ -6234,6 +6216,8 @@ function subscribeActiveLivesForFeed() {
     });
 }
 
+
+    
 // Agora-ს ვიდეოს გაშვება ფიდში (Muted რეჟიმში, უსაფრთხო UID-ით)
 async function startInlineAgoraStream(liveId) {
   if (typeof AgoraRTC === "undefined") return;
