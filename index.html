@@ -6988,37 +6988,34 @@ console.error("Like check error:", err);
 
 
     function updatePostLikesCount(postId, change) {
-      var postRef = db.collection('posts').doc(postId);
+  var postRef = db.collection('posts').doc(postId);
 
-      if (typeof change === 'number') {
-        var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
-        labels.forEach(function(label) {
-          var currentVal = parseInt(label.innerText) || 0;
-          var newVal = currentVal + change;
-          label.innerText = newVal < 0 ? 0 : newVal;
-        });
-      }
+  if (typeof change === 'number') {
+    var finalVal = 0;
+    var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+    labels.forEach(function(label) {
+      var currentVal = parseInt(label.innerText) || 0;
+      var newVal = currentVal + change;
+      finalVal = newVal < 0 ? 0 : newVal;
+      label.innerText = finalVal;
+    });
 
-      postRef.collection('post_likes').get().then(function(snapshot) {
-        var realCount = snapshot.size;
-        postRef.update({ likes_count: realCount }).catch(function(e){ console.error("Update likes count error:", e); });
+    postRef.update({ 
+      likes_count: firebase.firestore.FieldValue.increment(change) 
+    }).catch(function(e){ console.error("Update likes count error:", e); });
 
-        var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
-        labels.forEach(function(label) { label.innerText = realCount; });
-
-        var statsIcons = document.getElementById(`stats-icons-${postId}`);
-        if (statsIcons) {
-          statsIcons.innerHTML = realCount > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
-        }
-
-        if (typeof activePostForComments !== 'undefined' && activePostForComments === postId) {
-          var modalTotal = document.getElementById('modal-total-likes');
-          if (modalTotal) modalTotal.innerText = realCount;
-        }
-      }).catch(function(err) {
-        console.error("Get likes count error:", err);
-      });
+    var statsIcons = document.getElementById(`stats-icons-${postId}`);
+    if (statsIcons) {
+      statsIcons.innerHTML = finalVal > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
     }
+
+    if (typeof activePostForComments !== 'undefined' && activePostForComments === postId) {
+      var modalTotal = document.getElementById('modal-total-likes');
+      if (modalTotal) modalTotal.innerText = finalVal;
+    }
+  }
+}
+
 
     function toggleLikeUI(postId, isLiked) {
       var buttons = document.querySelectorAll(`.like-btn-standard[data-post-id="${postId}"]`);
