@@ -3689,8 +3689,59 @@ auth.onAuthStateChanged(function(user) {
       });
     }
 
+    
     // აქ იწყება
      // გლობალური ცვლადი დეტალების მოდალისთვის
+// ============================================================
+// 1. მონაცემის შენახვა + ეკრანის მყისიერი განახლება
+// ============================================================
+function saveSubScreenField() {
+  if (!currentEditFieldKey || !currentUser) return;
+  var inputEl = document.getElementById('fb-sub-main-input');
+  var newVal = inputEl ? inputEl.value.trim() : '';
+
+  var keyDbMap = {
+    work: 'job_title', college: 'college', school: 'school',
+    city: 'current_city', hometown: 'country', website: 'website',
+    social: 'social_link', pronouns: 'pronouns', languages: 'languages',
+    birthday: 'age', nickname: 'nickname', family: 'family_members',
+    events: 'life_events', music: 'favorite_music'
+  };
+
+  var dbField = keyDbMap[currentEditFieldKey];
+  if (!dbField) return;
+
+  var payload = {};
+  payload[dbField] = newVal;
+  payload.updated_at = firebase.firestore.FieldValue.serverTimestamp();
+
+  db.collection('profiles').doc(currentUser.uid).update(payload)
+    .then(function() {
+      // 🌟 მომენტალურად ვანახლებთ ობიექტს
+      if (!userProfile) userProfile = {};
+      userProfile[dbField] = newVal;
+
+      if (typeof cachedProfiles !== 'undefined' && cachedProfiles[currentUser.uid]) {
+        cachedProfiles[currentUser.uid][dbField] = newVal;
+      }
+
+      closeEditSubScreen();
+      showEditProfileScreen();
+
+      // 🌟 მაშინვე გადავახატვინოთ პროფილის კედელიც, რომ გამოსვლისას ადგილზე დაგხვდეს!
+      if (typeof renderProfileDetails === 'function') {
+        renderProfileDetails(userProfile);
+      }
+    })
+    .catch(function(err) {
+      console.error("Profile save error:", err);
+      alert("Error saving: " + err.message);
+    });
+}
+
+// ============================================================
+// 2. პროფილის კედლის დეტალები + "იხილეთ დაწვრილებით"
+// ============================================================
 var activeViewingUserDetails = null;
 
 function renderProfileDetails(user) {
@@ -3701,11 +3752,8 @@ function renderProfileDetails(user) {
   activeViewingUserDetails = u;
   
   var t = (typeof getAppT === 'function') ? getAppT() : ((typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : {});
-
-  // ვამოწმებთ, საკუთარ პროფილზე ვართ თუ სხვისაზე
   var isOwnProfile = (typeof currentUser !== 'undefined' && currentUser && (typeof activeViewingProfileId === 'undefined' || !activeViewingProfileId || activeViewingProfileId === currentUser.uid));
 
-  // 1. ძირითადი პირადი ველების შეგროვება
   var basicItems = [];
 
   if (u.current_city && u.current_city.trim() !== '') {
@@ -3748,7 +3796,7 @@ function renderProfileDetails(user) {
     basicItems.push({ icon: 'icons/clapperboard.svg', text: escapeAboutHtml(u.favorite_music) });
   }
 
-  // 2. საკონტაქტო ველები (ვებსაიტი / სოციალური ქსელი)
+  // საკონტაქტო ბლოკი
   var contactItems = [];
   if (u.social_link && u.social_link.trim() !== '') {
     var cleanSoc = escapeAboutHtml(u.social_link).replace(/^https?:\/\/(www\.)?instagram\.com\//, '@').replace(/\/$/, '');
@@ -3764,7 +3812,7 @@ function renderProfileDetails(user) {
     });
   }
 
-  // თუ სრულიად ცარიელია
+  // თუ ცარიელია
   if (basicItems.length === 0 && contactItems.length === 0) {
     container.innerHTML = `
       <div class="profile-details-header-row">
@@ -3775,7 +3823,6 @@ function renderProfileDetails(user) {
     return;
   }
 
-  // 3. კედელზე ვაჩვენებთ მაქსიმუმ 3-4 პირად ველს
   var previewLimit = 3;
   var previewItems = basicItems.slice(0, previewLimit);
   var previewHtml = previewItems.map(function(item) {
@@ -3787,18 +3834,16 @@ function renderProfileDetails(user) {
     `;
   }).join('');
 
-  // 4. "იხილეთ დაწვრილებით" ღილაკი
   var seeMoreBtnHtml = '';
   if (basicItems.length > previewLimit) {
     var seeMoreText = t.seeMoreDetails || "იხილეთ დაწვრილებით";
     seeMoreBtnHtml = `
       <div class="profile-see-more-details-btn" onclick="openAllDetailsSheet()">
-        <span>${seeMoreText}</span>
+        <span>••• ${seeMoreText}</span>
       </div>
     `;
   }
 
-  // 5. საკონტაქტო ინფორმაციის ცალკე ბლოკი (ზუსტად შენი სქრინის მიხედვით)
   var contactBlockHtml = '';
   if (contactItems.length > 0) {
     var contactListHtml = contactItems.map(function(item) {
@@ -3820,7 +3865,6 @@ function renderProfileDetails(user) {
     `;
   }
 
-  // 6. ფანქრის ხატულა (რეალური Pencil SVG, მხოლოდ საკუთარ პროფილზე)
   var editPenHtml = '';
   if (isOwnProfile) {
     editPenHtml = `
@@ -3832,7 +3876,6 @@ function renderProfileDetails(user) {
     `;
   }
 
-  // სრული აწყობა
   container.innerHTML = `
     <div class="profile-details-header-row">
       <span class="profile-details-main-title">${t.personalDetailsTitle || "პერსონალური დეტალური ინფორმაცია"}</span>
@@ -3844,6 +3887,64 @@ function renderProfileDetails(user) {
     ${seeMoreBtnHtml}
     ${contactBlockHtml}
   `;
+}
+
+// ============================================================
+// 3. ქვედა ბარათის (Bottom Sheet) გახსნა - 100% გარანტირებული
+// ============================================================
+function openAllDetailsSheet() {
+  var bs = document.getElementById('bs-all-details');
+  var content = document.getElementById('bs-all-details-content');
+  var titleEl = document.getElementById('bs-all-details-title');
+  var t = (typeof getAppT === 'function') ? getAppT() : ((typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : {});
+
+  if (titleEl) {
+    titleEl.innerText = t.personalDetailsTitle || "დეტალური ინფორმაცია";
+  }
+
+  var u = activeViewingUserDetails || userProfile || {};
+  if (!content) return;
+
+  var allItems = [];
+  if (u.current_city) allItems.push({ icon: 'icons/house.svg', label: t.subCity || 'ქალაქი', text: escapeAboutHtml(u.current_city) });
+  if (u.country) allItems.push({ icon: 'icons/footprints.svg', label: t.subHometown || 'მშობლიური ქალაქი', text: escapeAboutHtml(u.country) });
+  if (u.job_title) allItems.push({ icon: 'icons/bookmark.svg', label: t.subWork || 'სამუშაო', text: escapeAboutHtml(u.job_title) });
+  if (u.college) allItems.push({ icon: 'icons/award.svg', label: t.subCollege || 'უმაღლესი', text: escapeAboutHtml(u.college) });
+  if (u.school) allItems.push({ icon: 'icons/store.svg', label: t.subSchool || 'სკოლა', text: escapeAboutHtml(u.school) });
+  if (u.relationship) allItems.push({ icon: 'icons/heart.svg', label: t.subRel || 'ურთიერთობა', text: escapeAboutHtml(u.relationship) });
+  if (u.age) allItems.push({ icon: 'icons/cake.svg', label: t.subBirthday || 'დაბადების დღე', text: escapeAboutHtml(u.age) });
+  if (u.gender) allItems.push({ icon: 'icons/circle-user-round.svg', label: t.subGender || 'სქესი', text: escapeAboutHtml(u.gender) });
+  if (u.pronouns) allItems.push({ icon: 'icons/circle-user-round.svg', label: t.subPronouns || 'ნაცვალსახელები', text: escapeAboutHtml(u.pronouns) });
+  if (u.languages) allItems.push({ icon: 'icons/globe.svg', label: t.subLangs || 'ენები', text: escapeAboutHtml(u.languages) });
+  if (u.nickname) allItems.push({ icon: 'icons/circle-user-round.svg', label: t.subNickname || 'მეტსახელი', text: escapeAboutHtml(u.nickname) });
+  if (u.website) allItems.push({ icon: 'icons/globe.svg', label: t.subWebsite || 'ვებსაიტი', text: `<a href="${escapeAboutHtml(u.website)}" target="_blank" style="color:#1877f2;text-decoration:none;">${escapeAboutHtml(u.website)}</a>` });
+  if (u.social_link) allItems.push({ icon: 'icons/tag.svg', label: t.subSocial || 'სოციალური ბმული', text: `<a href="${escapeAboutHtml(u.social_link)}" target="_blank" style="color:#1877f2;text-decoration:none;">${escapeAboutHtml(u.social_link)}</a>` });
+  if (u.family_members) allItems.push({ icon: 'icons/users.svg', label: t.subFamily || 'ოჯახის წევრები', text: escapeAboutHtml(u.family_members) });
+  if (u.life_events) allItems.push({ icon: 'icons/award.svg', label: t.subEvents || 'მოვლენები', text: escapeAboutHtml(u.life_events) });
+  if (u.favorite_music) allItems.push({ icon: 'icons/clapperboard.svg', label: t.subMusic || 'საყვარელი მუსიკა', text: escapeAboutHtml(u.favorite_music) });
+
+  content.innerHTML = allItems.map(function(item) {
+    return `
+      <div class="detail-item" style="padding: 8px 0; display: flex; align-items: center; gap: 12px;">
+        <img src="${item.icon}" class="post-action-icon icon" alt="icon">
+        <div>
+          <div style="font-size: 15px; font-weight: 600; color: #050505;">${item.text}</div>
+          <div style="font-size: 12px; color: #65676b;">${item.label}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (bs) {
+    bs.style.setProperty('display', 'flex', 'important');
+  }
+}
+
+function closeAllDetailsSheet(e) {
+  var bs = document.getElementById('bs-all-details');
+  if (bs) {
+    bs.style.setProperty('display', 'none', 'important');
+  }
 }
 
     // აქ მთავრდება
