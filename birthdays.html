@@ -274,7 +274,7 @@
     </div>
   </section>
 
-        <script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -300,24 +300,91 @@
     let currentRecentUserId = null;
     let currentRecentUserName = "";
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadRealBirthdays();
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        loadRealBirthdays(user.uid);
+      } else {
+        const recentContainer = document.getElementById('recentBdayContainer');
+        const upcomingContainer = document.getElementById('upcomingBdayList');
+        recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">გთხოვთ გაიაროთ ავტორიზაცია.</div>';
+        upcomingContainer.innerHTML = '';
+      }
     });
 
-    async function loadRealBirthdays() {
+    async function loadRealBirthdays(myUid) {
       const recentContainer = document.getElementById('recentBdayContainer');
       const upcomingContainer = document.getElementById('upcomingBdayList');
 
       try {
-        let snap = await db.collection('profiles').get();
-        if (snap.empty) {
-          snap = await db.collection('users').get();
+        const CACHE_KEY_BDAYS = 'eb_cached_birthdays_' + myUid;
+        const CACHE_KEY_TIME = 'eb_cached_birthdays_time_' + myUid;
+        const CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 საათი ინახავს ტელეფონში
+
+        let cachedData = null;
+        try {
+          const lastTime = localStorage.getItem(CACHE_KEY_TIME);
+          if (lastTime && (Date.now() - Number(lastTime) < CACHE_DURATION)) {
+            cachedData = JSON.parse(localStorage.getItem(CACHE_KEY_BDAYS));
+          }
+        } catch(e) {
+          cachedData = null;
         }
 
-        if (snap.empty) {
-          recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">მომხმარებლები არ მოიძებნა.</div>';
-          upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">დაბადების დღეები არ არის.</div>';
-          return;
+        let friendsProfiles = [];
+
+        if (cachedData && Array.isArray(cachedData)) {
+          // ბაზაში საერთოდ არ შედის - 0 Read
+          friendsProfiles = cachedData;
+        } else {
+          // 1. იღებს მხოლოდ დადასტურებულ მეგობრებს
+          const [sentReqs, receivedReqs] = await Promise.all([
+            db.collection('friend_requests').where('sender_id', '==', myUid).where('status', '==', 'accepted').get(),
+            db.collection('friend_requests').where('receiver_id', '==', myUid).where('status', '==', 'accepted').get()
+          ]);
+
+          const friendIdsSet = new Set();
+          sentReqs.forEach(d => friendIdsSet.add(d.data().receiver_id));
+          receivedReqs.forEach(d => friendIdsSet.add(d.data().sender_id));
+
+          const friendIds = Array.from(friendIdsSet);
+
+          if (friendIds.length === 0) {
+            recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">მეგობრები არ გყავთ დამატებული.</div>';
+            upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">დაბადების დღეები არ არის.</div>';
+            return;
+          }
+
+          // 2. იღებს მხოლოდ მეგობრების პროფილებს (მაქსიმუმ 30-ს ერთ მოთხოვნაში `in` ოპერატორით)
+          const chunks = [];
+          for (let i = 0; i < friendIds.length; i += 30) {
+            chunks.push(friendIds.slice(i, i + 30));
+          }
+
+          const profilePromises = chunks.map(chunk => 
+            db.collection('profiles').where(firebase.firestore.FieldPath.documentId(), 'in', chunk).get()
+          );
+
+          const profileSnaps = await Promise.all(profilePromises);
+
+          profileSnaps.forEach(snap => {
+            snap.forEach(doc => {
+              const u = doc.data();
+              friendsProfiles.push({
+                id: doc.id,
+                full_name: u.full_name || u.display_name || u.name || 'მომხმარებელი',
+                avatar_url: u.avatar_url || u.photo_url || 'icons/circle-user-round.svg',
+                birth_date: u.birth_date || u.birthdate || u.birthday || u.dob || u.bday || u.date_of_birth || null,
+                birth_day: u.birth_day || null,
+                birth_month: u.birth_month || null
+              });
+            });
+          });
+
+          // ქეშირდება მეხსიერებაში
+          try {
+            localStorage.setItem(CACHE_KEY_BDAYS, JSON.stringify(friendsProfiles));
+            localStorage.setItem(CACHE_KEY_TIME, Date.now().toString());
+          } catch(e) {}
         }
 
         const now = new Date();
@@ -328,13 +395,8 @@
         const recentList = [];
         const upcomingList = [];
 
-        snap.forEach(doc => {
-          const u = doc.data();
-
-          // რეალური თარიღის ამოღება Firestore-იდან
+        friendsProfiles.forEach(u => {
           const parsed = extractUserBirthDate(u);
-          
-          // თუ ბაზაში თარიღი არ წერია, ამ მომხმარებელს საერთოდ გამოვტოვებთ!
           if (!parsed) return;
 
           let thisYearBday = new Date(currentYear, parsed.month, parsed.day);
@@ -343,9 +405,9 @@
           // ახლახან: ბოლო 2 დღე ან დღეს
           if (diffDays >= -2 && diffDays <= 0) {
             recentList.push({
-              id: doc.id,
-              name: u.full_name || u.display_name || u.name || 'მომხმარებელი',
-              avatar: u.avatar_url || u.photo_url || 'icons/circle-user-round.svg',
+              id: u.id,
+              name: u.full_name,
+              avatar: u.avatar_url,
               diff: diffDays,
               date: thisYearBday
             });
@@ -357,9 +419,9 @@
             }
 
             upcomingList.push({
-              id: doc.id,
-              name: u.full_name || u.display_name || u.name || 'მომხმარებელი',
-              avatar: u.avatar_url || u.photo_url || 'icons/circle-user-round.svg',
+              id: u.id,
+              name: u.full_name,
+              avatar: u.avatar_url,
               diff: diffDays,
               date: thisYearBday
             });
@@ -397,7 +459,7 @@
           recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">ბოლო დღეებში დაბადების დღე არავის ჰქონია.</div>';
         }
 
-        // 2. სექცია „მომავალი“ (უახლოესი თარიღების მიხედვით ზრდადი)
+        // 2. სექცია „მომავალი“
         upcomingList.sort((a, b) => a.diff - b.diff);
 
         if (upcomingList.length === 0) {
@@ -432,11 +494,9 @@
       }
     }
 
-    // ბაზიდან რეალური თარიღის ამოღების ზუსტი ფუნქცია
     function extractUserBirthDate(userData) {
       if (!userData) return null;
 
-      // 1. თუ ცალკე ველებად წერია (მაგ. birth_day და birth_month)
       if (userData.birth_day && userData.birth_month) {
         return {
           month: parseInt(userData.birth_month, 10) - 1,
@@ -444,29 +504,25 @@
         };
       }
 
-      // 2. ერთიანი ველი
       const raw = userData.birth_date || userData.birthdate || userData.birthday || userData.dob || userData.bday || userData.date_of_birth;
       if (!raw) return null;
 
-      // Firestore Timestamp
       if (raw.toDate && typeof raw.toDate === 'function') {
         const d = raw.toDate();
         return { month: d.getMonth(), day: d.getDate() };
       }
 
-      // ტექსტური თარიღი: YYYY-MM-DD ან DD/MM/YYYY ან DD-MM-YYYY
       if (typeof raw === 'string') {
         const parts = raw.split(/[-/.]/);
         if (parts.length >= 3) {
-          if (parts[0].length === 4) { // YYYY-MM-DD
+          if (parts[0].length === 4) {
             return { month: parseInt(parts[1], 10) - 1, day: parseInt(parts[2], 10) };
-          } else { // DD-MM-YYYY
+          } else {
             return { month: parseInt(parts[1], 10) - 1, day: parseInt(parts[0], 10) };
           }
         }
       }
 
-      // სტანდარტული Date ობიექტი ან ISO სტრინგი
       const d = new Date(raw);
       if (!isNaN(d.getTime())) {
         return { month: d.getMonth(), day: d.getDate() };
@@ -508,6 +564,5 @@
       window.location.href = `index.html?profile_id=${uid}`;
     }
   </script>
-            
 </body>
 </html>
