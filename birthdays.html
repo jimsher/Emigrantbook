@@ -247,10 +247,10 @@
   <!-- ზედა ჰედერი -->
   <header class="bday-header">
     <div class="bday-header-left">
-      <button class="bday-back-btn" onclick="window.history.back()" aria-label="უკან">‹</button>
-      <span class="bday-title">დაბადების დღეები</span>
+      <button class="bday-back-btn" onclick="window.history.back()" aria-label="Back">‹</button>
+      <span class="bday-title" id="txt-bday-title">დაბადების დღეები</span>
     </div>
-    <button class="bday-header-right-btn" onclick="alert('პარამეტრები')">
+    <button class="bday-header-right-btn" onclick="alert(currentLangText.settings || 'პარამეტრები')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
@@ -260,17 +260,17 @@
 
   <!-- სექცია 1: ახლახან -->
   <section class="bday-section">
-    <h2 class="bday-section-title">ახლახან</h2>
+    <h2 class="bday-section-title" id="txt-recent-title">ახლახან</h2>
     <div class="bday-recent-card" id="recentBdayContainer">
-      <div style="color: #65676b; font-size: 14px;">იტვირთება...</div>
+      <div style="color: #65676b; font-size: 14px;" id="txt-recent-loading">იტვირთება...</div>
     </div>
   </section>
 
   <!-- სექცია 2: მომავალი -->
   <section class="bday-section" style="padding-top: 6px;">
-    <h2 class="bday-section-title">მომავალი</h2>
+    <h2 class="bday-section-title" id="txt-upcoming-title">მომავალი</h2>
     <div class="bday-list" id="upcomingBdayList">
-      <div style="color: #65676b; font-size: 14px;">იტვირთება...</div>
+      <div style="color: #65676b; font-size: 14px;" id="txt-upcoming-loading">იტვირთება...</div>
     </div>
   </section>
 
@@ -288,25 +288,206 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const geoMonths = [
-      "იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი",
-      "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"
-    ];
+    // 🌐 7 ენის ლექსიკონი
+    const BDAY_TRANSLATIONS = {
+      ka: {
+        pageTitle: "დაბადების დღეები",
+        recentTitle: "ახლახან",
+        upcomingTitle: "მომავალი",
+        loading: "იტვირთება...",
+        authReq: "გთხოვთ გაიაროთ ავტორიზაცია.",
+        noFriends: "მეგობრები არ გყავთ დამატებული.",
+        noRecent: "ბოლო დღეებში დაბადების დღე არავის ჰქონია.",
+        noUpcoming: "მომავალი დაბადების დღეები არ არის მითითებული.",
+        today: "დღეს",
+        yesterday: "გუშინ",
+        daysAgo2: "2 დღის წინ",
+        postPlaceholder: "დაწერეთ სადაბადებისდღეო პოსტი...",
+        createPostBtn: "პოსტის შექმნა",
+        writeTextAlert: "ჩაწერეთ მილოცვის ტექსტი!",
+        postPublishedAlert: "მილოცვა გამოქვეყნდა კედელზე!",
+        congratsPrefix: "დაბადების დღეს გილოცავ!",
+        settings: "პარამეტრები",
+        defaultUser: "მომხმარებელი",
+        months: ["იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი", "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"],
+        days: ["კვირა", "ორშაბათი", "სამშაბათი", "ოთხშაბათი", "ხუთშაბათი", "პარასკევი", "შაბათი"]
+      },
+      en: {
+        pageTitle: "Birthdays",
+        recentTitle: "Recent",
+        upcomingTitle: "Upcoming",
+        loading: "Loading...",
+        authReq: "Please log in.",
+        noFriends: "You have no friends added yet.",
+        noRecent: "No recent birthdays.",
+        noUpcoming: "No upcoming birthdays.",
+        today: "Today",
+        yesterday: "Yesterday",
+        daysAgo2: "2 days ago",
+        postPlaceholder: "Write a birthday wish...",
+        createPostBtn: "Create Post",
+        writeTextAlert: "Please enter your birthday wish!",
+        postPublishedAlert: "Wish published on the feed!",
+        congratsPrefix: "Happy Birthday!",
+        settings: "Settings",
+        defaultUser: "User",
+        months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+      },
+      it: {
+        pageTitle: "Compleanni",
+        recentTitle: "Recenti",
+        upcomingTitle: "In arrivo",
+        loading: "Caricamento...",
+        authReq: "Effettua l'accesso.",
+        noFriends: "Non hai ancora aggiunto amici.",
+        noRecent: "Nessun compleanno recente.",
+        noUpcoming: "Nessun compleanno imminente.",
+        today: "Oggi",
+        yesterday: "Ieri",
+        daysAgo2: "2 giorni fa",
+        postPlaceholder: "Scrivi un messaggio di auguri...",
+        createPostBtn: "Crea post",
+        writeTextAlert: "Inserisci il messaggio di auguri!",
+        postPublishedAlert: "Auguri pubblicati sulla bacheca!",
+        congratsPrefix: "Buon Compleanno!",
+        settings: "Impostazioni",
+        defaultUser: "Utente",
+        months: ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"],
+        days: ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"]
+      },
+      ru: {
+        pageTitle: "Дни рождения",
+        recentTitle: "Недавние",
+        upcomingTitle: "Предстоящие",
+        loading: "Загрузка...",
+        authReq: "Пожалуйста, войдите в систему.",
+        noFriends: "У вас пока нет друзей.",
+        noRecent: "В последнее время дней рождения не было.",
+        noUpcoming: "Предстоящие дни рождения не указаны.",
+        today: "Сегодня",
+        yesterday: "Вчера",
+        daysAgo2: "2 дня назад",
+        postPlaceholder: "Напишите поздравление...",
+        createPostBtn: "Создать пост",
+        writeTextAlert: "Напишите текст поздравления!",
+        postPublishedAlert: "Поздравление опубликовано!",
+        congratsPrefix: "С Днем Рождения!",
+        settings: "Настройки",
+        defaultUser: "Пользователь",
+        months: ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
+        days: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+      },
+      fr: {
+        pageTitle: "Anniversaires",
+        recentTitle: "Récents",
+        upcomingTitle: "À venir",
+        loading: "Chargement...",
+        authReq: "Veuillez vous connecter.",
+        noFriends: "Vous n'avez pas encore d'amis.",
+        noRecent: "Aucun anniversaire récent.",
+        noUpcoming: "Aucun anniversaire à venir.",
+        today: "Aujourd'hui",
+        yesterday: "Hier",
+        daysAgo2: "Il y a 2 jours",
+        postPlaceholder: "Écrivez un message d'anniversaire...",
+        createPostBtn: "Publier",
+        writeTextAlert: "Veuillez saisir votre message!",
+        postPublishedAlert: "Message publié sur le mur!",
+        congratsPrefix: "Joyeux Anniversaire!",
+        settings: "Paramètres",
+        defaultUser: "Utilisateur",
+        months: ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
+        days: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
+      },
+      de: {
+        pageTitle: "Geburtstage",
+        recentTitle: "Kürzlich",
+        upcomingTitle: "Bevorstehend",
+        loading: "Wird geladen...",
+        authReq: "Bitte melden Sie sich an.",
+        noFriends: "Noch keine Freunde hinzugefügt.",
+        noRecent: "Keine aktuellen Geburtstage.",
+        noUpcoming: "Keine bevorstehenden Geburtstage.",
+        today: "Heute",
+        yesterday: "Gestern",
+        daysAgo2: "Vor 2 Tagen",
+        postPlaceholder: "Schreibe einen Geburtstagsgruß...",
+        createPostBtn: "Beitrag erstellen",
+        writeTextAlert: "Bitte gib einen Grußtext ein!",
+        postPublishedAlert: "Glückwunsch auf der Pinnwand gepostet!",
+        congratsPrefix: "Alles Gute zum Geburtstag!",
+        settings: "Einstellungen",
+        defaultUser: "Benutzer",
+        months: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+        days: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"]
+      },
+      es: {
+        pageTitle: "Cumpleaños",
+        recentTitle: "Recientes",
+        upcomingTitle: "Próximos",
+        loading: "Cargando...",
+        authReq: "Por favor, inicia sesión.",
+        noFriends: "Aún no tienes amigos añadidos.",
+        noRecent: "No hay cumpleaños recientes.",
+        noUpcoming: "No hay próximos cumpleaños.",
+        today: "Hoy",
+        yesterday: "Ayer",
+        daysAgo2: "Hace 2 días",
+        postPlaceholder: "Escribe una felicitación...",
+        createPostBtn: "Crear publicación",
+        writeTextAlert: "¡Por favor escribe una felicitación!",
+        postPublishedAlert: "¡Felicitación publicada en el muro!",
+        congratsPrefix: "¡Feliz Cumpleaños!",
+        settings: "Configuración",
+        defaultUser: "Usuario",
+        months: ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+        days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
+      }
+    };
 
-    const geoDays = [
-      "კვირა", "ორშაბათი", "სამშაბათი", "ოთხშაბათი", "ხუთშაბათი", "პარასკევი", "შაბათი"
-    ];
+    // 🌐 ენის ამოღება მთავარი საიტიდან
+    let currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+    if (!BDAY_TRANSLATIONS[currentLang]) currentLang = 'ka';
+    let currentLangText = BDAY_TRANSLATIONS[currentLang];
+
+    function applyTranslationsDOM() {
+      document.title = `${currentLangText.pageTitle} | Emigrantbook`;
+      const titleEl = document.getElementById('txt-bday-title');
+      const recTitleEl = document.getElementById('txt-recent-title');
+      const upTitleEl = document.getElementById('txt-upcoming-title');
+      const recLoad = document.getElementById('txt-recent-loading');
+      const upLoad = document.getElementById('txt-upcoming-loading');
+
+      if (titleEl) titleEl.innerText = currentLangText.pageTitle;
+      if (recTitleEl) recTitleEl.innerText = currentLangText.recentTitle;
+      if (upTitleEl) upTitleEl.innerText = currentLangText.upcomingTitle;
+      if (recLoad) recLoad.innerText = currentLangText.loading;
+      if (upLoad) upLoad.innerText = currentLangText.loading;
+    }
+    applyTranslationsDOM();
 
     let currentRecentUserId = null;
     let currentRecentUserName = "";
 
     auth.onAuthStateChanged(user => {
       if (user) {
-        loadRealBirthdays(user.uid);
+        // თუ ბაზაში მომხმარებლის პროფილში ენა წერია, გადავამოწმოთ
+        db.collection('profiles').doc(user.uid).get().then(doc => {
+          if (doc.exists && doc.data().language && BDAY_TRANSLATIONS[doc.data().language]) {
+            currentLang = doc.data().language;
+            localStorage.setItem('emigrantbook_lang', currentLang);
+            currentLangText = BDAY_TRANSLATIONS[currentLang];
+            applyTranslationsDOM();
+          }
+          loadRealBirthdays(user.uid);
+        }).catch(() => {
+          loadRealBirthdays(user.uid);
+        });
       } else {
         const recentContainer = document.getElementById('recentBdayContainer');
         const upcomingContainer = document.getElementById('upcomingBdayList');
-        recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">გთხოვთ გაიაროთ ავტორიზაცია.</div>';
+        recentContainer.innerHTML = `<div style="color:#65676b; font-size:14px;">${currentLangText.authReq}</div>`;
         upcomingContainer.innerHTML = '';
       }
     });
@@ -318,7 +499,7 @@
       try {
         const CACHE_KEY_BDAYS = 'eb_cached_birthdays_' + myUid;
         const CACHE_KEY_TIME = 'eb_cached_birthdays_time_' + myUid;
-        const CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 საათი ინახავს ტელეფონში
+        const CACHE_DURATION = 12 * 60 * 60 * 1000;
 
         let cachedData = null;
         try {
@@ -333,10 +514,8 @@
         let friendsProfiles = [];
 
         if (cachedData && Array.isArray(cachedData)) {
-          // ბაზაში საერთოდ არ შედის - 0 Read
           friendsProfiles = cachedData;
         } else {
-          // 1. იღებს მხოლოდ დადასტურებულ მეგობრებს
           const [sentReqs, receivedReqs] = await Promise.all([
             db.collection('friend_requests').where('sender_id', '==', myUid).where('status', '==', 'accepted').get(),
             db.collection('friend_requests').where('receiver_id', '==', myUid).where('status', '==', 'accepted').get()
@@ -349,12 +528,11 @@
           const friendIds = Array.from(friendIdsSet);
 
           if (friendIds.length === 0) {
-            recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">მეგობრები არ გყავთ დამატებული.</div>';
-            upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">დაბადების დღეები არ არის.</div>';
+            recentContainer.innerHTML = `<div style="color:#65676b; font-size:14px;">${currentLangText.noFriends}</div>`;
+            upcomingContainer.innerHTML = `<div style="color:#65676b; font-size:14px;">${currentLangText.noUpcoming}</div>`;
             return;
           }
 
-          // 2. იღებს მხოლოდ მეგობრების პროფილებს (მაქსიმუმ 30-ს ერთ მოთხოვნაში `in` ოპერატორით)
           const chunks = [];
           for (let i = 0; i < friendIds.length; i += 30) {
             chunks.push(friendIds.slice(i, i + 30));
@@ -371,7 +549,7 @@
               const u = doc.data();
               friendsProfiles.push({
                 id: doc.id,
-                full_name: u.full_name || u.display_name || u.name || 'მომხმარებელი',
+                full_name: u.full_name || u.display_name || u.name || currentLangText.defaultUser,
                 avatar_url: u.avatar_url || u.photo_url || 'icons/circle-user-round.svg',
                 birth_date: u.birth_date || u.birthdate || u.birthday || u.dob || u.bday || u.date_of_birth || null,
                 birth_day: u.birth_day || null,
@@ -380,7 +558,6 @@
             });
           });
 
-          // ქეშირდება მეხსიერებაში
           try {
             localStorage.setItem(CACHE_KEY_BDAYS, JSON.stringify(friendsProfiles));
             localStorage.setItem(CACHE_KEY_TIME, Date.now().toString());
@@ -402,7 +579,6 @@
           let thisYearBday = new Date(currentYear, parsed.month, parsed.day);
           let diffDays = Math.round((thisYearBday - todayReset) / oneDayMs);
 
-          // ახლახან: ბოლო 2 დღე ან დღეს
           if (diffDays >= -2 && diffDays <= 0) {
             recentList.push({
               id: u.id,
@@ -412,7 +588,6 @@
               date: thisYearBday
             });
           } else {
-            // თუ წელს უკვე ჩაიარა, მომავალი დაბადების დღე შემდეგ წელსაა
             if (diffDays < -2) {
               thisYearBday = new Date(currentYear + 1, parsed.month, parsed.day);
               diffDays = Math.round((thisYearBday - todayReset) / oneDayMs);
@@ -435,9 +610,13 @@
           currentRecentUserId = top.id;
           currentRecentUserName = top.name;
 
-          let timeText = "დღეს";
-          if (top.diff === -1) timeText = `გუშინ, ${top.date.getDate()} ${geoMonths[top.date.getMonth()]}`;
-          else if (top.diff === -2) timeText = `2 დღის წინ, ${top.date.getDate()} ${geoMonths[top.date.getMonth()]}`;
+          let timeText = currentLangText.today;
+          const monthTitle = currentLangText.months[top.date.getMonth()];
+          if (top.diff === -1) {
+            timeText = `${currentLangText.yesterday}, ${top.date.getDate()} ${monthTitle}`;
+          } else if (top.diff === -2) {
+            timeText = `${currentLangText.daysAgo2}, ${top.date.getDate()} ${monthTitle}`;
+          }
 
           recentContainer.innerHTML = `
             <div class="bday-user-row" onclick="viewProfile('${top.id}')">
@@ -447,28 +626,28 @@
                 <span class="bday-user-date">${timeText}</span>
               </div>
             </div>
-            <input type="text" class="bday-input-box" id="bdayPostInput" placeholder="დაწერეთ სადაბადებისდღეო პოსტი...">
+            <input type="text" class="bday-input-box" id="bdayPostInput" placeholder="${currentLangText.postPlaceholder}">
             <div class="bday-action-row">
-              <button class="bday-post-btn" onclick="publishBdayPost()">პოსტის შექმნა</button>
+              <button class="bday-post-btn" onclick="publishBdayPost()">${currentLangText.createPostBtn}</button>
               <button class="bday-msg-btn-square" onclick="openMessengerWithUser('${top.id}')">
                 <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/></svg>
               </button>
             </div>
           `;
         } else {
-          recentContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">ბოლო დღეებში დაბადების დღე არავის ჰქონია.</div>';
+          recentContainer.innerHTML = `<div style="color:#65676b; font-size:14px;">${currentLangText.noRecent}</div>`;
         }
 
         // 2. სექცია „მომავალი“
         upcomingList.sort((a, b) => a.diff - b.diff);
 
         if (upcomingList.length === 0) {
-          upcomingContainer.innerHTML = '<div style="color:#65676b; font-size:14px;">მომავალი დაბადების დღეები არ არის მითითებული.</div>';
+          upcomingContainer.innerHTML = `<div style="color:#65676b; font-size:14px;">${currentLangText.noUpcoming}</div>`;
         } else {
           upcomingContainer.innerHTML = '';
           upcomingList.forEach(item => {
-            const dayName = geoDays[item.date.getDay()];
-            const monthName = geoMonths[item.date.getMonth()];
+            const dayName = currentLangText.days[item.date.getDay()];
+            const monthName = currentLangText.months[item.date.getMonth()];
             const dateStr = `${dayName}, ${item.date.getDate()} ${monthName}`;
 
             const row = document.createElement('div');
@@ -535,23 +714,23 @@
       const input = document.getElementById('bdayPostInput');
       const val = input.value.trim();
       if (!val) {
-        alert("ჩაწერეთ მილოცვის ტექსტი!");
+        alert(currentLangText.writeTextAlert);
         return;
       }
       const user = auth.currentUser;
       if (!user) {
-        alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+        alert(currentLangText.authReq);
         return;
       }
 
       db.collection('posts').add({
         user_id: user.uid,
-        content: `🎉 ${currentRecentUserName || ''} დაბადების დღეს გილოცავ! 🎂\n${val}`,
+        content: `🎉 ${currentRecentUserName || ''} ${currentLangText.congratsPrefix} 🎂\n${val}`,
         created_at: firebase.firestore.FieldValue.serverTimestamp(),
         likes_count: 0,
         comments_count: 0
       }).then(() => {
-        alert("მილოცვა გამოქვეყნდა კედელზე!");
+        alert(currentLangText.postPublishedAlert);
         input.value = "";
       });
     }
@@ -561,12 +740,11 @@
     }
 
     function viewProfile(uid) {
-  if (!uid) return;
-  // ვინახავთ ID-ს მეხსიერებაშიც და გადავცემთ პარამეტრადაც
-  localStorage.setItem('eb_target_profile_id', uid);
-  window.location.href = `index.html?profile_id=${uid}`;
-}
-
+      if (!uid) return;
+      sessionStorage.setItem('target_view_user_id', uid);
+      localStorage.setItem('eb_target_profile_id', uid);
+      window.location.href = `index.html?profile_id=${uid}`;
+    }
   </script>
 </body>
 </html>
