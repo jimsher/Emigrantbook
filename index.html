@@ -2664,6 +2664,21 @@ auth.onAuthStateChanged(function(user) {
       showScreen('home');
     }
 
+    // 🎂 დაბადების დღეებიდან პროფილზე პირდაპირ გადასვლა
+    var urlParams = new URLSearchParams(window.location.search);
+    var targetProfileId = urlParams.get('profile_id') || localStorage.getItem('eb_target_profile_id');
+
+    if (targetProfileId) {
+      localStorage.removeItem('eb_target_profile_id');
+      setTimeout(function() {
+        if (typeof viewUserProfile === "function") {
+          viewUserProfile(targetProfileId);
+        } else if (typeof showUserProfile === "function") {
+          showUserProfile(targetProfileId);
+        }
+      }, 300);
+    }
+
     initUserPresence(user.uid);
     requestNotificationPermission();
 
