@@ -3689,119 +3689,164 @@ auth.onAuthStateChanged(function(user) {
       });
     }
 
-    
-    function renderProfileDetails(profileData) {
+    // აქ იწყება
+     // გლობალური ცვლადი დეტალების მოდალისთვის
+var activeViewingUserDetails = null;
+
+function renderProfileDetails(user) {
   var container = document.getElementById('profile-details-container');
   if (!container) return;
 
-  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  var u = user || {};
+  activeViewingUserDetails = u;
+  
+  var t = (typeof getAppT === 'function') ? getAppT() : ((typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : {});
 
-  // 1. დაბადების თარიღი ან ასაკი
-  var birthHtml = "";
-  if (profileData.birth_date) {
-    birthHtml = `
-      <div class="detail-item">
-        <span class="icon"><img src="icons/cake.svg" class="post-action-icon" alt="Birthday"></span>
-        <span>${profileData.birth_date}</span>
-      </div>`;
-  } else if (profileData.age) {
-    birthHtml = `
-      <div class="detail-item">
-        <span class="icon"><img src="icons/cake.svg" class="post-action-icon" alt="Age"></span>
-        <span>${profileData.age}</span>
-      </div>`;
+  // ვამოწმებთ, საკუთარ პროფილზე ვართ თუ სხვისაზე
+  var isOwnProfile = (typeof currentUser !== 'undefined' && currentUser && (typeof activeViewingProfileId === 'undefined' || !activeViewingProfileId || activeViewingProfileId === currentUser.uid));
+
+  // 1. ძირითადი პირადი ველების შეგროვება
+  var basicItems = [];
+
+  if (u.current_city && u.current_city.trim() !== '') {
+    basicItems.push({ icon: 'icons/house.svg', text: escapeAboutHtml(u.current_city) });
+  }
+  if (u.country && u.country.trim() !== '') {
+    basicItems.push({ icon: 'icons/footprints.svg', text: escapeAboutHtml(u.country) });
+  }
+  if (u.job_title && u.job_title.trim() !== '') {
+    basicItems.push({ icon: 'icons/bookmark.svg', text: escapeAboutHtml(u.job_title) });
+  }
+  if (u.college && u.college.trim() !== '') {
+    basicItems.push({ icon: 'icons/award.svg', text: escapeAboutHtml(u.college) });
+  }
+  if (u.school && u.school.trim() !== '') {
+    basicItems.push({ icon: 'icons/store.svg', text: escapeAboutHtml(u.school) });
+  }
+  if (u.relationship && u.relationship.trim() !== '') {
+    basicItems.push({ icon: 'icons/heart.svg', text: escapeAboutHtml(u.relationship) });
+  }
+  if (u.age && String(u.age).trim() !== '') {
+    basicItems.push({ icon: 'icons/cake.svg', text: escapeAboutHtml(u.age) });
+  }
+  if (u.gender && u.gender.trim() !== '') {
+    basicItems.push({ icon: 'icons/circle-user-round.svg', text: escapeAboutHtml(u.gender) });
+  }
+  if (u.nickname && u.nickname.trim() !== '') {
+    basicItems.push({ icon: 'icons/circle-user-round.svg', text: '(' + escapeAboutHtml(u.nickname) + ')' });
+  }
+  if (u.languages && u.languages.trim() !== '') {
+    basicItems.push({ icon: 'icons/globe.svg', text: escapeAboutHtml(u.languages) });
+  }
+  if (u.family_members && u.family_members.trim() !== '') {
+    basicItems.push({ icon: 'icons/users.svg', text: escapeAboutHtml(u.family_members) });
+  }
+  if (u.life_events && u.life_events.trim() !== '') {
+    basicItems.push({ icon: 'icons/award.svg', text: escapeAboutHtml(u.life_events) });
+  }
+  if (u.favorite_music && u.favorite_music.trim() !== '') {
+    basicItems.push({ icon: 'icons/clapperboard.svg', text: escapeAboutHtml(u.favorite_music) });
   }
 
-  // 2. ურთიერთობის სტატუსი (თარგმანით)
-  var relHtml = "";
-  if (profileData.relationship) {
-    var relVal = profileData.relationship;
-    if (relVal === 'Single') relVal = t.relSingle || "Single";
-    else if (relVal === 'In a relationship') relVal = t.relInRelationship || "In a relationship";
-    else if (relVal === 'Engaged') relVal = t.relEngaged || "Engaged";
-    else if (relVal === 'Married') relVal = t.relMarried || "Married";
-    else if (relVal === "It's complicated") relVal = t.relComplicated || "It's complicated";
-
-    relHtml = `
-      <div class="detail-item">
-        <span class="icon"><img src="icons/heart.svg" class="post-action-icon" alt="Relationship"></span>
-        <span>${relVal}</span>
-      </div>`;
+  // 2. საკონტაქტო ველები (ვებსაიტი / სოციალური ქსელი)
+  var contactItems = [];
+  if (u.social_link && u.social_link.trim() !== '') {
+    var cleanSoc = escapeAboutHtml(u.social_link).replace(/^https?:\/\/(www\.)?instagram\.com\//, '@').replace(/\/$/, '');
+    contactItems.push({ 
+      icon: 'icons/tag.svg', 
+      text: `<a href="${escapeAboutHtml(u.social_link)}" target="_blank" style="color: #050505; text-decoration: none; font-weight: 500;">${cleanSoc}</a>` 
+    });
+  }
+  if (u.website && u.website.trim() !== '') {
+    contactItems.push({ 
+      icon: 'icons/globe.svg', 
+      text: `<a href="${escapeAboutHtml(u.website)}" target="_blank" style="color: #1877f2; text-decoration: none;">${escapeAboutHtml(u.website)}</a>` 
+    });
   }
 
-  // 3. სქესი (მხოლოდ პასუხი)
-  var genderHtml = "";
-  if (profileData.gender) {
-    var genVal = profileData.gender;
-    if (genVal === 'Male') genVal = (currentLang === 'ka') ? "მამრობითი" : genVal;
-    else if (genVal === 'Female') genVal = (currentLang === 'ka') ? "მდედრობითი" : genVal;
-    else if (genVal === 'Other') genVal = (currentLang === 'ka') ? "სხვა" : genVal;
-
-    genderHtml = `
-      <div class="detail-item">
-        <span class="icon"><img src="icons/venus-and-mars.svg" class="post-action-icon" alt="Gender"></span>
-        <span>${genVal}</span>
-      </div>`;
-  }
-
-  // 4. სამუშაო ადგილი / პოზიცია
-  var jobHtml = profileData.job_title ? `
-    <div class="detail-item">
-      <span class="icon"><img src="icons/briefcase-business.svg" class="post-action-icon" alt="Job"></span>
-      <span>${profileData.job_title}</span>
-    </div>` : '';
-
-  // 5. ქალაქი
-  var userCity = profileData.current_city || profileData.real_ip_city;
-  var cityHtml = userCity ? `
-    <div class="detail-item">
-      <span class="icon"><img src="icons/house.svg" class="post-action-icon" alt="City"></span>
-      <span>${userCity}</span>
-    </div>` : '';
-
-  // 6. ქვეყანა
-  var userCountry = profileData.country || profileData.real_ip_country;
-  var countryHtml = userCountry ? `
-    <div class="detail-item">
-      <span class="icon"><img src="icons/map-pinned.svg" class="post-action-icon" alt="Country"></span>
-      <span>${userCountry}</span>
-    </div>` : '';
-
-  // 7. ცხოვრებისეული მოვლენები
-  var eventHtml = profileData.life_events ? `
-    <div class="detail-item">
-      <span class="icon"><img src="icons/wand-sparkles.svg" class="post-action-icon" alt="Events"></span>
-      <span>${profileData.life_events}</span>
-    </div>` : '';
-
-  var allItemsHtml = birthHtml + relHtml + genderHtml + jobHtml + cityHtml + countryHtml + eventHtml;
-
-  // თუ მომხმარებელს არაფერი აქვს შევსებული
-  if (!allItemsHtml.trim()) {
-    container.innerHTML = "";
+  // თუ სრულიად ცარიელია
+  if (basicItems.length === 0 && contactItems.length === 0) {
+    container.innerHTML = `
+      <div class="profile-details-header-row">
+        <span class="profile-details-main-title">${t.personalDetailsTitle || "პერსონალური დეტალური ინფორმაცია"}</span>
+      </div>
+      <div style="color: #8a8f9d; font-size: 14px; padding: 6px 0;">${t.descPlaceholder || "ინფორმაცია მითითებული არ არის"}</div>
+    `;
     return;
   }
 
-  // ფანქრის ხატულა (მხოლოდ საკუთარ პროფილზე)
-  var isOwnProfile = (activeViewingProfileId === (currentUser ? currentUser.uid : null));
-  var editPenHtml = isOwnProfile ? `
-    <div class="profile-details-edit-pen" onclick="showEditProfileScreen()">
-      <img src="icons/pen.svg" class="post-action-icon" style="width: 18px; height: 18px; opacity: 0.8;" alt="Edit">
-    </div>
-  ` : '';
+  // 3. კედელზე ვაჩვენებთ მაქსიმუმ 3-4 პირად ველს
+  var previewLimit = 3;
+  var previewItems = basicItems.slice(0, previewLimit);
+  var previewHtml = previewItems.map(function(item) {
+    return `
+      <div class="detail-item">
+        <img src="${item.icon}" class="post-action-icon icon" alt="icon">
+        <span>${item.text}</span>
+      </div>
+    `;
+  }).join('');
 
-  var titleText = t.personalDetailsTitle || "პერსონალური დეტალური ინფორმაცია";
+  // 4. "იხილეთ დაწვრილებით" ღილაკი
+  var seeMoreBtnHtml = '';
+  if (basicItems.length > previewLimit) {
+    var seeMoreText = t.seeMoreDetails || "იხილეთ დაწვრილებით";
+    seeMoreBtnHtml = `
+      <div class="profile-see-more-details-btn" onclick="openAllDetailsSheet()">
+        <span>${seeMoreText}</span>
+      </div>
+    `;
+  }
 
+  // 5. საკონტაქტო ინფორმაციის ცალკე ბლოკი (ზუსტად შენი სქრინის მიხედვით)
+  var contactBlockHtml = '';
+  if (contactItems.length > 0) {
+    var contactListHtml = contactItems.map(function(item) {
+      return `
+        <div class="detail-item">
+          <img src="${item.icon}" class="post-action-icon icon" alt="contact">
+          <span>${item.text}</span>
+        </div>
+      `;
+    }).join('');
+
+    contactBlockHtml = `
+      <div style="margin-top: 18px;">
+        <div class="profile-details-main-title" style="margin-bottom: 12px;">${t.secContact || "საკონტაქტო ინფორმაცია"}</div>
+        <div class="profile-details-list">
+          ${contactListHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  // 6. ფანქრის ხატულა (რეალური Pencil SVG, მხოლოდ საკუთარ პროფილზე)
+  var editPenHtml = '';
+  if (isOwnProfile) {
+    editPenHtml = `
+      <div class="profile-details-edit-pen" onclick="showEditProfileScreen()" title="${t.edit || 'რედაქტირება'}">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #65676b;">
+          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+        </svg>
+      </div>
+    `;
+  }
+
+  // სრული აწყობა
   container.innerHTML = `
     <div class="profile-details-header-row">
-      <div class="profile-details-main-title">${titleText}</div>
+      <span class="profile-details-main-title">${t.personalDetailsTitle || "პერსონალური დეტალური ინფორმაცია"}</span>
       ${editPenHtml}
     </div>
     <div class="profile-details-list">
-      ${allItemsHtml}
+      ${previewHtml}
     </div>
+    ${seeMoreBtnHtml}
+    ${contactBlockHtml}
   `;
 }
+
+    // აქ მთავრდება
 
 
     
