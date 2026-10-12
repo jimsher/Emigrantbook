@@ -5800,83 +5800,275 @@ function loadUserPosts(userId, isNextPage) {
       }
     });
 }
-
     // აქ მთავრდება
 
-  
-    function showEditProfileScreen() {
-      if (!userProfile) return;
 
-      var fn = document.getElementById('edit-fullname');
-      var gen = document.getElementById('edit-gender');
-      var age = document.getElementById('edit-age');
-      var job = document.getElementById('edit-job');
-      var city = document.getElementById('edit-city');
-      var country = document.getElementById('edit-country');
-      var rel = document.getElementById('edit-relationship');
-      var ev = document.getElementById('edit-events');
+    
+  // აქ იწყება ახალი პროფილის ედიტორი
+    // ============================================================
+// PROFILE ABOUT ENGINE (სუფთა ფუნქციონალი არსებულ TRANSLATIONS-ზე)
+// ============================================================
 
-      if (fn) fn.value = userProfile.full_name || "";
-      if (gen) gen.value = userProfile.gender || "";
-      if (age) age.value = userProfile.age || "";
-      if (job) job.value = userProfile.job_title || "";
-      if (city) city.value = userProfile.current_city || "";
-      if (country) country.value = userProfile.country || "";
-      if (rel) rel.value = userProfile.relationship || "";
-      if (ev) ev.value = userProfile.life_events || "";
+var currentEditFieldKey = null;
+var currentEditPrivacy = 'public';
 
-      showScreen('edit-profile');
-    }
+function getAppT() {
+  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'ka';
+  return (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['ka'] : {});
+}
 
-    function saveProfileChanges() {
-      var fnEl = document.getElementById('edit-fullname');
-      var fullName = fnEl ? fnEl.value.trim() : "";
-      var genderEl = document.getElementById('edit-gender');
-      var gender = genderEl ? genderEl.value : "";
-      var age = document.getElementById('edit-age').value.trim();
-      var job = document.getElementById('edit-job').value.trim();
-      var city = document.getElementById('edit-city').value.trim();
-      var country = document.getElementById('edit-country').value.trim();
-      var relationship = document.getElementById('edit-relationship').value;
-      var events = document.getElementById('edit-events').value.trim();
+// 1. მთავარი ეკრანის გახსნა (0 Read კვოტა)
+function showEditProfileScreen() {
+  if (!userProfile) return;
+  var t = getAppT();
 
-      if (!fullName) {
-        alert("Name is required!");
-        return;
+  var setTxt = function(id, text) { var el = document.getElementById(id); if (el) el.innerText = text; };
+  setTxt('lbl-main-about-title', t.aboutTitle);
+  setTxt('sec-title-work', t.secWork);
+  setTxt('sec-title-edu', t.secEdu);
+  setTxt('sec-title-places', t.secPlaces);
+  setTxt('sec-title-contact', t.secContact);
+  setTxt('sec-title-basic', t.secBasic);
+  setTxt('sec-title-names', t.secNames);
+  setTxt('sec-title-rel', t.secRel);
+  setTxt('sec-title-family', t.secFamily);
+  setTxt('sec-title-events', t.secEvents);
+  setTxt('sec-title-music', t.secMusic);
+  setTxt('lbl-about-email-sub', t.emailSub);
+  setTxt('lbl-about-email-lock', t.onlyMe);
+
+  var emailEl = document.getElementById('val-about-email');
+  if (emailEl) emailEl.innerText = (currentUser && currentUser.email) ? currentUser.email : "user@email.com";
+
+  renderAboutRow('work', userProfile.job_title, t.addWork, t.subWork);
+  renderAboutRow('college', userProfile.college, t.addCollege, t.subCollege);
+  renderAboutRow('school', userProfile.school, t.addSchool, t.subSchool);
+  renderAboutRow('city', userProfile.current_city, t.addCity, t.subCity);
+  renderAboutRow('hometown', userProfile.country, t.addHometown, t.subHometown);
+  renderAboutRow('website', userProfile.website, t.addWebsite, t.subWebsite);
+  renderAboutRow('social', userProfile.social_link, t.addSocial, t.subSocial);
+  renderAboutRow('pronouns', userProfile.pronouns, t.addPronouns, t.subPronouns);
+  renderAboutRow('languages', userProfile.languages, t.addLangs, t.subLangs);
+  renderAboutRow('gender', userProfile.gender, t.addGender, t.subGender);
+  renderAboutRow('birthday', userProfile.age, t.addBirthday, t.subBirthday);
+  renderAboutRow('nickname', userProfile.nickname, t.addNickname, t.subNickname);
+  renderAboutRow('relationship', userProfile.relationship, t.addRel, t.subRel);
+  renderAboutRow('family', userProfile.family_members, t.addFamily, t.subFamily);
+  renderAboutRow('events', userProfile.life_events, t.addEvents, t.subEvents);
+  renderAboutRow('music', userProfile.favorite_music, t.addMusic, t.subMusic);
+
+  var screenEl = document.getElementById('screen-edit-profile');
+  if (screenEl) screenEl.style.display = 'block';
+}
+
+function closeAboutInfoScreen() {
+  var screenEl = document.getElementById('screen-edit-profile');
+  if (screenEl) screenEl.style.display = 'none';
+  if (typeof showMyProfile === 'function') showMyProfile();
+}
+
+function renderAboutRow(key, val, addTxt, subTxt) {
+  var wrap = document.getElementById('wrap-' + key);
+  if (!wrap) return;
+  if (val && String(val).trim() !== '') {
+    wrap.innerHTML = `<div class="fb-about-val-title">${escapeAboutHtml(val)}</div><div class="fb-about-sub-label">${subTxt}</div>`;
+  } else {
+    wrap.innerHTML = `<span class="fb-about-add-btn">${addTxt}</span>`;
+  }
+}
+
+// 2. ქვეგვერდის გახსნა
+function openEditSubScreen(fieldKey) {
+  currentEditFieldKey = fieldKey;
+  var t = getAppT();
+  var subScreen = document.getElementById('fb-sub-screen-editor');
+  var titleEl = document.getElementById('fb-sub-screen-title');
+  var inputEl = document.getElementById('fb-sub-main-input');
+  var iconEl = document.getElementById('fb-sub-input-icon');
+  var saveBtn = document.getElementById('fb-sub-save-btn');
+
+  if (saveBtn) saveBtn.innerText = t.saveBtn;
+
+  var fieldMap = {
+    work: { title: t.subWork, icon: 'icons/bookmark.svg', val: userProfile.job_title },
+    college: { title: t.subCollege, icon: 'icons/award.svg', val: userProfile.college },
+    school: { title: t.subSchool, icon: 'icons/store.svg', val: userProfile.school },
+    city: { title: t.subCity, icon: 'icons/house.svg', val: userProfile.current_city },
+    hometown: { title: t.subHometown, icon: 'icons/footprints.svg', val: userProfile.country },
+    website: { title: t.subWebsite, icon: 'icons/globe.svg', val: userProfile.website },
+    social: { title: t.subSocial, icon: 'icons/tag.svg', val: userProfile.social_link },
+    pronouns: { title: t.subPronouns, icon: 'icons/circle-user-round.svg', val: userProfile.pronouns },
+    languages: { title: t.subLangs, icon: 'icons/globe.svg', val: userProfile.languages },
+    birthday: { title: t.subBirthday, icon: 'icons/cake.svg', val: userProfile.age },
+    nickname: { title: t.subNickname, icon: 'icons/circle-user-round.svg', val: userProfile.nickname },
+    family: { title: t.subFamily, icon: 'icons/users.svg', val: userProfile.family_members },
+    events: { title: t.subEvents, icon: 'icons/award.svg', val: userProfile.life_events },
+    music: { title: t.subMusic, icon: 'icons/clapperboard.svg', val: userProfile.favorite_music }
+  };
+
+  var target = fieldMap[fieldKey] || { title: t.aboutTitle, icon: 'icons/tag.svg', val: '' };
+  if (titleEl) titleEl.innerText = target.title;
+  if (iconEl) iconEl.innerHTML = `<img src="${target.icon}" class="post-action-icon" style="width:20px;height:20px;" alt="icon">`;
+  if (inputEl) {
+    inputEl.value = target.val || '';
+    inputEl.placeholder = target.title;
+  }
+
+  if (subScreen) {
+    subScreen.style.display = 'flex';
+    if (inputEl) inputEl.focus();
+  }
+}
+
+function closeEditSubScreen() {
+  var subScreen = document.getElementById('fb-sub-screen-editor');
+  if (subScreen) subScreen.style.display = 'none';
+  currentEditFieldKey = null;
+}
+
+// 3. მიზნობრივი შენახვა (1 Update ბაზაში)
+function saveSubScreenField() {
+  if (!currentEditFieldKey || !currentUser) return;
+  var inputEl = document.getElementById('fb-sub-main-input');
+  var newVal = inputEl ? inputEl.value.trim() : '';
+
+  var keyDbMap = {
+    work: 'job_title', college: 'college', school: 'school',
+    city: 'current_city', hometown: 'country', website: 'website',
+    social: 'social_link', pronouns: 'pronouns', languages: 'languages',
+    birthday: 'age', nickname: 'nickname', family: 'family_members',
+    events: 'life_events', music: 'favorite_music'
+  };
+
+  var dbField = keyDbMap[currentEditFieldKey];
+  if (!dbField) return;
+
+  var payload = {};
+  payload[dbField] = newVal;
+  payload.updated_at = firebase.firestore.FieldValue.serverTimestamp();
+
+  db.collection('profiles').doc(currentUser.uid).update(payload)
+    .then(function() {
+      Object.assign(userProfile, payload);
+      if (typeof cachedProfiles !== 'undefined' && cachedProfiles[currentUser.uid]) {
+        Object.assign(cachedProfiles[currentUser.uid], payload);
       }
+      closeEditSubScreen();
+      showEditProfileScreen();
+    })
+    .catch(function(err) {
+      console.error("Profile save error:", err);
+    });
+}
 
-      var updateData = {
-        full_name: fullName,
-        gender: gender,
-        age: age,
-        job_title: job,
-        current_city: city,
-        country: country,
-        relationship: relationship,
-        life_events: events,
-        updated_at: firebase.firestore.FieldValue.serverTimestamp()
-      };
+// 4. სქესის Bottom Sheet
+function openGenderBottomSheet() {
+  var t = getAppT();
+  var titleEl = document.getElementById('bs-gender-title');
+  var listEl = document.getElementById('bs-gender-list');
+  if (titleEl) titleEl.innerText = t.subGender;
+  if (listEl && t.genderList) {
+    listEl.innerHTML = t.genderList.map(function(item) {
+      return `<div class="fb-bs-item" onclick="saveGenderDirect('${escapeAboutHtml(item)}')">${escapeAboutHtml(item)}</div>`;
+    }).join('');
+  }
+  var bs = document.getElementById('bs-gender');
+  if (bs) bs.style.display = 'flex';
+}
 
-      db.collection('profiles').doc(currentUser.uid)
-        .update(updateData)
-        .then(function() {
-          db.collection('posts').where('user_id', '==', currentUser.uid).get().then(function(snapshot) {
-            var batch = db.batch();
-            snapshot.forEach(function(docSnap) {
-              batch.update(docSnap.ref, { author_name: fullName });
-            });
-            batch.commit().then(function() {
-              db.collection('profiles').doc(currentUser.uid).get().then(function(profileDoc) {
-                if (profileDoc.exists) {
-                  userProfile = profileDoc.data();
-                  cachedProfiles[currentUser.uid] = userProfile;
-                }
-                showMyProfile();
-              });
-            });
-          });
-        });
+function saveGenderDirect(val) {
+  if (!currentUser) return;
+  closeAllBottomSheets();
+  db.collection('profiles').doc(currentUser.uid).update({
+    gender: val,
+    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    userProfile.gender = val;
+    if (typeof cachedProfiles !== 'undefined' && cachedProfiles[currentUser.uid]) {
+      cachedProfiles[currentUser.uid].gender = val;
     }
+    showEditProfileScreen();
+  });
+}
+
+// 5. ურთიერთობის Bottom Sheet
+function openRelationshipBottomSheet() {
+  var t = getAppT();
+  var titleEl = document.getElementById('bs-rel-title');
+  var listEl = document.getElementById('bs-relationship-list');
+  if (titleEl) titleEl.innerText = t.subRel;
+  if (listEl && t.relList) {
+    listEl.innerHTML = t.relList.map(function(item) {
+      return `<div class="fb-bs-item" onclick="saveRelationshipDirect('${escapeAboutHtml(item)}')">${escapeAboutHtml(item)}</div>`;
+    }).join('');
+  }
+  var bs = document.getElementById('bs-relationship');
+  if (bs) bs.style.display = 'flex';
+}
+
+function saveRelationshipDirect(val) {
+  if (!currentUser) return;
+  closeAllBottomSheets();
+  db.collection('profiles').doc(currentUser.uid).update({
+    relationship: val,
+    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    userProfile.relationship = val;
+    if (typeof cachedProfiles !== 'undefined' && cachedProfiles[currentUser.uid]) {
+      cachedProfiles[currentUser.uid].relationship = val;
+    }
+    showEditProfileScreen();
+  });
+}
+
+// 6. აუდიტორიის Bottom Sheet
+function openAudienceBottomSheet() {
+  var t = getAppT();
+  var setTxt = function(id, text) { var el = document.getElementById(id); if (el) el.innerText = text; };
+  setTxt('bs-aud-title', 'აუდიტორიის არჩევა');
+  setTxt('lbl-aud-pub-name', t.publicAud);
+  setTxt('lbl-aud-fr-name', t.friendsAud);
+  setTxt('lbl-aud-pr-name', t.onlyMe);
+  setTxt('btn-aud-done', t.doneBtn);
+
+  var bs = document.getElementById('bs-audience');
+  if (bs) bs.style.display = 'flex';
+}
+
+function confirmAudienceSelection() {
+  var t = getAppT();
+  var radio = document.querySelector('input[name="bs_privacy"]:checked');
+  if (radio) {
+    currentEditPrivacy = radio.value;
+    var lbl = document.getElementById('fb-sub-privacy-label');
+    if (lbl) {
+      if (currentEditPrivacy === 'public') lbl.innerText = t.publicAud;
+      else if (currentEditPrivacy === 'friends') lbl.innerText = t.friendsAud;
+      else if (currentEditPrivacy === 'private') lbl.innerText = t.onlyMe;
+    }
+  }
+  var bs = document.getElementById('bs-audience');
+  if (bs) bs.style.display = 'none';
+}
+
+function closeAllBottomSheets(e) {
+  var g = document.getElementById('bs-gender');
+  var r = document.getElementById('bs-relationship');
+  var a = document.getElementById('bs-audience');
+  if (g) g.style.display = 'none';
+  if (r) r.style.display = 'none';
+  if (a) a.style.display = 'none';
+}
+
+function escapeAboutHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/[&<>"']/g, function(m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+  });
+}
+
+    // აქ მთავრდება ედიტორის ფუქცია
+    
 
     function triggerAvatarUpload() {
       var input = document.getElementById('avatar-file-input');
