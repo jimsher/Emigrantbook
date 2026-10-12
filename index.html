@@ -2390,24 +2390,72 @@ async function deleteUserAccountPermanently() {
 
   var uid = user.uid;
 
-  try {
-    // 1. მომხმარებლის ყველა პოსტის წაშლა Firestore-იდან
-    var postsSnap = await db.collection('posts').where('user_id', '==', uid).get();
-    var batch = db.batch();
-    postsSnap.forEach(function(doc) {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
+  // ეკრანის დაბლოკვა პროცესის დასრულებამდე
+  var overlay = document.createElement('div');
+  overlay.id = 'acc-delete-overlay';
+  overlay.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:9999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;";
+  overlay.innerHTML = '<div style="font-size:18px;font-weight:700;margin-bottom:10px;">მიმდინარეობს ანგარიშის სრული წაშლა...</div><div style="font-size:14px;color:#bbb;">გთხოვთ დაელოდოთ მონაცემების გასუფთავებას</div>';
+  document.body.appendChild(overlay);
 
-    // 2. პროფილის დოკუმენტის წაშლა Firestore-იდან
+  try {
+    // 🛡️ დამხმარე ფუნქცია: დოკუმენტების უსაფრთხო ჯგუფური წაშლა (Batched Deletion)
+    async function purgeCollectionQuery(queryRef) {
+      try {
+        var snap = await queryRef.get();
+        if (snap.empty) return;
+        var batch = db.batch();
+        var count = 0;
+        snap.forEach(function(doc) {
+          batch.delete(doc.ref);
+          count++;
+        });
+        if (count > 0) {
+          await batch.commit();
+        }
+      } catch (err) {
+        console.warn("Purge step skipped or completed:", err);
+      }
+    }
+
+    // 1. მნახველების ისტორიის გასუფთავება (რომ "Emigrantbook User" აღარასდროს დარჩეს)
+    await purgeCollectionQuery(db.collection('profile_views').where('viewer_id', '==', uid));
+    await purgeCollectionQuery(db.collection('profile_views').where('profile_user_id', '==', uid));
+
+    // 2. მეგობრობის ყველა მოთხოვნის წაშლა (გაგზავნილი და მიღებული)
+    await purgeCollectionQuery(db.collection('friend_requests').where('sender_id', '==', uid));
+    await purgeCollectionQuery(db.collection('friend_requests').where('receiver_id', '==', uid));
+
+    // 3. დაბლოკილების სიის გასუფთავება
+    await purgeCollectionQuery(db.collection('blocked_users').where('blocker_id', '==', uid));
+    await purgeCollectionQuery(db.collection('blocked_users').where('blocked_id', '==', uid));
+
+    // 4. მომხმარებლის მიერ დაწერილი კომენტარების წაშლა
+    await purgeCollectionQuery(db.collection('post_comments').where('user_id', '==', uid));
+
+    // 5. მომხმარებლის სიუჟეტების (Stories) წაშლა
+    await purgeCollectionQuery(db.collection('stories').where('user_id', '==', uid));
+
+    // 6. მომხმარებლის მიერ შენახული პოსტებისა და პოსტ-შეტყობინებების წაშლა
+    await purgeCollectionQuery(db.collection('saved_posts').where('user_id', '==', uid));
+    await purgeCollectionQuery(db.collection('post_notifications').where('user_id', '==', uid));
+
+    // 7. მომხმარებლის ყველა პოსტის წაშლა Firestore-იდან
+    await purgeCollectionQuery(db.collection('posts').where('user_id', '==', uid));
+
+    // 8. ალგორითმის პრეფერენციების (user_preferences) დოკუმენტის წაშლა
+    await db.collection('user_preferences').doc(uid).delete().catch(function(){});
+
+    // 9. პროფილის დოკუმენტის წაშლა Firestore-იდან
     await db.collection('profiles').doc(uid).delete();
 
-    // 3. ავტორიზაციის ექაუნთის წაშლა Firebase Auth-იდან
+    // 10. ავტორიზაციის ექაუნთის წაშლა Firebase Auth-იდან
     await user.delete();
 
-    // 4. მეხსიერების გასუფთავება
+    // 11. მეხსიერების გასუფთავება
     localStorage.clear();
     sessionStorage.clear();
+
+    if (overlay) overlay.remove();
 
     var successMsg = (t && t.deleteAccSuccess) ? t.deleteAccSuccess : "თქვენი ანგარიში წარმატებით წაიშალა.";
     alert(successMsg);
@@ -2416,6 +2464,7 @@ async function deleteUserAccountPermanently() {
 
   } catch (error) {
     console.error("Account delete error:", error);
+    if (overlay) overlay.remove();
 
     // უსაფრთხოების დაცვა: თუ შესვლიდან დიდი დროა გასული, Firebase ითხოვს ხელახალ შესვლას
     if (error.code === 'auth/requires-recent-login') {
@@ -2428,7 +2477,9 @@ async function deleteUserAccountPermanently() {
     }
   }
 }
-    // აქ მთავრდება ექაუნთისბწაშლის ფუნქცია
+// აქ მთავრდება ექაუნთის წაშლის ფუნქცია
+
+    
 
     function subscribeToLiveLotteryPost() {
       var card = document.getElementById('live-lottery-post-card');
