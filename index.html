@@ -851,67 +851,304 @@ a:active {
   </div>
 </div>
 </div>
-    
    <!-- აწ მთავრდება ფროფილის სრული გვერდი -->   
+
+
+  <!--აქ იწყება ახალი ფოოფილისბრედაქტირი-->
+  <!-- ============================================================
+     FACEBOOK FULL ABOUT / PROFILE EDIT SYSTEM (ყველა სექცია)
+============================================================ -->
+<div id="screen-edit-profile" class="app-screen" style="display: none; background: #ffffff; min-height: 100vh; color: #050505;">
   
-   <div id="edit-profile-screen">
-    <div class="header">
-      <div class="logo-text" id="lbl-back-to-profile" onclick="showScreen('profile')">← Back to Profile</div>
+  <!-- 1. მთავარი ჰედერი -->
+  <div class="fb-about-header">
+    <button type="button" class="fb-about-back-btn" onclick="closeAboutInfoScreen()" aria-label="უკან">
+      <img src="icons/undo-2.svg" class="post-action-icon" style="width: 22px; height: 22px; filter: brightness(0);" alt="უკან">
+    </button>
+    <div class="fb-about-header-title" id="lbl-main-about-title">ინფორმაცია</div>
+  </div>
+
+  <div class="fb-about-scroll-body">
+
+    <!-- სექცია 1: სამუშაო -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-work">სამუშაო</div>
+      <div class="fb-about-row" id="row-work" onclick="openEditSubScreen('work')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/bookmark.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="სამუშაო">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-work"></div>
+      </div>
     </div>
-    <div class="feed-container">
-      <div class="edit-profile-card">
-        <div class="edit-header" id="lbl-edit-header">✏️ Update Profile Info</div>
-        <div class="input-group">
-          <label id="lbl-edit-fullname">First Name<br>Last Name</label>
-          <input type="text" id="edit-fullname" placeholder="John Doe">
+
+    <!-- სექცია 2: განათლება -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-edu">განათლება</div>
+      <!-- უმაღლესი -->
+      <div class="fb-about-row" id="row-college" onclick="openEditSubScreen('college')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/award.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="უმაღლესი">
         </div>
-        <div class="input-group">
-          <label id="lbl-edit-gender">Gender</label>
-          <select id="edit-gender">
-            <option value="">Not specified</option>
-            <option value="Male">Male / მამრობითი</option>
-            <option value="Female">Female / მდედრობითი</option>
-            <option value="Other">Other / სხვა</option>
-          </select>
+        <div class="fb-about-text-wrap" id="wrap-college"></div>
+      </div>
+      <!-- საშუალო სკოლა -->
+      <div class="fb-about-row" id="row-school" onclick="openEditSubScreen('school')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/store.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="სკოლა">
         </div>
-        <div class="input-group">
-          <label id="lbl-edit-age">Age</label>
-          <input type="number" id="edit-age" placeholder="e.g. 25">
+        <div class="fb-about-text-wrap" id="wrap-school"></div>
+      </div>
+    </div>
+
+    <!-- სექცია 3: საცხოვრებელი ადგილები -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-places">საცხოვრებელი ადგილები</div>
+      <!-- ფაქტობრივი ქალაქი -->
+      <div class="fb-about-row" id="row-city" onclick="openEditSubScreen('city')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/house.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="ქალაქი">
         </div>
-        <div class="input-group">
-          <label id="lbl-edit-job">Workplace (Position, Company)</label>
-          <input type="text" id="edit-job" placeholder="e.g. Developer">
+        <div class="fb-about-text-wrap" id="wrap-city"></div>
+      </div>
+      <!-- მშობლიური ქალაქი -->
+      <div class="fb-about-row" id="row-hometown" onclick="openEditSubScreen('hometown')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/footprints.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="მშობლიური ქალაქი">
         </div>
-        <div class="input-group">
-          <label id="lbl-edit-city">Current City</label>
-          <input type="text" id="edit-city" placeholder="e.g. Tbilisi">
+        <div class="fb-about-text-wrap" id="wrap-hometown"></div>
+      </div>
+    </div>
+
+    <!-- სექცია 4: საკონტაქტო ინფორმაცია -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-contact">საკონტაქტო ინფორმაცია</div>
+      <!-- ვებსაიტი -->
+      <div class="fb-about-row" id="row-website" onclick="openEditSubScreen('website')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/globe.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="ვებსაიტი">
         </div>
-        <div class="input-group">
-          <label id="lbl-edit-country">Country</label>
-          <input type="text" id="edit-country" placeholder="e.g. Georgia">
+        <div class="fb-about-text-wrap" id="wrap-website"></div>
+      </div>
+      <!-- სოციალური ქსელის ბმული -->
+      <div class="fb-about-row" id="row-social" onclick="openEditSubScreen('social')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/tag.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="სოციალური">
         </div>
-        <div class="input-group">
-          <label id="lbl-edit-relationship">Relationship Status</label>
-          <select id="edit-relationship">
-            <option value="" id="opt-rel-1">Not specified</option>
-            <option value="Single" id="opt-rel-2">Single</option>
-            <option value="In a relationship" id="opt-rel-3">In a relationship</option>
-            <option value="Engaged" id="opt-rel-4">Engaged</option>
-            <option value="Married" id="opt-rel-5">Married</option>
-            <option value="It's complicated" id="opt-rel-6">It's complicated</option>
-          </select>
+        <div class="fb-about-text-wrap" id="wrap-social"></div>
+      </div>
+      <!-- ელფოსტა -->
+      <div class="fb-about-row" id="row-email">
+        <div class="fb-about-icon-circle">
+          <img src="icons/message-circle-more.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="ელფოსტა">
         </div>
-        <div class="input-group">
-          <label id="lbl-edit-events">Life Events</label>
-          <textarea id="edit-events" placeholder="e.g. Started a new job, relocated..."></textarea>
-        </div>
-        <div class="edit-buttons-wrapper">
-          <button class="btn btn-save" id="lbl-save-changes" onclick="saveProfileChanges()">Save Changes</button>
-          <button class="btn btn-cancel" id="lbl-cancel-changes" onclick="showScreen('profile')">Cancel</button>
+        <div class="fb-about-text-wrap">
+          <div class="fb-about-val-title" id="val-about-email">user@email.com</div>
+          <div class="fb-about-sub-label" id="lbl-about-email-sub">ელფოსტის მისამართი</div>
+          <div class="fb-about-privacy-tag">
+            <img src="icons/lock.svg" class="post-action-icon" style="width: 12px; height: 12px; margin-right: 4px;" alt="lock">
+            <span id="lbl-about-email-lock">მხოლოდ მე</span>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- სექცია 5: ძირითადი ინფორმაცია -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-basic">ძირითადი ინფორმაცია</div>
+      <!-- ნაცვალსახელები -->
+      <div class="fb-about-row" id="row-pronouns" onclick="openEditSubScreen('pronouns')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="ნაცვალსახელები">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-pronouns"></div>
+      </div>
+      <!-- ენები -->
+      <div class="fb-about-row" id="row-languages" onclick="openEditSubScreen('languages')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/globe.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="ენები">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-languages"></div>
+      </div>
+      <!-- სქესი (Bottom Sheet) -->
+      <div class="fb-about-row" id="row-gender" onclick="openGenderBottomSheet()">
+        <div class="fb-about-icon-circle">
+          <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="სქესი">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-gender"></div>
+        <div class="fb-about-edit-pen">
+          <img src="icons/tag.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Edit">
+        </div>
+      </div>
+      <!-- დაბადების დღე -->
+      <div class="fb-about-row" id="row-birthday" onclick="openEditSubScreen('birthday')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/cake.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="დაბადების დღე">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-birthday"></div>
+        <div class="fb-about-edit-pen">
+          <img src="icons/tag.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Edit">
+        </div>
+      </div>
+    </div>
+
+    <!-- სექცია 6: სხვა სახელები -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-othernames">სხვა სახელები</div>
+      <div class="fb-about-row" id="row-nickname" onclick="openEditSubScreen('nickname')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="მეტსახელი">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-nickname"></div>
+      </div>
+    </div>
+
+    <!-- სექცია 7: ურთიერთობა -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-rel">ურთიერთობა</div>
+      <div class="fb-about-row" id="row-relationship" onclick="openRelationshipBottomSheet()">
+        <div class="fb-about-icon-circle">
+          <img src="icons/heart.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="ურთიერთობა">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-relationship"></div>
+        <div class="fb-about-edit-pen">
+          <img src="icons/tag.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Edit">
+        </div>
+      </div>
+    </div>
+
+    <!-- სექცია 8: ოჯახის წევრები -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-family">ოჯახის წევრები</div>
+      <div class="fb-about-row" id="row-family" onclick="openEditSubScreen('family')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/users.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="ოჯახი">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-family"></div>
+      </div>
+    </div>
+
+    <!-- სექცია 9: ცხოვრებისეული მოვლენები -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-events">ცხოვრებისეული მოვლენები</div>
+      <div class="fb-about-row" id="row-events" onclick="openEditSubScreen('events')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/award.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="მოვლენები">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-events"></div>
+      </div>
+    </div>
+
+    <!-- სექცია 10: მუსიკა -->
+    <div class="fb-about-section">
+      <div class="fb-about-section-title" id="sec-title-music">მუსიკა</div>
+      <div class="fb-about-row" id="row-music" onclick="openEditSubScreen('music')">
+        <div class="fb-about-icon-circle">
+          <img src="icons/clapperboard.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="მუსიკა">
+        </div>
+        <div class="fb-about-text-wrap" id="wrap-music"></div>
+      </div>
+    </div>
+
   </div>
+</div>
+
+<!-- ============================================================
+     SUB-SCREEN: ველის რედაქტირების გვერდი (ინპუტი + კონფიდენციალურობა)
+============================================================ -->
+<div id="fb-sub-screen-editor" class="fb-sub-screen" style="display: none;">
+  <div class="fb-sub-header">
+    <button type="button" class="fb-sub-back-btn" onclick="closeEditSubScreen()">
+      <img src="icons/undo-2.svg" class="post-action-icon" style="width: 20px; height: 20px; filter: brightness(0);" alt="Back">
+    </button>
+    <div class="fb-sub-title" id="fb-sub-screen-title">რედაქტირება</div>
+  </div>
+
+  <div class="fb-sub-content">
+    <div class="fb-input-box-wrap">
+      <div class="fb-input-icon" id="fb-sub-input-icon"></div>
+      <input type="text" id="fb-sub-main-input" class="fb-sub-input" placeholder="">
+    </div>
+
+    <!-- კონფიდენციალურობის ამორჩევა -->
+    <div class="fb-privacy-pill" onclick="openAudienceBottomSheet()">
+      <img src="icons/globe.svg" class="post-action-icon" style="width: 14px; height: 14px; margin-right: 4px;" alt="Audience">
+      <span id="fb-sub-privacy-label">საჯარო</span>
+      <span style="font-size: 11px; margin-left: 4px;">▼</span>
+    </div>
+  </div>
+
+  <div class="fb-sub-footer">
+    <button type="button" class="fb-blue-btn" id="fb-sub-save-btn" onclick="saveSubScreenField()">შენახვა</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     BOTTOM SHEET: სქესის არჩევა (სრული სია)
+============================================================ -->
+<div id="bs-gender" class="fb-bs-backdrop" onclick="closeAllBottomSheets(event)">
+  <div class="fb-bs-panel" onclick="event.stopPropagation()">
+    <div class="fb-bs-handle"></div>
+    <div class="fb-bs-title" id="bs-gender-title">სქესი</div>
+    <div class="fb-bs-list" id="bs-gender-list"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     BOTTOM SHEET: ურთიერთობის სტატუსი (11-ვე Facebook სტატუსი)
+============================================================ -->
+<div id="bs-relationship" class="fb-bs-backdrop" onclick="closeAllBottomSheets(event)">
+  <div class="fb-bs-panel" onclick="event.stopPropagation()">
+    <div class="fb-bs-handle"></div>
+    <div class="fb-bs-title" id="bs-rel-title">სტატუსი ურთიერთობის შესახებ</div>
+    <div class="fb-bs-list" id="bs-relationship-list" style="max-height: 55vh; overflow-y: auto;"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     BOTTOM SHEET: აუდიტორიის არჩევა
+============================================================ -->
+<div id="bs-audience" class="fb-bs-backdrop" onclick="closeAllBottomSheets(event)">
+  <div class="fb-bs-panel" onclick="event.stopPropagation()">
+    <div class="fb-bs-handle"></div>
+    <div class="fb-bs-title" id="bs-aud-title">აუდიტორიის არჩევა</div>
+    <div class="fb-bs-subtitle" id="bs-aud-desc">აირჩიეთ, ვის შეეძლება ამ ინფორმაციის ნახვა თქვენს პროფილზე.</div>
+    <div class="fb-audience-list">
+      <label class="fb-audience-row">
+        <div class="fb-aud-icon">
+          <img src="icons/globe.svg" class="post-action-icon" style="width: 22px; height: 22px;" alt="Public">
+        </div>
+        <div class="fb-aud-info">
+          <div class="fb-aud-name" id="lbl-aud-pub-name">საჯარო</div>
+          <div class="fb-aud-desc" id="lbl-aud-pub-desc">ყველა, როგორც საიტზე, ასევე მის მიღმა</div>
+        </div>
+        <input type="radio" name="bs_privacy" value="public" checked>
+      </label>
+      <label class="fb-audience-row">
+        <div class="fb-aud-icon">
+          <img src="icons/users.svg" class="post-action-icon" style="width: 22px; height: 22px;" alt="Friends">
+        </div>
+        <div class="fb-aud-info">
+          <div class="fb-aud-name" id="lbl-aud-fr-name">მეგობრები</div>
+          <div class="fb-aud-desc" id="lbl-aud-fr-desc">თქვენი მეგობრები საიტზე</div>
+        </div>
+        <input type="radio" name="bs_privacy" value="friends">
+      </label>
+      <label class="fb-audience-row">
+        <div class="fb-aud-icon">
+          <img src="icons/lock.svg" class="post-action-icon" style="width: 22px; height: 22px;" alt="Private">
+        </div>
+        <div class="fb-aud-info">
+          <div class="fb-aud-name" id="lbl-aud-pr-name">მხოლოდ მე</div>
+          <div class="fb-aud-desc" id="lbl-aud-pr-desc">მხოლოდ თქვენ ხედავთ</div>
+        </div>
+        <input type="radio" name="bs_privacy" value="private">
+      </label>
+    </div>
+    <button type="button" class="fb-blue-btn" id="btn-aud-done" style="margin-top: 15px;" onclick="confirmAudienceSelection()">მზადაა</button>
+  </div>
+</div>
+  <!-- აქ მთავრდება სრულად-->
+  
 
   <!-- PRIVACY SETTINGS SCREEN -->
   <!-- PRIVACY SETTINGS SCREEN -->
