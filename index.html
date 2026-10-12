@@ -2373,6 +2373,7 @@ a:active {
 
     // აქ იწყება
     // ⚠️ ანგარიშის, პოსტებისა და პროფილის სამუდამო წაშლა
+    // ⚠️ ანგარიშის, პოსტებისა და პროფილის სამუდამო წაშლა
 async function deleteUserAccountPermanently() {
   var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : null;
 
@@ -2391,19 +2392,26 @@ async function deleteUserAccountPermanently() {
   var uid = user.uid;
 
   try {
-    // 1. მომხმარებლის ყველა პოსტის წაშლა Firestore-იდან
+    // 1. მომხმარებლის ყველა პოსტის წაშლა (თავისი post_likes ქვე-კოლექციებით)
     var postsSnap = await db.collection('posts').where('user_id', '==', uid).get();
-    var batch = db.batch();
-    postsSnap.forEach(function(doc) {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
+    for (var i = 0; i < postsSnap.docs.length; i++) {
+      var pDoc = postsSnap.docs[i];
+      var pLikes = await pDoc.ref.collection('post_likes').get();
+      if (!pLikes.empty) {
+        var bLikes = db.batch();
+        pLikes.forEach(function(lDoc) { bLikes.delete(lDoc.ref); });
+        await bLikes.commit();
+      }
+      await pDoc.ref.delete();
+    }
 
+    // 2. კომენტარები
     var pCommSnap = await db.collection('post_comments').where('user_id', '==', uid).get();
     var batchComm = db.batch();
     pCommSnap.forEach(function(doc) { batchComm.delete(doc.ref); });
     await batchComm.commit();
 
+    // 3. შეტყობინებები და შენახული პოსტები
     var pNotifSnap = await db.collection('post_notifications').where('user_id', '==', uid).get();
     var batchNotif = db.batch();
     pNotifSnap.forEach(function(doc) { batchNotif.delete(doc.ref); });
@@ -2414,6 +2422,7 @@ async function deleteUserAccountPermanently() {
     savedSnap.forEach(function(doc) { batchSaved.delete(doc.ref); });
     await batchSaved.commit();
 
+    // 4. მეგობრობის, გამომწერების და Following-ის მოთხოვნები (ორივე მხრიდან)
     var fr1Snap = await db.collection('friend_requests').where('sender_id', '==', uid).get();
     var batchFr1 = db.batch();
     fr1Snap.forEach(function(doc) { batchFr1.delete(doc.ref); });
@@ -2424,6 +2433,7 @@ async function deleteUserAccountPermanently() {
     fr2Snap.forEach(function(doc) { batchFr2.delete(doc.ref); });
     await batchFr2.commit();
 
+    // 5. პროფილის ნახვები (ორივე მხრიდან)
     var pv1Snap = await db.collection('profile_views').where('viewer_id', '==', uid).get();
     var batchPv1 = db.batch();
     pv1Snap.forEach(function(doc) { batchPv1.delete(doc.ref); });
@@ -2434,6 +2444,7 @@ async function deleteUserAccountPermanently() {
     pv2Snap.forEach(function(doc) { batchPv2.delete(doc.ref); });
     await batchPv2.commit();
 
+    // 6. დაბლოკილები (ორივე მხრიდან)
     var blk1Snap = await db.collection('blocked_users').where('blocker_id', '==', uid).get();
     var batchBlk1 = db.batch();
     blk1Snap.forEach(function(doc) { batchBlk1.delete(doc.ref); });
@@ -2444,11 +2455,13 @@ async function deleteUserAccountPermanently() {
     blk2Snap.forEach(function(doc) { batchBlk2.delete(doc.ref); });
     await batchBlk2.commit();
 
+    // 7. სიუჟეტები (Stories)
     var storySnap = await db.collection('stories').where('user_id', '==', uid).get();
     var batchStory = db.batch();
     storySnap.forEach(function(doc) { batchStory.delete(doc.ref); });
     await batchStory.commit();
 
+    // 8. ლაივები და ზარები
     var livesSnap = await db.collection('lives').where('user_id', '==', uid).get();
     var batchLives = db.batch();
     livesSnap.forEach(function(doc) { batchLives.delete(doc.ref); });
@@ -2464,6 +2477,7 @@ async function deleteUserAccountPermanently() {
     call2Snap.forEach(function(doc) { batchCall2.delete(doc.ref); });
     await batchCall2.commit();
 
+    // 9. ჩატები და რეაქციები
     var chatSnap = await db.collection('chats').where('users', 'array-contains', uid).get();
     var batchChat = db.batch();
     chatSnap.forEach(function(doc) { batchChat.delete(doc.ref); });
@@ -2474,6 +2488,7 @@ async function deleteUserAccountPermanently() {
     reactSnap.forEach(function(doc) { batchReact.delete(doc.ref); });
     await batchReact.commit();
 
+    // 10. ჯგუფები
     var grpPostSnap = await db.collection('group_posts').where('user_id', '==', uid).get();
     var batchGrpPost = db.batch();
     grpPostSnap.forEach(function(doc) { batchGrpPost.delete(doc.ref); });
@@ -2494,6 +2509,7 @@ async function deleteUserAccountPermanently() {
     grpEvSnap.forEach(function(doc) { batchGrpEv.delete(doc.ref); });
     await batchGrpEv.commit();
 
+    // 11. ლატარია
     var lotBonSnap = await db.collection('lottery_bonuses').where('user_id', '==', uid).get();
     var batchLotBon = db.batch();
     lotBonSnap.forEach(function(doc) { batchLotBon.delete(doc.ref); });
@@ -2504,6 +2520,7 @@ async function deleteUserAccountPermanently() {
     lotHistSnap.forEach(function(doc) { batchLotHist.delete(doc.ref); });
     await batchLotHist.commit();
 
+    // 12. მაღაზია, სერვისები და ფინანსები
     var shopPrSnap = await db.collection('shop_products').where('user_id', '==', uid).get();
     var batchShopPr = db.batch();
     shopPrSnap.forEach(function(doc) { batchShopPr.delete(doc.ref); });
@@ -2537,13 +2554,13 @@ async function deleteUserAccountPermanently() {
     await db.collection('user_preferences').doc(uid).delete().catch(function(){});
     await db.collection('lottery_stats').doc(uid).delete().catch(function(){});
 
-    // 2. პროფილის დოკუმენტის წაშლა Firestore-იდან
+    // 13. პროფილის დოკუმენტის წაშლა Firestore-იდან
     await db.collection('profiles').doc(uid).delete();
 
-    // 3. ავტორიზაციის ექაუნთის წაშლა Firebase Auth-იდან
+    // 14. ავტორიზაციის ექაუნთის წაშლა Firebase Auth-იდან
     await user.delete();
 
-    // 4. მეხსიერების გასუფთავება
+    // 15. მეხსიერების გასუფთავება
     localStorage.clear();
     sessionStorage.clear();
 
@@ -2567,7 +2584,6 @@ async function deleteUserAccountPermanently() {
   }
 }
 // აქ მთავრდება ექაუნთისბწაშლის ფუნქცია
-
 
     
 
