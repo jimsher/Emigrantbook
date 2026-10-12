@@ -5819,11 +5819,11 @@ function getAppT() {
 
 // 1. მთავარი ეკრანის გახსნა (0 Read კვოტა)
 function showEditProfileScreen() {
-  if (!userProfile && typeof currentUser !== 'undefined' && currentUser) {
+  // მომხმარებლის მონაცემების უსაფრთხო ამოღება
+  var p = (typeof userProfile !== 'undefined' && userProfile) ? userProfile : {};
+  if (!p.full_name && typeof currentUser !== 'undefined' && currentUser) {
     if (typeof cachedProfiles !== 'undefined' && cachedProfiles[currentUser.uid]) {
-      userProfile = cachedProfiles[currentUser.uid];
-    } else {
-      userProfile = {};
+      p = cachedProfiles[currentUser.uid];
     }
   }
 
@@ -5853,8 +5853,7 @@ function showEditProfileScreen() {
     emailEl.innerText = (currentUser && currentUser.email) ? currentUser.email : "user@email.com";
   }
 
-  var p = userProfile || {};
-
+  // ყველა არსებული რიგის უსაფრთხო შევსება
   renderAboutRow('work', p.job_title, t.addWork || "სამუშაო გამოცდილების დამატება", t.subWork || "სამუშაო ადგილი");
   renderAboutRow('college', p.college, t.addCollege || "უმაღლესი სასწავლებლის დამატება", t.subCollege || "უმაღლესი სასწავლებელი");
   renderAboutRow('school', p.school, t.addSchool || "საშუალო სკოლის დამატება", t.subSchool || "საშუალო სკოლა");
@@ -5872,14 +5871,16 @@ function showEditProfileScreen() {
   renderAboutRow('events', p.life_events, t.addEvents || "ცხოვრებისეული მოვლენის დამატება", t.subEvents || "ცხოვრებისეული მოვლენა");
   renderAboutRow('music', p.favorite_music, t.addMusic || "მუსიკის დამატება", t.subMusic || "საყვარელი მუსიკა");
 
-  // ეკრანის გახსნა ორიგინალი showScreen-ით
+  // ეკრანის გარანტირებული ჩვენება
+  var targetScreen = document.getElementById('edit-profile') || document.getElementById('screen-edit-profile');
   if (typeof showScreen === 'function') {
     showScreen('edit-profile');
-  } else {
-    var screenEl = document.getElementById('edit-profile');
-    if (screenEl) screenEl.style.display = 'block';
+  }
+  if (targetScreen) {
+    targetScreen.style.setProperty('display', 'block', 'important');
   }
 }
+
 
 function closeAboutInfoScreen() {
   if (typeof showMyProfile === 'function') {
