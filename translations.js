@@ -135,6 +135,22 @@
     mutualSummaryText: "Friends you may share connections with",
     followersSummaryText: "Followers are Emigrantbook members",
     personalDetailsTitle: "Details",
+
+    aboutTitle: "About",
+    secWork: "Work", addWork: "Add work experience", subWork: "Workplace",
+    secEdu: "Education", addCollege: "Add college", subCollege: "College", addSchool: "Add high school", subSchool: "High school",
+    secPlaces: "Places Lived", addCity: "Add current city", subCity: "Current city", addHometown: "Add hometown", subHometown: "Hometown",
+    secContact: "Contact Info", addWebsite: "Add website", subWebsite: "Website", addSocial: "Add social link", subSocial: "Social link", emailSub: "Email address", onlyMe: "Only me",
+    secBasic: "Basic Info", addPronouns: "Add pronouns", subPronouns: "Pronouns", addLangs: "Add languages", subLangs: "Languages", addGender: "Add gender", subGender: "Gender", addBirthday: "Add birthday", subBirthday: "Birthday",
+    secNames: "Other Names", addNickname: "Add other name", subNickname: "Nickname",
+    secRel: "Relationship", addRel: "Add relationship", subRel: "Relationship status",
+    secFamily: "Family Members", addFamily: "Add family member", subFamily: "Family member",
+    secEvents: "Life Events", addEvents: "Add life event", subEvents: "Life event",
+    secMusic: "Music", addMusic: "Add music", subMusic: "Favorite music",
+    saveBtn: "Save", doneBtn: "Done", publicAud: "Public", friendsAud: "Friends",
+    genderList: ["Female", "Male", "Non-binary", "Custom"],
+    relList: ["Single", "In a relationship", "Engaged", "Married", "In a civil union", "In a domestic partnership", "In an open relationship", "It's complicated", "Separated", "Divorced", "Widowed"],
+
     
 
     // აქ იწყება აქტივობის ფაილი  
@@ -304,6 +320,22 @@
     mutualSummaryText: "Amici con cui potresti avere legami in comune",
     followersSummaryText: "I follower sono membri di Emigrantbook",
     personalDetailsTitle: "Dettagli personali",
+
+    aboutTitle: "Informazioni",
+    secWork: "Lavoro", addWork: "Aggiungi esperienza lavorativa", subWork: "Posto di lavoro",
+    secEdu: "Istruzione", addCollege: "Aggiungi università", subCollege: "Università", addSchool: "Aggiungi scuola superiore", subSchool: "Scuola superiore",
+    secPlaces: "Luoghi in cui hai vissuto", addCity: "Aggiungi città attuale", subCity: "Città attuale", addHometown: "Aggiungi città di origine", subHometown: "Città di origine",
+    secContact: "Informazioni di contatto", addWebsite: "Aggiungi sito web", subWebsite: "Sito web", addSocial: "Aggiungi link social", subSocial: "Link social", emailSub: "Indirizzo e-mail", onlyMe: "Solo io",
+    secBasic: "Informazioni di base", addPronouns: "Aggiungi pronomi", subPronouns: "Pronomi", addLangs: "Aggiungi lingue", subLangs: "Lingue", addGender: "Aggiungi genere", subGender: "Genere", addBirthday: "Aggiungi data di nascita", subBirthday: "Data di nascita",
+    secNames: "Altri nomi", addNickname: "Aggiungi altro nome", subNickname: "Soprannome",
+    secRel: "Relazione", addRel: "Aggiungi relazione", subRel: "Stato sentimentale",
+    secFamily: "Familiari", addFamily: "Aggiungi familiare", subFamily: "Familiare",
+    secEvents: "Avvenimenti importanti", addEvents: "Aggiungi avvenimento", subEvents: "Avvenimento importante",
+    secMusic: "Musica", addMusic: "Aggiungi musica", subMusic: "Musica preferita",
+    saveBtn: "Salva", doneBtn: "Fatto", publicAud: "Tutti", friendsAud: "Amici",
+    genderList: ["Donna", "Uomo", "Non binario", "Personalizzato"],
+    relList: ["Single", "Ha una relazione", "Fidanzamento ufficiale", "Sposato/a", "Unione civile", "Convivenza", "Relazione aperta", "Situazione complicata", "Separato/a", "Divorziato/a", "Vedovo/a"],
+
       
    // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -472,6 +504,22 @@
     mutualSummaryText: "მეგობრები, რომლებთანაც საერთო რამეები გაკავშირებთ",
     followersSummaryText: "გამომწერები არიან Emigrantbook-ის მომხმარებლები",
     personalDetailsTitle: "პერსონალური დეტალური ინფორმაცია",
+
+    aboutTitle: "ინფორმაცია",
+    secWork: "სამუშაო", addWork: "სამუშაო გამოცდილების დამატება", subWork: "სამუშაო ადგილი",
+    secEdu: "განათლება", addCollege: "უმაღლესი სასწავლებლის დამატება", subCollege: "უმაღლესი სასწავლებელი", addSchool: "საშუალო სკოლის დამატება", subSchool: "საშუალო სკოლა",
+    secPlaces: "საცხოვრებელი ადგილები", addCity: "ფაქტობრივი ქალაქის დამატება", subCity: "ფაქტობრივი ქალაქი", addHometown: "მშობლიური ქალაქის დამატება", subHometown: "მშობლიური ქალაქი",
+    secContact: "საკონტაქტო ინფორმაცია", addWebsite: "ვებსაიტის დამატება", subWebsite: "ვებსაიტი", addSocial: "სოციალური ქსელის ბმულის დამატება", subSocial: "სოციალური ბმული", emailSub: "ელფოსტის მისამართი", onlyMe: "მხოლოდ მე",
+    secBasic: "ძირითადი ინფორმაცია", addPronouns: "ნაცვალსახელების დამატება", subPronouns: "ნაცვალსახელები", addLangs: "ენების დამატება", subLangs: "ენები", addGender: "სქესის დამატება", subGender: "სქესი", addBirthday: "დაბადების დღის დამატება", subBirthday: "დაბადების დღე",
+    secNames: "სხვა სახელები", addNickname: "სხვა სახელის დამატება", subNickname: "მეტსახელი",
+    secRel: "ურთიერთობა", addRel: "ურთიერთობის დამატება", subRel: "სტატუსი ურთიერთობის შესახებ",
+    secFamily: "ოჯახის წევრები", addFamily: "ოჯახის წევრის დამატება", subFamily: "ოჯახის წევრი",
+    secEvents: "ცხოვრებისეული მოვლენები", addEvents: "ცხოვრებისეული მოვლენის დამატება", subEvents: "ცხოვრებისეული მოვლენა",
+    secMusic: "მუსიკა", addMusic: "მუსიკის დამატება", subMusic: "საყვარელი მუსიკა",
+    saveBtn: "შენახვა", doneBtn: "მზადაა", publicAud: "საჯარო", friendsAud: "მეგობრები",
+    genderList: ["მდედრობითი", "მამრობითი", "არაბინარული", "დამატებითი ალტერნატივები"],
+    relList: ["მარტოხელა", "ურთიერთობაში", "დანიშნული", "დაქორწინებული", "სამოქალაქო ქორწინებაში", "სამოქალაქო თანაცხოვრებაში", "ღია ურთიერთობაში", "რთული", "დაშორებული", "განქორწინებული", "დაქვრივებული"],
+
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -640,6 +688,22 @@
     mutualSummaryText: "Друзья, с которыми у вас есть общие связи",
     followersSummaryText: "Подписчики являются пользователями Emigrantbook",
     personalDetailsTitle: "Подробная информация",
+
+    aboutTitle: "Информация",
+    secWork: "Работа", addWork: "Добавить место работы", subWork: "Место работы",
+    secEdu: "Образование", addCollege: "Добавить ВУЗ", subCollege: "ВУЗ", addSchool: "Добавить среднюю школу", subSchool: "Школа",
+    secPlaces: "Места проживания", addCity: "Добавить город проживания", subCity: "Город проживания", addHometown: "Добавить родной город", subHometown: "Родной город",
+    secContact: "Контактная информация", addWebsite: "Добавить веб-сайт", subWebsite: "Веб-сайт", addSocial: "Добавить ссылку на соцсеть", subSocial: "Соцсеть", emailSub: "Электронный адрес", onlyMe: "Только я",
+    secBasic: "Основная информация", addPronouns: "Указать местоимения", subPronouns: "Местоимения", addLangs: "Добавить языки", subLangs: "Языки", addGender: "Указать пол", subGender: "Пол", addBirthday: "Добавить дату рождения", subBirthday: "День рождения",
+    secNames: "Другие имена", addNickname: "Добавить другое имя", subNickname: "Псевдоним",
+    secRel: "Отношения", addRel: "Добавить семейное положение", subRel: "Семейное положение",
+    secFamily: "Члены семьи", addFamily: "Добавить родственника", subFamily: "Родственник",
+    secEvents: "События из жизни", addEvents: "Добавить событие", subEvents: "Событие",
+    secMusic: "Музыка", addMusic: "Добавить музыку", subMusic: "Любимая музыка",
+    saveBtn: "Сохранить", doneBtn: "Готово", publicAud: "Общедоступно", friendsAud: "Друзья",
+    genderList: ["Женский", "Мужской", "Небинарный", "Другой"],
+    relList: ["Без пары", "В отношениях", "Помолвлен(а)", "В браке", "В гражданском браке", "В сожительстве", "В свободных отношениях", "Все сложно", "В разлуке", "В разводе", "Вдовец/вдова"],
+
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -808,6 +872,22 @@
     mutualSummaryText: "Amis avec lesquels vous avez des liens en commun",
     followersSummaryText: "Les abonnés sont des membres d'Emigrantbook",
     personalDetailsTitle: "Informations personnelles",
+
+    aboutTitle: "À propos",
+    secWork: "Emploi", addWork: "Ajouter un lieu de travail", subWork: "Lieu de travail",
+    secEdu: "Formation", addCollege: "Ajouter une université", subCollege: "Université", addSchool: "Ajouter un lycée", subSchool: "Lycée",
+    secPlaces: "Lieux de résidence", addCity: "Ajouter la ville actuelle", subCity: "Ville actuelle", addHometown: "Ajouter la ville d’origine", subHometown: "Ville d’origine",
+    secContact: "Coordonnées", addWebsite: "Ajouter un site web", subWebsite: "Site web", addSocial: "Ajouter un lien social", subSocial: "Lien social", emailSub: "Adresse e-mail", onlyMe: "Moi uniquement",
+    secBasic: "Informations générales", addPronouns: "Ajouter des pronoms", subPronouns: "Pronoms", addLangs: "Ajouter des langues", subLangs: "Langues", addGender: "Ajouter le genre", subGender: "Genre", addBirthday: "Ajouter la date de naissance", subBirthday: "Date de naissance",
+    secNames: "Autres noms", addNickname: "Ajouter un autre nom", subNickname: "Surnom",
+    secRel: "Situation amoureuse", addRel: "Ajouter une situation amoureuse", subRel: "Situation",
+    secFamily: "Membres de la famille", addFamily: "Ajouter un membre", subFamily: "Membre de la famille",
+    secEvents: "Événements marquants", addEvents: "Ajouter un événement", subEvents: "Événement",
+    secMusic: "Musique", addMusic: "Ajouter de la musique", subMusic: "Musique préférée",
+    saveBtn: "Enregistrer", doneBtn: "Terminé", publicAud: "Public", friendsAud: "Amis",
+    genderList: ["Femme", "Homme", "Non binaire", "Personnalisé"],
+    relList: ["Célibataire", "En couple", "Fiancé(e)", "Marié(e)", "Pacsé(e)", "En concubinage", "En union libre", "C’est compliqué", "Séparé(e)", "Divorcé(e)", "Veuf/Veuve"],
+
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -976,6 +1056,22 @@
     mutualSummaryText: "Freunde, mit denen du Gemeinsamkeiten hast",
     followersSummaryText: "Follower sind Mitglieder von Emigrantbook",
     personalDetailsTitle: "Steckbrief",
+
+    aboutTitle: "Info",
+    secWork: "Arbeit", addWork: "Arbeitsplatz hinzufügen", subWork: "Arbeitsplatz",
+    secEdu: "Ausbildung", addCollege: "Hochschule hinzufügen", collegeSub: "Hochschule", addSchool: "Schule hinzufügen", subSchool: "Schule",
+    secPlaces: "Wohnorte", addCity: "Aktuellen Wohnort hinzufügen", subCity: "Aktueller Wohnort", addHometown: "Heimatort hinzufügen", subHometown: "Heimatort",
+    secContact: "Kontaktinformationen", addWebsite: "Webseite hinzufügen", subWebsite: "Webseite", addSocial: "Sozialen Link hinzufügen", subSocial: "Sozialer Link", emailSub: "E-Mail-Adresse", onlyMe: "Nur ich",
+    secBasic: "Allgemeine Infos", addPronouns: "Pronomen hinzufügen", subPronouns: "Pronomen", addLangs: "Sprachen hinzufügen", subLangs: "Sprachen", addGender: "Geschlecht hinzufügen", subGender: "Geschlecht", addBirthday: "Geburtstag hinzufügen", subBirthday: "Geburtstag",
+    secNames: "Weitere Namen", addNickname: "Weiteren Namen hinzufügen", subNickname: "Spitzname",
+    secRel: "Beziehungsstatus", addRel: "Beziehungsstatus hinzufügen", subRel: "Beziehungsstatus",
+    secFamily: "Familienmitglieder", addFamily: "Familienmitglied hinzufügen", subFamily: "Familienmitglied",
+    secEvents: "Lebensereignisse", addEvents: "Lebensereignis hinzufügen", subEvents: "Lebensereignis",
+    secMusic: "Musik", addMusic: "Musik hinzufügen", subMusic: "Lieblingsmusik",
+    saveBtn: "Speichern", doneBtn: "Fertig", publicAud: "Öffentlich", friendsAud: "Freunde",
+    genderList: ["Weiblich", "Männlich", "Nicht-binär", "Benutzerdefiniert"],
+    relList: ["Single", "In einer Beziehung", "Verlobt", "Verheiratet", "In einer eingetragenen Lebenspartnerschaft", "Zusammenlebend", "In einer offenen Beziehung", "Es ist kompliziert", "Getrennt", "Geschieden", "Verwitwet"],
+
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
@@ -1144,6 +1240,22 @@
     mutualSummaryText: "Φίλοι με τους οποίους έχετε κοινά ενδιαφέροντα",
     followersSummaryText: "Οι ακόλουθοι είναι μέλη του Emigrantbook",
     personalDetailsTitle: "Προσωπικές λεπτομέρειες",
+
+    aboutTitle: "Πληροφορίες",
+    secWork: "Εργασία", addWork: "Προσθήκη εμπειρίας εργασίας", subWork: "Χώρος εργασίας",
+    secEdu: "Εκπαίδευση", addCollege: "Προσθήκη πανεπιστημίου", subCollege: "Πανεπιστήμιο", addSchool: "Προσθήκη σχολείου", subSchool: "Σχολείο",
+    placesSec: "Μέρη όπου έχετε ζήσει", addCity: "Προσθήκη τρέχουσας πόλης", subCity: "Τρέχουσα πόλη", addHometown: "Προσθήκη πόλης καταγωγής", subHometown: "Πόλη καταγωγής",
+    secContact: "Στοιχεία επικοινωνίας", addWebsite: "Προσθήκη ιστότοπου", subWebsite: "Ιστότοπος", addSocial: "Προσθήκη συνδέσμου social", subSocial: "Σύνδεσμος social", emailSub: "Διεύθυνση email", onlyMe: "Μόνο εγώ",
+    secBasic: "Βασικές πληροφορίες", addPronouns: "Προσθήκη αντωνυμιών", subPronouns: "Αντωνυμίες", addLangs: "Προσθήκη γλωσσών", subLangs: "Γλώσσες", addGender: "Προσθήκη φύλου", subGender: "Φύλο", addBirthday: "Προσθήκη ημερομηνίας γέννησης", subBirthday: "Ημερομηνία γέννησης",
+    secNames: "Άλλα ονόματα", addNickname: "Προσθήκη άλλου ονόματος", subNickname: "Ψευδώνυμο",
+    secRel: "Σχέση", addRel: "Προσθήκη σχέσης", subRel: "Προσωπική κατάσταση",
+    secFamily: "Μέλη οικογένειας", addFamily: "Προσθήκη μέλους", subFamily: "Μέλος οικογένειας",
+    secEvents: "Σημαντικά γεγονότα", addEvents: "Προσθήκη γεγονότος", subEvents: "Σημαντικό γεγονός",
+    secMusic: "Μουσική", addMusic: "Προσθήκη μουσικής", subMusic: "Αγαπημένη μουσική",
+    saveBtn: "Αποθήκευση", doneBtn: "Τέλος", publicAud: "Δημόσιο", friendsAud: "Φίλοι",
+    genderList: ["Γυναίκα", "Άνδρας", "Μη δυაδικό", "Προσαρμοσμένο"],
+    relList: ["Ελεύθερος/-η", "Σε σχέση", "Αρραβωνιασμένος/-η", "Παντρεμένος/-η", "Σύμφωνο συμβίωσης", "Συγκατοίκηση", "Ελεύθερη σχέση", "Είναι περίπλοκο", "Σε διάσταση", "Διαζευγμένος/-η", "Σε χηρεία"],
+
       
     // აქ იწყება აქტივობის ფაილი
     backHome: "← Emigrantbook",
