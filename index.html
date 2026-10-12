@@ -5819,52 +5819,74 @@ function getAppT() {
 
 // 1. მთავარი ეკრანის გახსნა (0 Read კვოტა)
 function showEditProfileScreen() {
-  if (!userProfile) return;
+  if (!userProfile && typeof currentUser !== 'undefined' && currentUser) {
+    if (typeof cachedProfiles !== 'undefined' && cachedProfiles[currentUser.uid]) {
+      userProfile = cachedProfiles[currentUser.uid];
+    } else {
+      userProfile = {};
+    }
+  }
+
   var t = getAppT();
 
-  var setTxt = function(id, text) { var el = document.getElementById(id); if (el) el.innerText = text; };
-  setTxt('lbl-main-about-title', t.aboutTitle);
-  setTxt('sec-title-work', t.secWork);
-  setTxt('sec-title-edu', t.secEdu);
-  setTxt('sec-title-places', t.secPlaces);
-  setTxt('sec-title-contact', t.secContact);
-  setTxt('sec-title-basic', t.secBasic);
-  setTxt('sec-title-names', t.secNames);
-  setTxt('sec-title-rel', t.secRel);
-  setTxt('sec-title-family', t.secFamily);
-  setTxt('sec-title-events', t.secEvents);
-  setTxt('sec-title-music', t.secMusic);
-  setTxt('lbl-about-email-sub', t.emailSub);
-  setTxt('lbl-about-email-lock', t.onlyMe);
+  var setTxt = function(id, text) { 
+    var el = document.getElementById(id); 
+    if (el) el.innerText = text; 
+  };
+
+  setTxt('lbl-main-about-title', t.aboutTitle || "ინფორმაცია");
+  setTxt('sec-title-work', t.secWork || "სამუშაო");
+  setTxt('sec-title-edu', t.secEdu || "განათლება");
+  setTxt('sec-title-places', t.secPlaces || "საცხოვრებელი ადგილები");
+  setTxt('sec-title-contact', t.secContact || "საკონტაქტო ინფორმაცია");
+  setTxt('sec-title-basic', t.secBasic || "ძირითადი ინფორმაცია");
+  setTxt('sec-title-names', t.secNames || "სხვა სახელები");
+  setTxt('sec-title-rel', t.secRel || "ურთიერთობა");
+  setTxt('sec-title-family', t.secFamily || "ოჯახის წევრები");
+  setTxt('sec-title-events', t.secEvents || "ცხოვრებისეული მოვლენები");
+  setTxt('sec-title-music', t.secMusic || "მუსიკა");
+  setTxt('lbl-about-email-sub', t.emailSub || "ელფოსტის მისამართი");
+  setTxt('lbl-about-email-lock', t.onlyMe || "მხოლოდ მე");
 
   var emailEl = document.getElementById('val-about-email');
-  if (emailEl) emailEl.innerText = (currentUser && currentUser.email) ? currentUser.email : "user@email.com";
+  if (emailEl) {
+    emailEl.innerText = (currentUser && currentUser.email) ? currentUser.email : "user@email.com";
+  }
 
-  renderAboutRow('work', userProfile.job_title, t.addWork, t.subWork);
-  renderAboutRow('college', userProfile.college, t.addCollege, t.subCollege);
-  renderAboutRow('school', userProfile.school, t.addSchool, t.subSchool);
-  renderAboutRow('city', userProfile.current_city, t.addCity, t.subCity);
-  renderAboutRow('hometown', userProfile.country, t.addHometown, t.subHometown);
-  renderAboutRow('website', userProfile.website, t.addWebsite, t.subWebsite);
-  renderAboutRow('social', userProfile.social_link, t.addSocial, t.subSocial);
-  renderAboutRow('pronouns', userProfile.pronouns, t.addPronouns, t.subPronouns);
-  renderAboutRow('languages', userProfile.languages, t.addLangs, t.subLangs);
-  renderAboutRow('gender', userProfile.gender, t.addGender, t.subGender);
-  renderAboutRow('birthday', userProfile.age, t.addBirthday, t.subBirthday);
-  renderAboutRow('nickname', userProfile.nickname, t.addNickname, t.subNickname);
-  renderAboutRow('relationship', userProfile.relationship, t.addRel, t.subRel);
-  renderAboutRow('family', userProfile.family_members, t.addFamily, t.subFamily);
-  renderAboutRow('events', userProfile.life_events, t.addEvents, t.subEvents);
-  renderAboutRow('music', userProfile.favorite_music, t.addMusic, t.subMusic);
+  var p = userProfile || {};
 
-  var screenEl = document.getElementById('screen-edit-profile');
-  if (screenEl) screenEl.style.display = 'block';
+  renderAboutRow('work', p.job_title, t.addWork || "სამუშაო გამოცდილების დამატება", t.subWork || "სამუშაო ადგილი");
+  renderAboutRow('college', p.college, t.addCollege || "უმაღლესი სასწავლებლის დამატება", t.subCollege || "უმაღლესი სასწავლებელი");
+  renderAboutRow('school', p.school, t.addSchool || "საშუალო სკოლის დამატება", t.subSchool || "საშუალო სკოლა");
+  renderAboutRow('city', p.current_city, t.addCity || "ფაქტობრივი ქალაქის დამატება", t.subCity || "ფაქტობრივი ქალაქი");
+  renderAboutRow('hometown', p.country, t.addHometown || "მშობლიური ქალაქის დამატება", t.subHometown || "მშობლიური ქალაქი");
+  renderAboutRow('website', p.website, t.addWebsite || "ვებსაიტის დამატება", t.subWebsite || "ვებსაიტი");
+  renderAboutRow('social', p.social_link, t.addSocial || "სოციალური ქსელის ბმულის დამატება", t.subSocial || "სოციალური ბმული");
+  renderAboutRow('pronouns', p.pronouns, t.addPronouns || "ნაცვალსახელების დამატება", t.subPronouns || "ნაცვალსახელები");
+  renderAboutRow('languages', p.languages, t.addLangs || "ენების დამატება", t.subLangs || "ენები");
+  renderAboutRow('gender', p.gender, t.addGender || "სქესის დამატება", t.subGender || "სქესი");
+  renderAboutRow('birthday', p.age, t.addBirthday || "დაბადების დღის დამატება", t.subBirthday || "დაბადების დღე");
+  renderAboutRow('nickname', p.nickname, t.addNickname || "სხვა სახელის დამატება", t.subNickname || "მეტსახელი");
+  renderAboutRow('relationship', p.relationship, t.addRel || "ურთიერთობის დამატება", t.subRel || "სტატუსი ურთიერთობის შესახებ");
+  renderAboutRow('family', p.family_members, t.addFamily || "ოჯახის წევრის დამატება", t.subFamily || "ოჯახის წევრი");
+  renderAboutRow('events', p.life_events, t.addEvents || "ცხოვრებისეული მოვლენის დამატება", t.subEvents || "ცხოვრებისეული მოვლენა");
+  renderAboutRow('music', p.favorite_music, t.addMusic || "მუსიკის დამატება", t.subMusic || "საყვარელი მუსიკა");
+
+  // ეკრანის გახსნა ორიგინალი showScreen-ით
+  if (typeof showScreen === 'function') {
+    showScreen('edit-profile');
+  } else {
+    var screenEl = document.getElementById('edit-profile');
+    if (screenEl) screenEl.style.display = 'block';
+  }
 }
 
 function closeAboutInfoScreen() {
-  var screenEl = document.getElementById('screen-edit-profile');
-  if (screenEl) screenEl.style.display = 'none';
-  if (typeof showMyProfile === 'function') showMyProfile();
+  if (typeof showMyProfile === 'function') {
+    showMyProfile();
+  } else if (typeof showScreen === 'function') {
+    showScreen('profile');
+  }
 }
 
 function renderAboutRow(key, val, addTxt, subTxt) {
@@ -5876,6 +5898,7 @@ function renderAboutRow(key, val, addTxt, subTxt) {
     wrap.innerHTML = `<span class="fb-about-add-btn">${addTxt}</span>`;
   }
 }
+
 
 // 2. ქვეგვერდის გახსნა
 function openEditSubScreen(fieldKey) {
