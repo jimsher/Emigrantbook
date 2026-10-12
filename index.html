@@ -5883,12 +5883,27 @@ function showEditProfileScreen() {
 
 
 function closeAboutInfoScreen() {
-  if (typeof showMyProfile === 'function') {
-    showMyProfile();
-  } else if (typeof showScreen === 'function') {
+  // 1. გარანტირებულად დავმალოთ რედაქტორის ორივე შესაძლო ID
+  var ed1 = document.getElementById('edit-profile');
+  var ed2 = document.getElementById('screen-edit-profile');
+  var sub = document.getElementById('fb-sub-screen-editor');
+
+  if (ed1) ed1.style.setProperty('display', 'none', 'important');
+  if (ed2) ed2.style.setProperty('display', 'none', 'important');
+  if (sub) sub.style.setProperty('display', 'none', 'important');
+
+  // 2. დავხუროთ Bottom Sheet-ებიც
+  closeAllBottomSheets();
+
+  // 3. დავბრუნდეთ სუფთად პროფილზე
+  if (typeof showScreen === 'function') {
     showScreen('profile');
   }
+  if (typeof showMyProfile === 'function') {
+    showMyProfile();
+  }
 }
+
 
 function renderAboutRow(key, val, addTxt, subTxt) {
   var wrap = document.getElementById('wrap-' + key);
