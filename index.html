@@ -4902,16 +4902,19 @@ function viewUserProfile(userId) {
         if (covCam) covCam.style.setProperty('display', 'none', 'important');
         if (burgBtn) burgBtn.style.display = "none";
 
-        if (lockMsgEl) {
-          lockMsgEl.style.setProperty('display', 'block', 'important');
-          lockMsgEl.innerHTML = `
-            <div style="margin-bottom: 15px; display: flex; justify-content: center;">
-              <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Blocked">
-            </div>
-            <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${t.blockedProfileTitle || "Profile Unavailable"}</div>
-            <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;">${t.blockedProfileSub || "You cannot view this profile because a block is active."}</div>
-          `;
-        }
+           if (lockMsgEl) {
+            lockMsgEl.style.setProperty('display', 'block', 'important');
+            lockMsgEl.innerHTML = `
+              <div style="margin-bottom: 14px; display: flex; justify-content: center;">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: #e7f3ff; display: flex; align-items: center; justify-content: center;">
+                  <img src="icons/lock.svg" class="post-action-icon" style="width: 28px; height: 28px; filter: invert(34%) sepia(85%) saturate(1637%) hue-rotate(200deg) brightness(96%) contrast(97%);" alt="Private Profile">
+                </div>
+              </div>
+              <div style="font-size: 17px; font-weight: 700; color: #050505;" id="lbl-locked-title">${t.lockedProfileTitle || "ეს პროფილი დახურულია"}</div>
+              <div style="color: #65676b; font-size: 13.5px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">${t.lockedProfileSub || "მხოლოდ მეგობრებს შეუძლიათ ამ მომხმარებლის პოსტების, ფოტოების და ვიდეოების ნახვა."}</div>
+            `;
+          }
+
         showScreen('profile');
         return;
       }
