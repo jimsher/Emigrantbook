@@ -2489,26 +2489,87 @@ function handleReelsDirectUpload(event) {
   openReelsFlowPreview(file);
 }
 
+    
 // 🔴 5. კამერიდან ვიდეოს ჩაწერა
+var recordAudioContext = null;
+var currentRecordingMusic = null;
+
+// 🔴 კამერიდან ვიდეოს ჩაწერა პირდაპირ ჩაკერებული მუსიკით
 function toggleCameraRecording() {
   var inner = document.getElementById('rfRecordInnerCircle');
   if (!liveCameraStream) return;
 
   if (!isRecordingVideo) {
     recordedChunks = [];
+    
+    // 1. ვქმნით ერთიან ნაკადს კამერის ვიდეოდან
+    var combinedStream = new MediaStream();
+    liveCameraStream.getVideoTracks().forEach(function(track) {
+      combinedStream.addTrack(track);
+    });
+
+    // 2. თუ მუსიკა არჩეულია, მუსიკის აუდიოს ვურთავთ ვიდეო ფაილს
+    if (selectedReelMusicObj && selectedReelMusicObj.url) {
+      try {
+        recordAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        currentRecordingMusic = new Audio();
+        currentRecordingMusic.crossOrigin = "anonymous";
+        currentRecordingMusic.src = selectedReelMusicObj.url;
+        
+        var sourceNode = recordAudioContext.createMediaElementSource(currentRecordingMusic);
+        var destNode = recordAudioContext.createMediaStreamDestination();
+        
+        sourceNode.connect(destNode);
+        sourceNode.connect(recordAudioContext.destination); // რომ ჩაწერისას შენც გესმოდეს
+
+        // მუსიკის ხმას ვამატებთ ჩასაწერ ვიდეოში
+        destNode.stream.getAudioTracks().forEach(function(track) {
+          combinedStream.addTrack(track);
+        });
+
+        currentRecordingMusic.play().catch(function(e) { console.warn("Music play error:", e); });
+      } catch (err) {
+        console.warn("AudioContext setup error:", err);
+      }
+    }
+
+    // 3. MediaRecorder-ის გაშვება
+    var options = { mimeType: 'video/mp4' };
+    if (!MediaRecorder.isTypeSupported('video/mp4')) {
+      options = { mimeType: 'video/webm;codecs=vp8,opus' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm' };
+      }
+    }
+
     try {
-      mediaRecorder = new MediaRecorder(liveCameraStream);
+      mediaRecorder = new MediaRecorder(combinedStream, options);
     } catch(e) {
-      mediaRecorder = new MediaRecorder(liveCameraStream, { mimeType: 'video/webm' });
+      mediaRecorder = new MediaRecorder(combinedStream);
     }
 
     mediaRecorder.ondataavailable = function(e) {
-      if (e.data.size > 0) recordedChunks.push(e.data);
+      if (e.data && e.data.size > 0) recordedChunks.push(e.data);
     };
 
     mediaRecorder.onstop = function() {
-      var blob = new Blob(recordedChunks, { type: 'video/mp4' });
-      selectedReelFile = new File([blob], "recorded_reel.mp4", { type: 'video/mp4' });
+      // მუსიკის გაჩერება
+      if (currentRecordingMusic) {
+        currentRecordingMusic.pause();
+        currentRecordingMusic = null;
+      }
+      if (recordAudioContext) {
+        recordAudioContext.close().catch(function(){});
+        recordAudioContext = null;
+      }
+
+      // ვიდეო ფაილი, რომელშიც მუსიკა უკვე ჩაკერებულია
+      var mime = mediaRecorder.mimeType || 'video/mp4';
+      var blob = new Blob(recordedChunks, { type: mime });
+      var fileExt = mime.includes('mp4') ? '.mp4' : '.webm';
+      
+      selectedReelFile = new File([blob], "recorded_reel_" + Date.now() + fileExt, { type: mime });
+
       closeReelsCameraScreen();
       openReelsFlowPreview(selectedReelFile);
     };
@@ -2520,7 +2581,10 @@ function toggleCameraRecording() {
       inner.style.transform = "scale(0.6)";
     }
   } else {
-    mediaRecorder.stop();
+    // ჩაწერის გაჩერება
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
     isRecordingVideo = false;
     if (inner) {
       inner.style.borderRadius = "50%";
@@ -2528,6 +2592,7 @@ function toggleCameraRecording() {
     }
   }
 }
+
 
 // 🎬 6. Preview მოდალი
 function openReelsFlowPreview(file) {
