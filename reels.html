@@ -2059,5 +2059,114 @@ document.addEventListener('play', function(e) {
     <span id="reelsUploadStatusText" style="font-weight: 700; font-size: 15px;">ვიდეო იტვირთება (0%)...</span>
   </div>
 
+  
+  <!-- ==========================================================================
+       🚀 NEW: TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (HTML MODALS)
+       ყველა ახალი ეკრანი და Bottom Sheet (Facebook White Style)
+       ========================================================================== -->
+
+  <!-- 1. ვიდეოს გადახედვის ეკრანი (Preview Screen) -->
+  <div class="reels-flow-modal" id="rfPreviewModal">
+    <div class="rf-header">
+      <button type="button" class="rf-back-btn" onclick="closeReelsFlowPreview()">✕</button>
+      <div class="rf-music-pill-btn" onclick="openReelsMusicSheet()">
+        <span>🎵</span>
+        <span id="rf-lbl-selected-music">მუსიკის დამატება</span>
+      </div>
+      <div style="width: 26px;"></div>
+    </div>
+
+    <div class="rf-preview-box">
+      <video class="rf-preview-video" id="rfPreviewVideo" loop playsinline></video>
+    </div>
+
+    <div style="background: #ffffff; padding: 14px 16px; border-top: 1px solid #dadde1; display: flex; justify-content: flex-end; max-width: 480px; width: 100%; margin: 0 auto;">
+      <button type="button" class="rf-btn-publish" style="padding: 10px 24px; flex: none;" onclick="goToPublishScreen()">
+        <span id="rf-lbl-next-btn">შემდეგი</span>
+        <span>›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. გამოქვეყნების ეკრანი (Publish / Details Screen) -->
+  <div class="reels-flow-modal" id="rfPublishModal">
+    <div class="rf-header">
+      <button type="button" class="rf-back-btn" onclick="backToPreviewScreen()">‹</button>
+      <div class="rf-header-title" id="rf-lbl-publish-title">გამოქვეყნება</div>
+      <div style="width: 26px;"></div>
+    </div>
+
+    <div class="rf-publish-content">
+      <!-- აღწერის ველი და ქავერის პრევიუ -->
+      <div class="rf-desc-row">
+        <textarea id="rfPostCaption" class="rf-desc-input" placeholder="დაამატეთ აღწერა..."></textarea>
+        <div class="rf-thumb-preview-box">
+          <canvas id="rfThumbCanvas" style="display:none;"></canvas>
+          <img id="rfThumbPreviewImg" class="rf-thumb-preview-img" src="" alt="Cover">
+          <div class="rf-thumb-label" id="rf-lbl-cover-tag">ქავერი</div>
+        </div>
+      </div>
+
+      <!-- ჰეშთეგების სწრაფი ღილაკები -->
+      <div class="rf-tags-row">
+        <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#reels')">#reels</button>
+        <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#emigrantbook')">#emigrantbook</button>
+        <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#viral')">#viral</button>
+      </div>
+
+      <div style="height: 1px; background: #dadde1; margin: 4px 0;"></div>
+
+      <!-- პარამეტრების მწკრივები (Facebook White Style) -->
+      <div class="rf-setting-row" onclick="toggleReelAudience()">
+        <div class="rf-setting-left">
+          <img src="icons/globe.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Audience">
+          <div>
+            <div class="rf-setting-title" id="rf-lbl-aud-title">ვის შეუძლია ნახვა</div>
+            <div class="rf-setting-desc" id="rf-selected-audience-label">ყველას (საჯარო)</div>
+          </div>
+        </div>
+        <span class="rf-setting-arrow">›</span>
+      </div>
+
+      <div class="rf-setting-row">
+        <div class="rf-setting-left">
+          <img src="icons/message-circle-more.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Comments">
+          <div>
+            <div class="rf-setting-title" id="rf-lbl-allow-comments">კომენტარების დაშვება</div>
+            <div class="rf-setting-desc" id="rf-lbl-allow-comments-sub">ყველას შეუძლია კომენტარის დაწერა</div>
+          </div>
+        </div>
+        <input type="checkbox" id="rfAllowCommentsCheckbox" checked style="width: 20px; height: 20px; accent-color: #1877f2;">
+      </div>
+
+      <!-- ქვედა ღილაკები: დრაფტი და გამოქვეყნება -->
+      <div class="rf-action-bottom-row">
+        <button type="button" class="rf-btn-draft" onclick="saveReelAsDraft()" id="rf-lbl-draft-btn">შენახვა დრაფტებში</button>
+        <button type="button" class="rf-btn-publish" onclick="startFinalReelUpload()" id="rf-lbl-submit-btn">
+          <span>🚀</span>
+          <span id="rf-lbl-publish-btn-text">გამოქვეყნება</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. მუსიკის არჩევის Bottom Sheet -->
+  <div class="rf-music-sheet" id="rfMusicSheet" onclick="closeReelsMusicSheet(event)">
+    <div class="rf-music-panel" onclick="event.stopPropagation()">
+      <div class="rf-music-header">
+        <div class="rf-header-title" id="rf-lbl-music-header">მუსიკის არჩევა</div>
+        <button type="button" class="comments-close-btn" onclick="closeReelsMusicSheet()">✕</button>
+      </div>
+      <div class="rf-music-tabs">
+        <div class="rf-music-tab-item active" id="rf-tab-for-you" onclick="switchMusicTab('foryou')">თქვენთვის</div>
+        <div class="rf-music-tab-item" id="rf-tab-popular" onclick="switchMusicTab('popular')">პოპულარული</div>
+        <div class="rf-music-tab-item" id="rf-tab-none" onclick="selectReelMusic(null)">მუსიკის გარეშე</div>
+      </div>
+      <div class="rf-music-list" id="rfMusicListContainer">
+        <!-- მუსიკები ჩაიხატება დინამიურად (ქეშირებული სიიდან) -->
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
