@@ -2551,6 +2551,101 @@ function applyReelsFlowTranslations() {
   if (desc) desc.placeholder = t.descPlaceholder;
 }
 
+
+
+
+    let liveCameraStream = null;
+let currentFacingMode = 'user'; // 'user' (წინა) ან 'environment' (უკანა)
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecordingVideo = false;
+
+// 1. კამერის ეკრანის გახსნა
+function openReelsCameraScreen() {
+  const modal = document.getElementById('rfCameraModal');
+  modal.style.display = 'flex';
+  startLiveCameraStream();
+}
+
+// 2. კამერის სტრიმის ჩართვა
+function startLiveCameraStream() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacingMode },
+      audio: true
+    }).then(stream => {
+      liveCameraStream = stream;
+      const video = document.getElementById('rfLiveCameraFeed');
+      if (video) {
+        video.srcObject = stream;
+      }
+    }).catch(err => {
+      console.warn("Camera access denied or error:", err);
+    });
+  }
+}
+
+// 3. კამერის ეკრანის დახურვა
+function closeReelsCameraScreen() {
+  const modal = document.getElementById('rfCameraModal');
+  if (liveCameraStream) {
+    liveCameraStream.getTracks().forEach(track => track.stop());
+    liveCameraStream = null;
+  }
+  modal.style.display = 'none';
+}
+
+// 4. წინა/უკანა კამერის გადართვა (Flip)
+function flipLiveCamera() {
+  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+  if (liveCameraStream) {
+    liveCameraStream.getTracks().forEach(track => track.stop());
+  }
+  startLiveCameraStream();
+}
+
+// 5. კამერის ეკრანიდან გალერეის გამოძახება
+function triggerGalleryPickerFromCam() {
+  const fileInput = document.getElementById('reelsDirectVideoInput');
+  if (fileInput) {
+    closeReelsCameraScreen(); // ვთიშავთ კამერას, რომ ტელეფონი არ გადაიტვირთოს
+    fileInput.click();       // იხსნება გალერეა
+  }
+}
+
+// 6. ჩაწერის დაწყება/გაჩერება წითელი ღილაკით
+function toggleCameraRecording() {
+  const inner = document.getElementById('rfRecordInnerCircle');
+  if (!liveCameraStream) return;
+
+  if (!isRecordingVideo) {
+    // დავიწყოთ ჩაწერა
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(liveCameraStream);
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+      selectedReelFile = new File([blob], "recorded_reel.mp4", { type: 'video/mp4' });
+      closeReelsCameraScreen();
+      openReelsFlowPreview(selectedReelFile);
+    };
+
+    mediaRecorder.start();
+    isRecordingVideo = true;
+    inner.style.borderRadius = "8px"; // ხდება კვადრატი Stop რეჟიმში
+    inner.style.transform = "scale(0.6)";
+  } else {
+    // გავაჩეროთ ჩაწერა
+    mediaRecorder.stop();
+    isRecordingVideo = false;
+    inner.style.borderRadius = "50%";
+    inner.style.transform = "scale(1)";
+  }
+}
+
+
   </script>
     <!-- ატვირთვის პროგრესის ფანჯარა -->
   <div class="reels-upload-overlay" id="reelsUploadOverlay">
