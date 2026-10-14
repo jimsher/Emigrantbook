@@ -2799,17 +2799,23 @@ function renderMusicList(tab) {
   }).join('');
 }
 
-function selectReelMusic(musicId) {
+var reelAudioCtx = null;
+var reelAudioBuffer = null;
+var reelAudioSourceNode = null;
+var reelAudioDest = null;
+
+async function selectReelMusic(musicId) {
   var camMusicLabel = document.getElementById('rf-cam-selected-music');
   var prevMusicLabel = document.getElementById('rf-lbl-selected-music');
   var t = getReelsLangT();
 
   if (!musicId) {
     selectedReelMusicObj = null;
-    activeCameraMusicAudio.pause();
-    activeCameraMusicAudio.currentTime = 0;
-    activeCameraMusicAudio.src = "";
-
+    if (reelAudioSourceNode) {
+      try { reelAudioSourceNode.stop(); } catch(e){}
+      reelAudioSourceNode = null;
+    }
+    reelAudioBuffer = null;
     if (camMusicLabel) camMusicLabel.innerText = t.addMusic;
     if (prevMusicLabel) prevMusicLabel.innerText = t.addMusic;
   } else {
@@ -2820,17 +2826,46 @@ function selectReelMusic(musicId) {
     if (prevMusicLabel) prevMusicLabel.innerText = title;
 
     if (found && found.url) {
-      activeCameraMusicAudio.pause();
-      activeCameraMusicAudio.src = found.url;
-      activeCameraMusicAudio.currentTime = 0;
+      try {
+        if (!reelAudioCtx) {
+          reelAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (reelAudioCtx.state === 'suspended') {
+          await reelAudioCtx.resume();
+        }
 
-      activeCameraMusicAudio.play().catch(function(err) {
-        console.warn("Music play error:", err);
-      });
+        // მუსიკის წამოღება პირდაპირ ციფრულ ბუფერში
+        var response = await fetch(found.url);
+        var arrayBuffer = await response.arrayBuffer();
+        reelAudioBuffer = await reelAudioCtx.decodeAudioData(arrayBuffer);
+
+        // ვქმნით ვირტუალურ აუდიო გამოსავალს ჩამწერისთვის
+        if (!reelAudioDest) {
+          reelAudioDest = reelAudioCtx.createMediaStreamDestination();
+        }
+
+        // გავაჩეროთ ძველი თუ უკრავდა
+        if (reelAudioSourceNode) {
+          try { reelAudioSourceNode.stop(); } catch(e){}
+        }
+
+        // დაკვრა კამერაზე მოსასმენად
+        reelAudioSourceNode = reelAudioCtx.createBufferSource();
+        reelAudioSourceNode.buffer = reelAudioBuffer;
+        reelAudioSourceNode.loop = true;
+
+        reelAudioSourceNode.connect(reelAudioCtx.destination);
+        reelAudioSourceNode.connect(reelAudioDest);
+        reelAudioSourceNode.start(0);
+
+      } catch(err) {
+        console.error("Music load/decode error:", err);
+      }
     }
   }
   closeReelsMusicSheet();
 }
+
 
 function saveReelAsDraft() {
   var t = getReelsLangT();
