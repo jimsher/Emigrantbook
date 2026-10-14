@@ -2327,35 +2327,43 @@ function openReelsCameraScreen() {
   }
 
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({
+    // 9:16 ვერტიკალური პარამეტრები, რომ კადრი მთელ ეკრანზე ბუნებრივად დაჯდეს
+    var constraints = {
       video: {
         facingMode: currentFacingMode,
-        zoom: 1.0 // აიძულებს კამერას მინიმალურ (1x) ზუმზე დადგეს
+        aspectRatio: { ideal: 0.5625 }, // 9:16 სუფთა პორტრეტული ფორმატი
+        width: { min: 480, ideal: 1080 },
+        height: { min: 854, ideal: 1920 }
       },
       audio: false
-    }).then(function(stream) {
-      liveCameraStream = stream;
-      if (video) {
-        video.srcObject = stream;
-        video.play().catch(function(){});
-      }
-    }).catch(function(err) {
-      // Fallback ჩვეულებრივ რეჟიმზე
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: currentFacingMode },
-        audio: false
-      }).then(function(stream) {
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(stream) {
         liveCameraStream = stream;
         if (video) {
           video.srcObject = stream;
           video.play().catch(function(){});
         }
-      }).catch(function(e) {
-        console.warn("Camera start error:", e);
+      })
+      .catch(function(err) {
+        // Fallback თუ კონკრეტული სენსორი მკაცრ რეზოლუციას არ დაემორჩილა
+        navigator.mediaDevices.getUserMedia({
+          video: { facingMode: currentFacingMode, aspectRatio: { ideal: 0.5625 } },
+          audio: false
+        }).then(function(stream) {
+          liveCameraStream = stream;
+          if (video) {
+            video.srcObject = stream;
+            video.play().catch(function(){});
+          }
+        }).catch(function(e) {
+          console.warn("Camera start error:", e);
+        });
       });
-    });
   }
 }
+
 
 
 
