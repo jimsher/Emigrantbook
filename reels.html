@@ -1190,8 +1190,7 @@
       <img src="icons/monitor-play.svg" alt="ვიდეოები" class="nav-icon">
     </a>
 
-      <!-- ➕ ვიდეოს ატვირთვა / კამერა -->
-<input type="file" id="reelsDirectVideoInput" accept="video/*" style="display: none;" onchange="handleReelsDirectUpload(event)">
+     <!-- ➕ ვიდეოს ატვირთვა / TikTok კამერა -->
 <div class="nav-item" id="nav-btn-upload-reel" onclick="openReelsCameraScreen()" style="cursor: pointer; margin: 0;">
   <div class="tiktok-upload-nav-btn">
     <div class="tiktok-nav-inner">
@@ -1201,6 +1200,7 @@
     </div>
   </div>
 </div>
+ 
   
 
 
@@ -2647,12 +2647,14 @@ function toggleCameraRecording() {
 
 
 
-   /* ==========================================================================
-   🚀 FULL TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (JS ENGINE)
-   7 ენის სრული მხარდაჭერა + კამერა + გალერეა + R2 ატვირთვა
+
+    
+      
+/* ==========================================================================
+   🚀 NEW: TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (JS ENGINE)
    ========================================================================== */
 
-// 🌐 1. 7 ენის სრული ლექსიკონი
+// 🌐 1. 7 ენის ლექსიკონი
 const REELS_I18N = {
   ka: {
     addMusic: "მუსიკის დამატება",
@@ -2679,7 +2681,7 @@ const REELS_I18N = {
     effects: "ეფექტები",
     authReq: "გთხოვთ გაიაროთ ავტორიზაცია.",
     videoOnly: "გთხოვთ აირჩიოთ მხოლოდ ვიდეო ფაილი!",
-    sizeLimit: "ვიდეოს ზომა აჭარბებს 100MB-ს. გთხოვთ აირჩიოთ უფრო პატარა ვიდეო.",
+    sizeLimit: "ვიდეოს ზომა აჭარბებს 100MB-ს.",
     draftSaved: "ვიდეო შენახულია დრაფტებში!",
     uploadSuccess: "ვიდეო წარმატებით გამოქვეყნდა!",
     uploading: "ვიდეო იტვირთება"
@@ -2866,7 +2868,6 @@ const REELS_I18N = {
   }
 };
 
-// საიტის მიმდინარე ენის ამოღება
 function getReelsActiveLangCode() {
   if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
   if (typeof window.currentSiteLang !== 'undefined' && window.currentSiteLang) return window.currentSiteLang;
@@ -2878,7 +2879,7 @@ function getReelsLangT() {
   return REELS_I18N[lang] || REELS_I18N['ka'];
 }
 
-// 🎵 2. ლოკალური ქეშირებული მუსიკები (Read-ების 0 ხარჯი)
+// 2. ლოკალური მუსიკების ბაზა (Read-ების 0 ხარჯი)
 const REELS_MUSIC_CACHE = [
   { id: "m1", title: "DJ Geo Remix", author: "DJ Geo", cover: "icons/clapperboard.svg", duration: "1:27", type: "popular" },
   { id: "m2", title: "Vibe 5789 Exclusive", author: "Vibe Music", cover: "icons/clapperboard.svg", duration: "1:01", type: "popular" },
@@ -2896,27 +2897,34 @@ var selectedReelFile = null;
 var selectedReelMusicObj = null;
 var selectedReelAudience = 'public';
 
-// 📸 3. კამერის გახსნა ნავბარის ღილაკით
+// 📸 3. კამერის გახსნა (სტაბილური, გაყინვის გარეშე)
 function openReelsCameraScreen() {
+  var t = getReelsLangT();
+  if (!currentUser) {
+    alert(t.authReq || "გთხოვთ გაიაროთ ავტორიზაცია.");
+    return;
+  }
+
   var modal = document.getElementById('rfCameraModal');
   if (modal) {
-    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.display = 'flex';
     applyReelsFlowTranslations();
-    startLiveCameraStream();
   }
-}
 
-function startLiveCameraStream() {
+  // მხოლოდ ვიდეო ნაკადი ოპტიმალური გარჩევადობით, რომ ბრაუზერი არ გაიყინოს
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({
-      video: { facingMode: currentFacingMode },
-      audio: true
+      video: { facingMode: currentFacingMode, width: { ideal: 720 }, height: { ideal: 1280 } },
+      audio: false
     }).then(function(stream) {
       liveCameraStream = stream;
       var video = document.getElementById('rfLiveCameraFeed');
-      if (video) video.srcObject = stream;
+      if (video) {
+        video.srcObject = stream;
+        video.play().catch(function(){});
+      }
     }).catch(function(err) {
-      console.warn("Camera stream error:", err);
+      console.warn("Camera start:", err);
     });
   }
 }
@@ -2927,19 +2935,28 @@ function closeReelsCameraScreen() {
     liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
     liveCameraStream = null;
   }
-  if (modal) modal.style.setProperty('display', 'none', 'important');
+  if (modal) modal.style.display = 'none';
 }
 
 function flipLiveCamera() {
   currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
   if (liveCameraStream) {
     liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
+    liveCameraStream = null;
   }
-  startLiveCameraStream();
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacingMode },
+      audio: false
+    }).then(function(stream) {
+      liveCameraStream = stream;
+      var video = document.getElementById('rfLiveCameraFeed');
+      if (video) video.srcObject = stream;
+    }).catch(function(){});
+  }
 }
 
 function toggleCameraFlash() {
-  // თუ მოწყობილობას აქვს Flash
   if (liveCameraStream) {
     var track = liveCameraStream.getVideoTracks()[0];
     if (track && track.getCapabilities && track.getCapabilities().torch) {
@@ -2959,16 +2976,16 @@ function setRecordDuration(sec, el) {
   }
 }
 
-// 🖼️ 4. გალერეის გახსნა (კამერა ფონზე რჩება, მთავარზე არ გაგდებს)
-function triggerGalleryDirectPicker() {
-  var input = document.getElementById('reelsGalleryDirectInput');
+// 🖼️ 4. გალერეის გამოძახება კამერის ეკრანიდან (კამერა არ დაიხურება, უკან არ გაგდებს!)
+function triggerGalleryFromCameraScreen() {
+  var input = document.getElementById('rfGalleryPickerInput');
   if (input) {
     input.value = "";
     input.click();
   }
 }
 
-// ვიდეოს არჩევის გადაჭერა გალერეიდან
+// ვიდეოს არჩევის დამუშავება
 function handleReelsDirectUpload(event) {
   var fileInput = event.target;
   var file = fileInput.files[0];
@@ -2976,13 +2993,20 @@ function handleReelsDirectUpload(event) {
 
   var t = getReelsLangT();
 
-  if (!currentUser) {
-    alert(t.authReq || "გთხოვთ გაიაროთ ავტორიზაცია.");
+  var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
+  if (!isVideo) {
+    alert(t.videoOnly || "გთხოვთ აირჩიოთ მხოლოდ ვიდეო ფაილი!");
     fileInput.value = "";
     return;
   }
 
-  // მხოლოდ ფაილის არჩევის შემდეგ ვთიშავთ კამერას
+  if (file.size > 100 * 1024 * 1024) {
+    alert(t.sizeLimit || "ვიდეოს ზომა აჭარბებს 100MB-ს.");
+    fileInput.value = "";
+    return;
+  }
+
+  // კამერა იხურება მხოლოდ მაშინ, როცა ვიდეო უკვე არჩეულია
   closeReelsCameraScreen();
 
   selectedReelFile = file;
@@ -2992,7 +3016,7 @@ function handleReelsDirectUpload(event) {
   openReelsFlowPreview(file);
 }
 
-// 🔴 5. კამერით ჩაწერა წითელი ღილაკით
+// 🔴 5. კამერიდან ვიდეოს ჩაწერა
 function toggleCameraRecording() {
   var inner = document.getElementById('rfRecordInnerCircle');
   if (!liveCameraStream) return;
@@ -3032,18 +3056,15 @@ function toggleCameraRecording() {
   }
 }
 
-// 🎬 6. Preview ეკრანის მართვა
+// 🎬 6. Preview მოდალი
 function openReelsFlowPreview(file) {
   var modal = document.getElementById('rfPreviewModal');
   var video = document.getElementById('rfPreviewVideo');
-  var fileUrl = URL.createObjectURL(file);
-
   if (video) {
-    video.src = fileUrl;
+    video.src = URL.createObjectURL(file);
     video.currentTime = 0;
     video.play().catch(function(){});
   }
-
   applyReelsFlowTranslations();
   if (modal) modal.style.display = 'flex';
 }
@@ -3058,12 +3079,12 @@ function closeReelsFlowPreview() {
   }
   if (modal) modal.style.display = 'none';
 
-  var fileInput = document.getElementById('reelsGalleryDirectInput');
+  var fileInput = document.getElementById('rfGalleryPickerInput');
   if (fileInput) fileInput.value = "";
   selectedReelFile = null;
 }
 
-// 📝 7. გამოქვეყნების ეკრანზე გადასვლა და ქავერის გენერაცია
+// 📝 7. Publish ეკრანზე გადასვლა და ქავერის გენერაცია
 function goToPublishScreen() {
   var previewModal = document.getElementById('rfPreviewModal');
   var previewVideo = document.getElementById('rfPreviewVideo');
@@ -3103,7 +3124,6 @@ function generateVideoThumbnail(videoElem) {
   }
 }
 
-// 8. ჰეშთეგები და აუდიტორია
 function addReelHashtag(tag) {
   var input = document.getElementById('rfPostCaption');
   if (!input) return;
@@ -3129,7 +3149,7 @@ function toggleReelAudience() {
   }
 }
 
-// 🎵 9. მუსიკის არჩევა
+// 🎵 8. მუსიკა
 function openReelsMusicSheet() {
   var sheet = document.getElementById('rfMusicSheet');
   if (sheet) {
@@ -3138,7 +3158,7 @@ function openReelsMusicSheet() {
   }
 }
 
-function closeReelsMusicSheet(e) {
+function closeReelsMusicSheet() {
   var sheet = document.getElementById('rfMusicSheet');
   if (sheet) sheet.style.display = 'none';
 }
@@ -3189,11 +3209,9 @@ function selectReelMusic(musicId) {
     if (camMusicLabel) camMusicLabel.innerText = title;
     if (prevMusicLabel) prevMusicLabel.innerText = title;
   }
-
   closeReelsMusicSheet();
 }
 
-// 💾 10. დრაფტებში შენახვა
 function saveReelAsDraft() {
   var t = getReelsLangT();
   var caption = document.getElementById('rfPostCaption') ? document.getElementById('rfPostCaption').value.trim() : "";
@@ -3204,12 +3222,12 @@ function saveReelAsDraft() {
     date: new Date().toISOString()
   };
   localStorage.setItem('eb_last_reel_draft', JSON.stringify(draft));
-  alert(t.draftSaved);
+  alert(t.draftSaved || "ვიდეო შენახულია დრაფტებში!");
   document.getElementById('rfPublishModal').style.display = 'none';
   closeReelsFlowPreview();
 }
 
-// 🚀 11. გამოქვეყნება Cloudflare R2-ზე და Firestore-ში
+// 🚀 9. გამოქვეყნება Cloudflare R2-ზე და Firestore-ში
 function startFinalReelUpload() {
   if (!selectedReelFile) return;
   var t = getReelsLangT();
@@ -3222,12 +3240,12 @@ function startFinalReelUpload() {
 
   document.getElementById('rfPublishModal').style.display = 'none';
   if (overlay) overlay.style.display = 'flex';
-  if (statusText) statusText.innerText = `${t.uploading} (0%)...`;
+  if (statusText) statusText.innerText = (t.uploading || "ვიდეო იტვირთება") + " (0%)...";
 
   uploadReelToR2(
     selectedReelFile,
     function(percent) {
-      if (statusText) statusText.innerText = `${t.uploading} (${percent}%)...`;
+      if (statusText) statusText.innerText = (t.uploading || "ვიდეო იტვირთება") + " (" + percent + "%)...";
     },
     function(publicUrl, error) {
       if (error || !publicUrl) {
@@ -3252,7 +3270,7 @@ function startFinalReelUpload() {
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
         if (overlay) overlay.style.display = 'none';
-        alert(t.uploadSuccess);
+        alert(t.uploadSuccess || "ვიდეო წარმატებით გამოქვეყნდა!");
         closeReelsFlowPreview();
         loadRealReelsFromFirestore();
       }).catch(function(err) {
@@ -3263,7 +3281,7 @@ function startFinalReelUpload() {
   );
 }
 
-// 🌐 12. ენების მორგება DOM ელემენტებზე
+// 🌐 10. 7 ენის ტექსტების მორგება
 function applyReelsFlowTranslations() {
   var t = getReelsLangT();
   var setEl = function(id, text) {
@@ -3295,6 +3313,7 @@ function applyReelsFlowTranslations() {
   var desc = document.getElementById('rfPostCaption');
   if (desc) desc.placeholder = t.descPlaceholder;
 }
+
  
   </script>
     <!-- ატვირთვის პროგრესის ფანჯარა -->
@@ -3307,23 +3326,22 @@ function applyReelsFlowTranslations() {
 
 
 
-
-   <!-- ==========================================================================
-       🚀 FULL TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (HTML MODALS)
+  <!-- ==========================================================================
+       🚀 NEW: TIKTOK / REELS FULL UPLOAD SYSTEM (HTML MODALS)
        ========================================================================== -->
 
   <!-- 📸 1. TIKTOK კამერის ეკრანი (სუფთა ვექტორული SVG-ებით) -->
   <div class="reels-flow-modal" id="rfCameraModal" style="background: #000000; overflow: hidden; display: none;">
-    <!-- ცოცხალი კამერის ვიდეო -->
+    <!-- ცოცხალი კამერა -->
     <video id="rfLiveCameraFeed" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
 
-    <!-- ფარული input პირდაპირ გალერეიდან ასარჩევად -->
-    <input type="file" id="reelsGalleryDirectInput" accept="video/mp4,video/quicktime,video/*" style="display: none;" onchange="handleReelsDirectUpload(event)">
+    <!-- ფარული input პირდაპირ გალერეიდან ვიდეოს ასარჩევად -->
+    <input type="file" id="rfGalleryPickerInput" accept="video/*" style="display: none;" onchange="handleReelsDirectUpload(event)">
 
-    <!-- ზედა პანელი: დახურვა, მუსიკა, კამერის გადართვა -->
+    <!-- ზედა ზოლი -->
     <div style="position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 20; background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);">
-      <button type="button" onclick="closeReelsCameraScreen()" style="background: none; border: none; color: #ffffff; cursor: pointer; padding: 6px; display: flex; align-items: center;">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      <button type="button" onclick="closeReelsCameraScreen()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
       
       <div class="rf-music-pill-btn" onclick="openReelsMusicSheet()" style="background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; display: flex; align-items: center; gap: 6px;">
@@ -3331,8 +3349,8 @@ function applyReelsFlowTranslations() {
         <span id="rf-cam-selected-music">მუსიკის დამატება</span>
       </div>
 
-      <!-- კამერის გადაბრუნება (Flip Camera) -->
-      <button type="button" onclick="flipLiveCamera()" style="background: none; border: none; cursor: pointer; padding: 6px; display: flex; align-items: center;">
+      <!-- კამერის როტაცია (Flip Camera) -->
+      <button type="button" onclick="flipLiveCamera()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex;">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8c0 1.954.702 3.744 1.87 5.143L4 17h5v-5L7.26 13.74C6.47 12.64 6 11.37 6 10c0-3.314 2.686-6 6-6s6 2.686 6 6c0 1.37-.47 2.64-1.26 3.74L15 12v5h5l-1.87-1.857C19.298 13.744 20 11.954 20 10z"/>
         </svg>
@@ -3344,23 +3362,22 @@ function applyReelsFlowTranslations() {
       <!-- ფლეში -->
       <div onclick="toggleCameraFlash()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-flash">Flash</span>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-flash">ფლეში</span>
       </div>
       <!-- ტაიმერი -->
       <div style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-timer">Timer</span>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-timer">ტაიმერი</span>
       </div>
       <!-- ეფექტები -->
       <div style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-effects">Effects</span>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-effects">ეფექტები</span>
       </div>
     </div>
 
     <!-- ქვედა მართვის ზონა -->
-    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding-bottom: 28px; display: flex; flex-direction: column; align-items: center; z-index: 20; background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);">
-      <!-- ტაიმერის რეჟიმები -->
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding-bottom: 26px; display: flex; flex-direction: column; align-items: center; z-index: 20; background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);">
       <div style="display: flex; gap: 20px; margin-bottom: 18px; font-size: 13.5px; font-weight: 700; color: #ffffff;">
         <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-10m" onclick="setRecordDuration(600, this)">10 წთ</span>
         <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-60s" onclick="setRecordDuration(60, this)">60 წმ</span>
@@ -3368,10 +3385,9 @@ function applyReelsFlowTranslations() {
         <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-photo">ფოტო</span>
       </div>
 
-      <!-- ჩაწერის ზოლი -->
       <div style="width: 100%; display: flex; align-items: center; justify-content: space-around; padding: 0 24px;">
-        <!-- 🖼️ გალერეის ღილაკი -->
-        <div onclick="triggerGalleryDirectPicker()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <!-- 🖼️ გალერეა (კამერა არ დაიხურება, პირდაპირ იხსნება ფაილების არჩევა) -->
+        <div onclick="triggerGalleryFromCameraScreen()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
           <div style="width: 44px; height: 44px; border-radius: 10px; border: 2px solid #ffffff; background: rgba(255,255,255,0.15); overflow: hidden; display: flex; align-items: center; justify-content: center;">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
           </div>
@@ -3391,9 +3407,11 @@ function applyReelsFlowTranslations() {
   <!-- 🎬 2. ვიდეოს გადახედვის ეკრანი (Preview Screen - Facebook White) -->
   <div class="reels-flow-modal" id="rfPreviewModal" style="display: none;">
     <div class="rf-header">
-      <button type="button" class="rf-back-btn" onclick="closeReelsFlowPreview()">✕</button>
+      <button type="button" class="rf-back-btn" onclick="closeReelsFlowPreview()">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#050505" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
       <div class="rf-music-pill-btn" onclick="openReelsMusicSheet()">
-        <span>🎵</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         <span id="rf-lbl-selected-music">მუსიკის დამატება</span>
       </div>
       <div style="width: 26px;"></div>
@@ -3406,7 +3424,7 @@ function applyReelsFlowTranslations() {
     <div style="background: #ffffff; padding: 14px 16px; border-top: 1px solid #dadde1; display: flex; justify-content: flex-end; max-width: 480px; width: 100%; margin: 0 auto;">
       <button type="button" class="rf-btn-publish" style="padding: 10px 24px; flex: none;" onclick="goToPublishScreen()">
         <span id="rf-lbl-next-btn">შემდეგი</span>
-        <span>›</span>
+        <span style="font-size: 16px;">›</span>
       </button>
     </div>
   </div>
@@ -3414,13 +3432,14 @@ function applyReelsFlowTranslations() {
   <!-- 📝 3. გამოქვეყნების ეკრანი (Publish Screen - Facebook White) -->
   <div class="reels-flow-modal" id="rfPublishModal" style="display: none;">
     <div class="rf-header">
-      <button type="button" class="rf-back-btn" onclick="backToPreviewScreen()">‹</button>
+      <button type="button" class="rf-back-btn" onclick="backToPreviewScreen()">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#050505" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
       <div class="rf-header-title" id="rf-lbl-publish-title">გამოქვეყნება</div>
       <div style="width: 26px;"></div>
     </div>
 
     <div class="rf-publish-content">
-      <!-- აღწერის ველი და ქავერის პრევიუ -->
       <div class="rf-desc-row">
         <textarea id="rfPostCaption" class="rf-desc-input" placeholder="დაამატეთ აღწერა..."></textarea>
         <div class="rf-thumb-preview-box">
@@ -3430,7 +3449,6 @@ function applyReelsFlowTranslations() {
         </div>
       </div>
 
-      <!-- ჰეშთეგები -->
       <div class="rf-tags-row">
         <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#reels')">#reels</button>
         <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#emigrantbook')">#emigrantbook</button>
@@ -3439,10 +3457,9 @@ function applyReelsFlowTranslations() {
 
       <div style="height: 1px; background: #dadde1; margin: 4px 0;"></div>
 
-      <!-- პარამეტრები -->
       <div class="rf-setting-row" onclick="toggleReelAudience()">
         <div class="rf-setting-left">
-          <img src="icons/globe.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Audience">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#65676b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
           <div>
             <div class="rf-setting-title" id="rf-lbl-aud-title">ვის შეუძლია ნახვა</div>
             <div class="rf-setting-desc" id="rf-selected-audience-label">ყველას (საჯარო)</div>
@@ -3453,7 +3470,7 @@ function applyReelsFlowTranslations() {
 
       <div class="rf-setting-row">
         <div class="rf-setting-left">
-          <img src="icons/message-circle-more.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Comments">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#65676b" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
           <div>
             <div class="rf-setting-title" id="rf-lbl-allow-comments">კომენტარების დაშვება</div>
             <div class="rf-setting-desc" id="rf-lbl-allow-comments-sub">ყველას შეუძლია კომენტარის დაწერა</div>
@@ -3462,18 +3479,16 @@ function applyReelsFlowTranslations() {
         <input type="checkbox" id="rfAllowCommentsCheckbox" checked style="width: 20px; height: 20px; accent-color: #1877f2;">
       </div>
 
-      <!-- ქვედა ღილაკები -->
       <div class="rf-action-bottom-row">
         <button type="button" class="rf-btn-draft" onclick="saveReelAsDraft()" id="rf-lbl-draft-btn">შენახვა დრაფტებში</button>
         <button type="button" class="rf-btn-publish" onclick="startFinalReelUpload()" id="rf-lbl-submit-btn">
-          <span>🚀</span>
           <span id="rf-lbl-publish-btn-text">გამოქვეყნება</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 🎵 4. მუსიკის Bottom Sheet (თეთრი Facebook სტილი) -->
+  <!-- 🎵 4. მუსიკის Bottom Sheet -->
   <div class="rf-music-sheet" id="rfMusicSheet" onclick="closeReelsMusicSheet(event)">
     <div class="rf-music-panel" onclick="event.stopPropagation()">
       <div class="rf-music-header">
@@ -3485,11 +3500,10 @@ function applyReelsFlowTranslations() {
         <div class="rf-music-tab-item" id="rf-tab-popular" onclick="switchMusicTab('popular')">პოპულარული</div>
         <div class="rf-music-tab-item" id="rf-tab-none" onclick="selectReelMusic(null)">მუსიკის გარეშე</div>
       </div>
-      <div class="rf-music-list" id="rfMusicListContainer">
-        <!-- მუსიკები დინამიურად იხატება -->
-      </div>
+      <div class="rf-music-list" id="rfMusicListContainer"></div>
     </div>
   </div>
+
      
 
 </body>
