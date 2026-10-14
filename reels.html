@@ -2531,107 +2531,95 @@ function handleReelsDirectUpload(event) {
 
     
 // 🔴 5. კამერიდან ვიდეოს ჩაწერა
- function toggleCameraRecording() {
+function toggleCameraRecording() {
   var inner = document.getElementById('rfRecordInnerCircle');
   if (!liveCameraStream) return;
 
   if (!isRecordingVideo) {
     recordedChunks = [];
 
-    // 1. კამერის ვიდეო ნაკადი
+    // 1. კამერის სუფთა ნაკადი
     var combinedStream = new MediaStream();
     liveCameraStream.getVideoTracks().forEach(function(track) {
       combinedStream.addTrack(track);
     });
 
-    // შიდა ფუნქცია, რომელიც იწყებს უშუალოდ ჩაწერას
-    function startActualRecording() {
-      var mimeType = 'video/mp4';
-      if (!MediaRecorder.isTypeSupported('video/mp4')) {
-        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-          mimeType = 'video/webm;codecs=vp8,opus';
-        } else {
-          mimeType = 'video/webm';
-        }
-      }
-
-      try {
-        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mimeType });
-      } catch(e) {
-        try {
-          mediaRecorder = new MediaRecorder(combinedStream);
-        } catch(err2) {
-          mediaRecorder = new MediaRecorder(liveCameraStream);
-        }
-      }
-
-      mediaRecorder.ondataavailable = function(e) {
-        if (e.data && e.data.size > 0) {
-          recordedChunks.push(e.data);
-        }
-      };
-
-      mediaRecorder.onstop = function() {
-        if (currentCameraAudio) {
-          currentCameraAudio.pause();
-        }
-
-        var finalMime = mediaRecorder.mimeType || 'video/mp4';
-        var blob = new Blob(recordedChunks, { type: finalMime });
-        var fileExt = finalMime.includes('webm') ? '.webm' : '.mp4';
-        
-        selectedReelFile = new File([blob], "reel_" + Date.now() + fileExt, { type: finalMime });
-
-        closeReelsCameraScreen();
-        openReelsFlowPreview(selectedReelFile);
-      };
-
-      try {
-        mediaRecorder.start();
-        isRecordingVideo = true;
-        if (inner) {
-          inner.style.borderRadius = "8px";
-          inner.style.transform = "scale(0.6)";
-        }
-      } catch (err) {
-        console.error("Recording start error:", err);
-        isRecordingVideo = false;
-        if (inner) {
-          inner.style.borderRadius = "50%";
-          inner.style.transform = "scale(1)";
-        }
-      }
-    }
-
-    // 2. თუ მუსიკაა არჩეული: ჯერ ვურთავთ ხმას, მერე ვუშვებთ ჩაწერას
+    // 2. თუ მუსიკაა, უბრალოდ ვუკრავთ ფონზე და ვცდილობთ ტრეკის უსაფრთხოდ მიბმას
     if (selectedReelMusicObj && currentCameraAudio && currentCameraAudio.src) {
       try {
-        var audioStream = null;
-        if (typeof currentCameraAudio.captureStream === 'function') {
-          audioStream = currentCameraAudio.captureStream();
-        } else if (typeof currentCameraAudio.mozCaptureStream === 'function') {
-          audioStream = currentCameraAudio.mozCaptureStream();
-        }
+        currentCameraAudio.currentTime = 0;
+        currentCameraAudio.play().catch(function(){});
+      } catch(e) {}
 
-        if (audioStream && audioStream.getAudioTracks().length > 0) {
-          audioStream.getAudioTracks().forEach(function(track) {
+      // უსაფრთხო მიერთება: თუ ბრაუზერმა არ დაუშვა, შეცდომას ჩაყლაპავს და ჩაწერას არ გაყინავს!
+      try {
+        var aStream = (typeof currentCameraAudio.captureStream === 'function') 
+          ? currentCameraAudio.captureStream() 
+          : (typeof currentCameraAudio.mozCaptureStream === 'function' ? currentCameraAudio.mozCaptureStream() : null);
+
+        if (aStream && aStream.getAudioTracks().length > 0) {
+          aStream.getAudioTracks().forEach(function(track) {
             combinedStream.addTrack(track);
           });
         }
-      } catch(e) {
-        console.warn("Audio track capture error:", e);
+      } catch(err) {
+        console.warn("Audio stream attach skipped due to security policy:", err);
+      }
+    }
+
+    // 3. ჩამწერის გაშვება (გარანტირებული)
+    var streamToRecord = (combinedStream.getTracks().length > 0) ? combinedStream : liveCameraStream;
+    var options = { mimeType: 'video/mp4' };
+    if (!MediaRecorder.isTypeSupported('video/mp4')) {
+      options = { mimeType: 'video/webm' };
+    }
+
+    try {
+      mediaRecorder = new MediaRecorder(streamToRecord, options);
+    } catch(e) {
+      try {
+        mediaRecorder = new MediaRecorder(streamToRecord);
+      } catch(e2) {
+        mediaRecorder = new MediaRecorder(liveCameraStream);
+      }
+    }
+
+    mediaRecorder.ondataavailable = function(e) {
+      if (e.data && e.data.size > 0) {
+        recordedChunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.onstop = function() {
+      // მუსიკის გაჩერება
+      if (currentCameraAudio) {
+        currentCameraAudio.pause();
       }
 
-      currentCameraAudio.currentTime = 0;
-      currentCameraAudio.play().catch(function(e) { console.warn(e); });
-      startActualRecording();
-    } else {
-      // მუსიკის გარეშე პირდაპირ იწყებს
-      startActualRecording();
+      var finalMime = mediaRecorder.mimeType || 'video/mp4';
+      var blob = new Blob(recordedChunks, { type: finalMime });
+      var fileExt = finalMime.includes('webm') ? '.webm' : '.mp4';
+      
+      selectedReelFile = new File([blob], "reel_" + Date.now() + fileExt, { type: finalMime });
+
+      closeReelsCameraScreen();
+      openReelsFlowPreview(selectedReelFile);
+    };
+
+    try {
+      mediaRecorder.start();
+      isRecordingVideo = true;
+      if (inner) {
+        inner.style.borderRadius = "8px";
+        inner.style.transform = "scale(0.6)";
+      }
+    } catch(startErr) {
+      console.error("Start failed:", startErr);
+      isRecordingVideo = false;
     }
 
   } else {
-    // 🛑 ჩაწერის გაჩერება
+    // 🛑 ჩაწერის შეჩერება
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
@@ -2642,6 +2630,7 @@ function handleReelsDirectUpload(event) {
     }
   }
 }
+
        
 
 
