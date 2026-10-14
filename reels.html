@@ -2558,7 +2558,72 @@ function applyReelsFlowTranslations() {
     <span id="reelsUploadStatusText" style="font-weight: 700; font-size: 15px;">ვიდეო იტვირთება (0%)...</span>
   </div>
 
-  
+
+
+
+
+
+  <!-- ==========================================================================
+     📸 1. TIKTOK CAMERA RECORDING SCREEN (პირველი ეკრანი)
+     ========================================================================== -->
+<div class="reels-flow-modal" id="rfCameraModal" style="background: #000000; overflow: hidden;">
+  <!-- ცოცხალი კამერის ვიდეო -->
+  <video id="rfLiveCameraFeed" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+
+  <!-- ზედა პანელი: დახურვა, მუსიკა, კამერის გადართვა -->
+  <div style="position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 20; background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);">
+    <button type="button" onclick="closeReelsCameraScreen()" style="background: none; border: none; color: #ffffff; font-size: 26px; cursor: pointer; padding: 4px;">✕</button>
+    <div class="rf-music-pill-btn" onclick="openReelsMusicSheet()" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #ffffff;">
+      <span>🎵</span>
+      <span id="rf-cam-selected-music">მუსიკის დამატება</span>
+    </div>
+    <button type="button" onclick="flipLiveCamera()" style="background: none; border: none; color: #ffffff; font-size: 24px; cursor: pointer;">🔄</button>
+  </div>
+
+  <!-- მარჯვენა ინსტრუმენტების ზოლი -->
+  <div style="position: absolute; top: 70px; right: 14px; display: flex; flex-direction: column; gap: 18px; z-index: 20; align-items: center; color: #ffffff;">
+    <div style="cursor: pointer; text-align: center;" onclick="toggleCameraFlash()">
+      <span style="font-size: 22px;">⚡</span>
+    </div>
+    <div style="cursor: pointer; text-align: center;">
+      <span style="font-size: 22px;">⏱️</span>
+    </div>
+    <div style="cursor: pointer; text-align: center;">
+      <span style="font-size: 22px;">✨</span>
+    </div>
+  </div>
+
+  <!-- ქვედა მართვის ზონა -->
+  <div style="position: absolute; bottom: 0; left: 0; right: 0; padding-bottom: 24px; display: flex; flex-direction: column; align-items: center; z-index: 20; background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%);">
+    <!-- ტაიმერის რეჟიმები -->
+    <div style="display: flex; gap: 16px; margin-bottom: 16px; font-size: 13px; font-weight: 700; color: #ffffff;">
+      <span style="cursor: pointer; opacity: 0.6;" onclick="setRecordDuration(600, this)">10 წთ</span>
+      <span style="cursor: pointer; opacity: 0.6;" onclick="setRecordDuration(60, this)">60 წმ</span>
+      <span style="cursor: pointer; color: #ff2d55; border-bottom: 2px solid #ff2d55; padding-bottom: 2px;" onclick="setRecordDuration(15, this)">15 წმ</span>
+      <span style="cursor: pointer; opacity: 0.6;">ფოტო</span>
+    </div>
+
+    <!-- ჩაწერის ზოლი: გალერეა მარცხნივ, წითელი ღილაკი ცენტრში -->
+    <div style="width: 100%; display: flex; align-items: center; justify-content: space-around; padding: 0 20px;">
+      <!-- 🖼️ გალერეიდან არჩევა (მარცხნივ ქვემოთ) -->
+      <div onclick="triggerGalleryPickerFromCam()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <div style="width: 44px; height: 44px; border-radius: 10px; border: 2px solid #ffffff; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+          <img src="icons/camera.svg" style="width: 24px; height: 24px; filter: invert(1);" alt="გალერეა">
+        </div>
+        <span style="font-size: 11px; font-weight: 600; color: #fff;">გალერეა</span>
+      </div>
+
+      <!-- 🔴 დიდი წითელი ჩამწერი ღილაკი -->
+      <div id="rfRecordBigBtn" onclick="toggleCameraRecording()" style="width: 76px; height: 76px; border-radius: 50%; border: 4px solid #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;">
+        <div id="rfRecordInnerCircle" style="width: 60px; height: 60px; border-radius: 50%; background: #fe2c55; transition: all 0.2s;"></div>
+      </div>
+
+      <!-- ცარიელი ბალანსისთვის მარჯვნივ -->
+      <div style="width: 44px;"></div>
+    </div>
+  </div>
+</div>
+
   <!-- ==========================================================================
        🚀 NEW: TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (HTML MODALS)
        ყველა ახალი ეკრანი და Bottom Sheet (Facebook White Style)
