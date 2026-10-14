@@ -2282,7 +2282,8 @@ const REELS_I18N = {
 };
 
                       
- function getReelsActiveLangCode() {
+ 
+  function getReelsActiveLangCode() {
   if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
   if (typeof window.currentSiteLang !== 'undefined' && window.currentSiteLang) return window.currentSiteLang;
   return localStorage.getItem('eb_lang') || localStorage.getItem('emigrant_lang') || 'ka';
@@ -2293,7 +2294,7 @@ function getReelsLangT() {
   return REELS_I18N[lang] || REELS_I18N['ka'];
 }
 
-// 2. ლოკალური მუსიკების ბაზა (Read-ების 0 ხარჯი)
+// 2. ლოკალური მუსიკების ბაზა
 const REELS_MUSIC_CACHE = [
   { 
     id: "m1", 
@@ -2342,11 +2343,11 @@ var selectedReelFile = null;
 var selectedReelMusicObj = null;
 var selectedReelAudience = 'public';
 
-// 🎵 გლობალური ფლეიერი კამერაზე მუსიკის დასაკრავად
+// 🎵 გლობალური ფლეიერი
 var activeCameraMusicAudio = new Audio();
 activeCameraMusicAudio.loop = true;
 
-// 📸 3. კამერის გახსნა (სტაბილური, გაყინვის გარეშე, ხმის ჩახშობის გათიშვით)
+// 📸 3. კამერის გახსნა
 function openReelsCameraScreen() {
   var t = getReelsLangT();
   if (!currentUser) {
@@ -2363,22 +2364,16 @@ function openReelsCameraScreen() {
   }
 
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    // 1. ვითხოვთ კამერას მაქსიმალურად ფართო ხედვით და ხმის ფილტრების გარეშე
     navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: currentFacingMode,
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
       },
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
-      }
+      audio: true
     }).then(function(stream) {
       liveCameraStream = stream;
       
-      // 2. ⚡ აპარატურული ზუმის იძულებითი განულება (Wide Angle-ზე გადაყვანა)
       var track = stream.getVideoTracks()[0];
       if (track && track.getCapabilities) {
         var capabilities = track.getCapabilities();
@@ -2404,7 +2399,6 @@ function openReelsCameraScreen() {
         video.play().catch(function(){});
       }
     }).catch(function(err) {
-      // Fallback
       navigator.mediaDevices.getUserMedia({
         video: { facingMode: currentFacingMode },
         audio: true
@@ -2424,7 +2418,6 @@ function openReelsCameraScreen() {
 function closeReelsCameraScreen() {
   var modal = document.getElementById('rfCameraModal');
   
-  // მუსიკის გაჩერება კამერის დახურვისას
   if (activeCameraMusicAudio) {
     activeCameraMusicAudio.pause();
     activeCameraMusicAudio.currentTime = 0;
@@ -2450,15 +2443,10 @@ function flipLiveCamera() {
     liveCameraStream = null;
   }
   
-  // ხელახლა ჩართვა
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({
       video: { facingMode: currentFacingMode },
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
-      }
+      audio: true
     }).then(function(stream) {
       liveCameraStream = stream;
       if (video) {
@@ -2500,7 +2488,6 @@ function triggerGalleryFromCameraScreen() {
   }
 }
 
-// ვიდეოს არჩევის დამუშავება
 function handleReelsDirectUpload(event) {
   var fileInput = event.target;
   var file = fileInput.files[0];
@@ -2521,7 +2508,6 @@ function handleReelsDirectUpload(event) {
     return;
   }
 
-  // კამერა იხურება მხოლოდ მაშინ, როცა ვიდეო უკვე არჩეულია
   closeReelsCameraScreen();
 
   selectedReelFile = file;
@@ -2531,7 +2517,7 @@ function handleReelsDirectUpload(event) {
   openReelsFlowPreview(file);
 }
 
-// 🔴 5. კამერიდან ვიდეოს ჩაწერა (მუსიკის ჩაკერებით)
+// 🔴 5. კამერიდან ვიდეოს ჩაწერა
 function toggleCameraRecording() {
   var inner = document.getElementById('rfRecordInnerCircle');
   if (!liveCameraStream) return;
@@ -2546,45 +2532,45 @@ function toggleCameraRecording() {
       tracks.push(track);
     });
 
-    // 2. აუდიო ნაკადი:
-    if (selectedReelMusicObj && reelAudioBuffer && reelAudioCtx) {
-      // ⚡ მიკროფონს ვთიშავთ, რომ ოთახის ხმაური და ექო არ ჩაიწეროს!
-      liveCameraStream.getAudioTracks().forEach(function(track) {
-        track.enabled = false;
+    // 2. ხმის ტრეკი
+    var audioAdded = false;
+
+    // თუ მუსიკაა, ვიღებთ მუსიკის ტრეკს და ვთიშავთ მიკროფონს, რომ ოთახის ექო არ ჩაიწეროს
+    if (selectedReelMusicObj && activeCameraMusicAudio) {
+      // მიკროფონის გაჩუმება
+      liveCameraStream.getAudioTracks().forEach(function(t) {
+        t.enabled = false;
       });
 
-      if (reelAudioCtx.state === 'suspended') {
-        reelAudioCtx.resume();
+      try {
+        var musicStream = null;
+        if (typeof activeCameraMusicAudio.captureStream === 'function') {
+          musicStream = activeCameraMusicAudio.captureStream();
+        } else if (typeof activeCameraMusicAudio.mozCaptureStream === 'function') {
+          musicStream = activeCameraMusicAudio.mozCaptureStream();
+        }
+
+        if (musicStream && musicStream.getAudioTracks().length > 0) {
+          tracks.push(musicStream.getAudioTracks()[0]);
+          audioAdded = true;
+        }
+      } catch (e) {
+        console.warn("CaptureStream fallback:", e);
       }
 
-      // მუსიკის გაშვება თავიდან სინქრონულად
-      if (reelAudioSourceNode) {
-        try { reelAudioSourceNode.stop(); } catch(e){}
-      }
+      activeCameraMusicAudio.currentTime = 0;
+      activeCameraMusicAudio.play().catch(function(){});
+    }
 
-      reelAudioSourceNode = reelAudioCtx.createBufferSource();
-      reelAudioSourceNode.buffer = reelAudioBuffer;
-      reelAudioSourceNode.loop = true;
-
-      // ვაკავშირებთ დინამიკთან და ჩამწერ ნაკადთან
-      reelAudioSourceNode.connect(reelAudioCtx.destination);
-      reelAudioSourceNode.connect(reelAudioDest);
-      reelAudioSourceNode.start(0);
-
-      // ვამატებთ მუსიკის ციფრულ ტრეკს ჩასაწერ ნაკადში
-      var aTracks = reelAudioDest.stream.getAudioTracks();
-      if (aTracks.length > 0) {
-        tracks.push(aTracks[0]);
-      }
-    } else {
-      // თუ მუსიკა არ არის არჩეული, მხოლოდ მაშინ იწერება მიკროფონი
+    // თუ მუსიკა არაა არჩეული, მიკროფონი რჩება ჩართული
+    if (!audioAdded) {
       liveCameraStream.getAudioTracks().forEach(function(track) {
         track.enabled = true;
         tracks.push(track);
       });
     }
 
-    var combinedStream = new MediaStream(tracks);
+    var recordStream = new MediaStream(tracks);
 
     var mime = 'video/webm;codecs=vp8,opus';
     if (!MediaRecorder.isTypeSupported(mime)) {
@@ -2598,9 +2584,9 @@ function toggleCameraRecording() {
     }
 
     try {
-      mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mime });
+      mediaRecorder = new MediaRecorder(recordStream, { mimeType: mime });
     } catch(e) {
-      mediaRecorder = new MediaRecorder(combinedStream);
+      mediaRecorder = new MediaRecorder(recordStream);
     }
 
     mediaRecorder.ondataavailable = function(e) {
@@ -2610,16 +2596,14 @@ function toggleCameraRecording() {
     };
 
     mediaRecorder.onstop = function() {
-      // მუსიკის გაჩერება
-      if (reelAudioSourceNode) {
-        try { reelAudioSourceNode.stop(); } catch(e){}
-        reelAudioSourceNode = null;
+      if (activeCameraMusicAudio) {
+        activeCameraMusicAudio.pause();
       }
 
       // მიკროფონის აღდგენა
       if (liveCameraStream) {
-        liveCameraStream.getAudioTracks().forEach(function(track) {
-          track.enabled = true;
+        liveCameraStream.getAudioTracks().forEach(function(t) {
+          t.enabled = true;
         });
       }
 
@@ -2634,7 +2618,7 @@ function toggleCameraRecording() {
     };
 
     try {
-      mediaRecorder.start(1000);
+      mediaRecorder.start(500);
       isRecordingVideo = true;
       if (inner) {
         inner.style.borderRadius = "8px";
@@ -2646,7 +2630,6 @@ function toggleCameraRecording() {
     }
 
   } else {
-    // ჩაწერის შეჩერება
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
@@ -2657,8 +2640,6 @@ function toggleCameraRecording() {
     }
   }
 }
-     
-   
 
 // 🎬 6. Preview მოდალი
 function openReelsFlowPreview(file) {
@@ -2799,23 +2780,17 @@ function renderMusicList(tab) {
   }).join('');
 }
 
-var reelAudioCtx = null;
-var reelAudioBuffer = null;
-var reelAudioSourceNode = null;
-var reelAudioDest = null;
-
-async function selectReelMusic(musicId) {
+function selectReelMusic(musicId) {
   var camMusicLabel = document.getElementById('rf-cam-selected-music');
   var prevMusicLabel = document.getElementById('rf-lbl-selected-music');
   var t = getReelsLangT();
 
   if (!musicId) {
     selectedReelMusicObj = null;
-    if (reelAudioSourceNode) {
-      try { reelAudioSourceNode.stop(); } catch(e){}
-      reelAudioSourceNode = null;
-    }
-    reelAudioBuffer = null;
+    activeCameraMusicAudio.pause();
+    activeCameraMusicAudio.currentTime = 0;
+    activeCameraMusicAudio.src = "";
+
     if (camMusicLabel) camMusicLabel.innerText = t.addMusic;
     if (prevMusicLabel) prevMusicLabel.innerText = t.addMusic;
   } else {
@@ -2826,46 +2801,17 @@ async function selectReelMusic(musicId) {
     if (prevMusicLabel) prevMusicLabel.innerText = title;
 
     if (found && found.url) {
-      try {
-        if (!reelAudioCtx) {
-          reelAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (reelAudioCtx.state === 'suspended') {
-          await reelAudioCtx.resume();
-        }
+      activeCameraMusicAudio.pause();
+      activeCameraMusicAudio.src = found.url;
+      activeCameraMusicAudio.currentTime = 0;
 
-        // მუსიკის წამოღება პირდაპირ ციფრულ ბუფერში
-        var response = await fetch(found.url);
-        var arrayBuffer = await response.arrayBuffer();
-        reelAudioBuffer = await reelAudioCtx.decodeAudioData(arrayBuffer);
-
-        // ვქმნით ვირტუალურ აუდიო გამოსავალს ჩამწერისთვის
-        if (!reelAudioDest) {
-          reelAudioDest = reelAudioCtx.createMediaStreamDestination();
-        }
-
-        // გავაჩეროთ ძველი თუ უკრავდა
-        if (reelAudioSourceNode) {
-          try { reelAudioSourceNode.stop(); } catch(e){}
-        }
-
-        // დაკვრა კამერაზე მოსასმენად
-        reelAudioSourceNode = reelAudioCtx.createBufferSource();
-        reelAudioSourceNode.buffer = reelAudioBuffer;
-        reelAudioSourceNode.loop = true;
-
-        reelAudioSourceNode.connect(reelAudioCtx.destination);
-        reelAudioSourceNode.connect(reelAudioDest);
-        reelAudioSourceNode.start(0);
-
-      } catch(err) {
-        console.error("Music load/decode error:", err);
-      }
+      activeCameraMusicAudio.play().catch(function(err) {
+        console.warn("Music play error:", err);
+      });
     }
   }
   closeReelsMusicSheet();
 }
-
 
 function saveReelAsDraft() {
   var t = getReelsLangT();
@@ -2935,7 +2881,7 @@ function startFinalReelUpload() {
     }
   );
 }
-      
+    
         
 
 
