@@ -2422,12 +2422,20 @@ function openReelsCameraScreen() {
 
 function closeReelsCameraScreen() {
   var modal = document.getElementById('rfCameraModal');
+  
+  // მუსიკის გაჩერება კამერის დახურვისას
+  if (activeCameraMusicAudio) {
+    activeCameraMusicAudio.pause();
+    activeCameraMusicAudio.currentTime = 0;
+  }
+
   if (liveCameraStream) {
     liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
     liveCameraStream = null;
   }
   if (modal) modal.style.display = 'none';
 }
+
 
 function flipLiveCamera() {
   currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
