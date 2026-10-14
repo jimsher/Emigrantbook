@@ -2535,6 +2535,7 @@ function handleReelsDirectUpload(event) {
 }
 
 // 🔴 5. კამერიდან ვიდეოს ჩაწერა (მუსიკის ჩაკერებით)
+// 🔴 5. კამერიდან ვიდეოს ჩაწერა (სუფთა მუსიკით)
 function toggleCameraRecording() {
   var inner = document.getElementById('rfRecordInnerCircle');
   if (!liveCameraStream) return;
@@ -2542,15 +2543,14 @@ function toggleCameraRecording() {
   if (!isRecordingVideo) {
     recordedChunks = [];
 
-    // ჩაწერის მომენტში მუსიკის ჩართვა თავიდან
+    // მუსიკის დაკვრა დინამიკში გადაღებისას
     if (selectedReelMusicObj && activeCameraMusicAudio && activeCameraMusicAudio.src) {
       activeCameraMusicAudio.currentTime = 0;
       activeCameraMusicAudio.play().catch(function(e) {
-        console.warn("Audio play error on record:", e);
+        console.warn("Audio play error:", e);
       });
     }
 
-    // ვკრებთ ვიდეო და აუდიო ტრეკებს
     var tracks = [];
 
     // 1. ვიდეო ტრეკი კამერიდან
@@ -2558,47 +2558,25 @@ function toggleCameraRecording() {
       tracks.push(track);
     });
 
-    // 2. აუდიო ტრეკი მუსიკიდან ან მიკროფონიდან
-    var audioStreamToUse = null;
-
-    if (activeCameraMusicAudio && (activeCameraMusicAudio.captureStream || activeCameraMusicAudio.mozCaptureStream)) {
-      try {
-        var musicStream = activeCameraMusicAudio.captureStream ? activeCameraMusicAudio.captureStream() : activeCameraMusicAudio.mozCaptureStream();
-        var mTracks = musicStream.getAudioTracks();
-        if (mTracks && mTracks.length > 0) {
-          audioStreamToUse = mTracks[0];
-        }
-      } catch (e) {
-        console.warn("CaptureStream fallback:", e);
-      }
-    }
-
-    if (audioStreamToUse) {
-      tracks.push(audioStreamToUse);
-    } else {
+    // 2. ხმა: თუ მუსიკა არაა, მხოლოდ მაშინ ვიწერთ მიკროფონს.
+    // თუ მუსიკაა, მიკროფონს საერთოდ არ ვამატებთ (ოთახის ხმა რომ არ ჩაიწეროს)
+    if (!selectedReelMusicObj) {
       liveCameraStream.getAudioTracks().forEach(function(track) {
         tracks.push(track);
       });
     }
 
-    var combinedStream = new MediaStream(tracks);
+    var recordStream = new MediaStream(tracks);
 
-    // 3. Android WebView-სთვის კოდეკი
-    var mime = 'video/webm;codecs=vp8,opus';
+    var mime = 'video/webm;codecs=vp8';
     if (!MediaRecorder.isTypeSupported(mime)) {
-      if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2')) {
-        mime = 'video/mp4;codecs=avc1,mp4a.40.2';
-      } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-        mime = 'video/mp4';
-      } else {
-        mime = 'video/webm';
-      }
+      mime = 'video/webm';
     }
 
     try {
-      mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mime });
+      mediaRecorder = new MediaRecorder(recordStream, { mimeType: mime });
     } catch(e) {
-      mediaRecorder = new MediaRecorder(combinedStream);
+      mediaRecorder = new MediaRecorder(recordStream);
     }
 
     mediaRecorder.ondataavailable = function(e) {
@@ -2607,25 +2585,27 @@ function toggleCameraRecording() {
       }
     };
 
-    mediaRecorder.onstop = function() {
+    mediaRecorder.onstop = async function() {
       // მუსიკის გაჩერება
       if (activeCameraMusicAudio) {
         activeCameraMusicAudio.pause();
       }
 
-      var finalMime = mediaRecorder.mimeType || mime;
-      var blob = new Blob(recordedChunks, { type: finalMime });
-      var fileExt = finalMime.includes('mp4') ? '.mp4' : '.webm';
-      
-      // ფაილი, რომელშიც მუსიკა უკვე ჩაკერებულია
-      selectedReelFile = new File([blob], "reel_" + Date.now() + fileExt, { type: finalMime });
+      var rawVideoBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || mime });
+
+      // ⚡ თუ მუსიკა იყო არჩეული, ვუკერავთ სუფთა ციფრულ აუდიოს პირდაპირ ტელეფონში
+      if (selectedReelMusicObj && selectedReelMusicObj.url) {
+        selectedReelFile = await muxVideoAndAudioClientSide(rawVideoBlob, selectedReelMusicObj.url);
+      } else {
+        selectedReelFile = new File([rawVideoBlob], "reel_" + Date.now() + ".webm", { type: rawVideoBlob.type });
+      }
 
       closeReelsCameraScreen();
       openReelsFlowPreview(selectedReelFile);
     };
 
     try {
-      mediaRecorder.start(100);
+      mediaRecorder.start(500);
       isRecordingVideo = true;
       if (inner) {
         inner.style.borderRadius = "8px";
@@ -2648,6 +2628,9 @@ function toggleCameraRecording() {
     }
   }
 }
+
+
+    
 
 // 🎬 6. Preview მოდალი
 function openReelsFlowPreview(file) {
