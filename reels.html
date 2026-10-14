@@ -2646,6 +2646,656 @@ function toggleCameraRecording() {
 }
 
 
+
+   /* ==========================================================================
+   🚀 FULL TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (JS ENGINE)
+   7 ენის სრული მხარდაჭერა + კამერა + გალერეა + R2 ატვირთვა
+   ========================================================================== */
+
+// 🌐 1. 7 ენის სრული ლექსიკონი
+const REELS_I18N = {
+  ka: {
+    addMusic: "მუსიკის დამატება",
+    next: "შემდეგი",
+    publishTitle: "გამოქვეყნება",
+    descPlaceholder: "დაამატეთ აღწერა...",
+    coverTag: "ქავერი",
+    audienceTitle: "ვის შეუძლია ნახვა",
+    audPublic: "ყველას (საჯარო)",
+    audFriends: "მხოლოდ მეგობრებს",
+    audPrivate: "მხოლოდ მე (პირადი)",
+    allowComments: "კომენტარების დაშვება",
+    allowCommentsSub: "ყველას შეუძლია კომენტარის დაწერა",
+    draftBtn: "შენახვა დრაფტებში",
+    publishBtn: "გამოქვეყნება",
+    musicHeader: "მუსიკის არჩევა",
+    tabForYou: "თქვენთვის",
+    tabPopular: "პოპულარული",
+    tabNoMusic: "მუსიკის გარეშე",
+    select: "არჩევა",
+    galleryBtn: "გალერეა",
+    flash: "ფლეში",
+    timer: "ტაიმერი",
+    effects: "ეფექტები",
+    authReq: "გთხოვთ გაიაროთ ავტორიზაცია.",
+    videoOnly: "გთხოვთ აირჩიოთ მხოლოდ ვიდეო ფაილი!",
+    sizeLimit: "ვიდეოს ზომა აჭარბებს 100MB-ს. გთხოვთ აირჩიოთ უფრო პატარა ვიდეო.",
+    draftSaved: "ვიდეო შენახულია დრაფტებში!",
+    uploadSuccess: "ვიდეო წარმატებით გამოქვეყნდა!",
+    uploading: "ვიდეო იტვირთება"
+  },
+  en: {
+    addMusic: "Add sound",
+    next: "Next",
+    publishTitle: "Post",
+    descPlaceholder: "Describe your post...",
+    coverTag: "Cover",
+    audienceTitle: "Who can watch this video",
+    audPublic: "Everyone (Public)",
+    audFriends: "Friends only",
+    audPrivate: "Only me (Private)",
+    allowComments: "Allow comments",
+    allowCommentsSub: "Everyone can comment",
+    draftBtn: "Drafts",
+    publishBtn: "Post",
+    musicHeader: "Select sound",
+    tabForYou: "For you",
+    tabPopular: "Popular",
+    tabNoMusic: "Original sound",
+    select: "Select",
+    galleryBtn: "Upload",
+    flash: "Flash",
+    timer: "Timer",
+    effects: "Effects",
+    authReq: "Please log in to upload.",
+    videoOnly: "Please select a valid video file!",
+    sizeLimit: "File size exceeds 100MB.",
+    draftSaved: "Saved to drafts!",
+    uploadSuccess: "Video published successfully!",
+    uploading: "Uploading video"
+  },
+  it: {
+    addMusic: "Aggiungi suono",
+    next: "Avanti",
+    publishTitle: "Pubblica",
+    descPlaceholder: "Descrivi il tuo video...",
+    coverTag: "Copertina",
+    audienceTitle: "Chi può vedere questo video",
+    audPublic: "Tutti (Pubblico)",
+    audFriends: "Solo amici",
+    audPrivate: "Solo io (Privato)",
+    allowComments: "Consenti commenti",
+    allowCommentsSub: "Tutti possono commentare",
+    draftBtn: "Bozze",
+    publishBtn: "Pubblica",
+    musicHeader: "Seleziona suono",
+    tabForYou: "Per te",
+    tabPopular: "Popolari",
+    tabNoMusic: "Suono originale",
+    select: "Seleziona",
+    galleryBtn: "Galleria",
+    flash: "Flash",
+    timer: "Timer",
+    effects: "Effetti",
+    authReq: "Effettua l'accesso per caricare.",
+    videoOnly: "Seleziona un file video valido!",
+    sizeLimit: "Il file supera i 100MB.",
+    draftSaved: "Salvato nelle bozze!",
+    uploadSuccess: "Video pubblicato con successo!",
+    uploading: "Caricamento video"
+  },
+  ru: {
+    addMusic: "Добавить музыку",
+    next: "Далее",
+    publishTitle: "Опубликовать",
+    descPlaceholder: "Добавьте описание...",
+    coverTag: "Обложка",
+    audienceTitle: "Кто может просматривать",
+    audPublic: "Все (Публично)",
+    audFriends: "Только друзья",
+    audPrivate: "Только я (Приватно)",
+    allowComments: "Разрешить комментарии",
+    allowCommentsSub: "Все могут комментировать",
+    draftBtn: "Черновики",
+    publishBtn: "Опубликовать",
+    musicHeader: "Выбор музыки",
+    tabForYou: "Для вас",
+    tabPopular: "Популярное",
+    tabNoMusic: "Без музыки",
+    select: "Выбрать",
+    galleryBtn: "Загрузить",
+    flash: "Вспышка",
+    timer: "Таймер",
+    effects: "Эффекты",
+    authReq: "Пожалуйста, авторизуйтесь.",
+    videoOnly: "Пожалуйста, выберите видеофайл!",
+    sizeLimit: "Размер видео превышает 100МБ.",
+    draftSaved: "Сохранено в черновиках!",
+    uploadSuccess: "Видео успешно опубликовано!",
+    uploading: "Загрузка видео"
+  },
+  fr: {
+    addMusic: "Ajouter un son",
+    next: "Suivant",
+    publishTitle: "Publier",
+    descPlaceholder: "Décrivez votre vidéo...",
+    coverTag: "Couverture",
+    audienceTitle: "Qui peut voir cette vidéo",
+    audPublic: "Tout le monde (Public)",
+    audFriends: "Amis uniquement",
+    audPrivate: "Moi uniquement (Privé)",
+    allowComments: "Autoriser les commentaires",
+    allowCommentsSub: "Tout le monde peut commenter",
+    draftBtn: "Brouillons",
+    publishBtn: "Publier",
+    musicHeader: "Sélectionner un son",
+    tabForYou: "Pour vous",
+    tabPopular: "Populaire",
+    tabNoMusic: "Son original",
+    select: "Sélectionner",
+    galleryBtn: "Galerie",
+    flash: "Flash",
+    timer: "Minuteur",
+    effects: "Effets",
+    authReq: "Veuillez vous connecter pour publier.",
+    videoOnly: "Veuillez sélectionner un fichier vidéo valide!",
+    sizeLimit: "Le fichier dépasse 100Mo.",
+    draftSaved: "Enregistré dans les brouillons!",
+    uploadSuccess: "Vidéo publiée avec succès!",
+    uploading: "Téléversement en cours"
+  },
+  de: {
+    addMusic: "Sound hinzufügen",
+    next: "Weiter",
+    publishTitle: "Veröffentlichen",
+    descPlaceholder: "Beschreibe deinen Beitrag...",
+    coverTag: "Cover",
+    audienceTitle: "Wer kann dieses Video sehen",
+    audPublic: "Jeder (Öffentlich)",
+    audFriends: "Nur Freunde",
+    audPrivate: "Nur ich (Privat)",
+    allowComments: "Kommentare erlauben",
+    allowCommentsSub: "Jeder kann kommentieren",
+    draftBtn: "Entwürfe",
+    publishBtn: "Posten",
+    musicHeader: "Sound auswählen",
+    tabForYou: "Für dich",
+    tabPopular: "Beliebt",
+    tabNoMusic: "Originalton",
+    select: "Auswählen",
+    galleryBtn: "Galerie",
+    flash: "Blitz",
+    timer: "Timer",
+    effects: "Effekte",
+    authReq: "Bitte melde dich an.",
+    videoOnly: "Bitte wähle eine gültige Videodatei aus!",
+    sizeLimit: "Datei ist größer als 100MB.",
+    draftSaved: "Als Entwurf gespeichert!",
+    uploadSuccess: "Video erfolgreich veröffentlicht!",
+    uploading: "Video wird hochgeladen"
+  },
+  el: {
+    addMusic: "Προσθήκη ήχου",
+    next: "Επόμενο",
+    publishTitle: "Δημοσίευση",
+    descPlaceholder: "Προσθέστε περιγραφή...",
+    coverTag: "Εξώφυλλο",
+    audienceTitle: "Ποιος μπορεί να δει αυτό το βίντεο",
+    audPublic: "Όλοι (Δημόσιο)",
+    audFriends: "Μόνο φίλοι",
+    audPrivate: "Μόνο εγώ (Ιδιωτικό)",
+    allowComments: "Να επιτρέπονται σχόλια",
+    allowCommentsSub: "Όλοι μπορούν να σχολιάσουν",
+    draftBtn: "Πρόχειρα",
+    publishBtn: "Δημοσίευση",
+    musicHeader: "Επιλογή ήχου",
+    tabForYou: "Για εσάς",
+    tabPopular: "Δημοφιλή",
+    tabNoMusic: "Πρωτότυπος ήχος",
+    select: "Επιλογή",
+    galleryBtn: "Γκαλερί",
+    flash: "Φλας",
+    timer: "Χρονόμετρο",
+    effects: "Εφέ",
+    authReq: "Παρακαλώ συνδεθείτε.",
+    videoOnly: "Επιλέξτε ένα έγκυρο αρχείο βίντεο!",
+    sizeLimit: "Το μέγεθος υπερβαίνει τα 100MB.",
+    draftSaved: "Αποθηκεύτηκε στα πρόχειρα!",
+    uploadSuccess: "Το βίντεο δημοσιεύτηκε με επιτυχία!",
+    uploading: "Μεταφόρτωση βίντεο"
+  }
+};
+
+// საიტის მიმდინარე ენის ამოღება
+function getReelsActiveLangCode() {
+  if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+  if (typeof window.currentSiteLang !== 'undefined' && window.currentSiteLang) return window.currentSiteLang;
+  return localStorage.getItem('eb_lang') || localStorage.getItem('emigrant_lang') || 'ka';
+}
+
+function getReelsLangT() {
+  var lang = getReelsActiveLangCode();
+  return REELS_I18N[lang] || REELS_I18N['ka'];
+}
+
+// 🎵 2. ლოკალური ქეშირებული მუსიკები (Read-ების 0 ხარჯი)
+const REELS_MUSIC_CACHE = [
+  { id: "m1", title: "DJ Geo Remix", author: "DJ Geo", cover: "icons/clapperboard.svg", duration: "1:27", type: "popular" },
+  { id: "m2", title: "Vibe 5789 Exclusive", author: "Vibe Music", cover: "icons/clapperboard.svg", duration: "1:01", type: "popular" },
+  { id: "m3", title: "Motivat2 Original Beat", author: "Motivat2", cover: "icons/clapperboard.svg", duration: "2:33", type: "foryou" },
+  { id: "m4", title: "Sheni Tvalebi Remix", author: "Ilarion Studio", cover: "icons/clapperboard.svg", duration: "1:00", type: "foryou" },
+  { id: "m5", title: "I Won't Let You Go", author: "Monkey Beats", cover: "icons/clapperboard.svg", duration: "4:36", type: "foryou" }
+];
+
+var liveCameraStream = null;
+var currentFacingMode = 'user';
+var mediaRecorder = null;
+var recordedChunks = [];
+var isRecordingVideo = false;
+var selectedReelFile = null;
+var selectedReelMusicObj = null;
+var selectedReelAudience = 'public';
+
+// 📸 3. კამერის გახსნა ნავბარის ღილაკით
+function openReelsCameraScreen() {
+  var modal = document.getElementById('rfCameraModal');
+  if (modal) {
+    modal.style.setProperty('display', 'flex', 'important');
+    applyReelsFlowTranslations();
+    startLiveCameraStream();
+  }
+}
+
+function startLiveCameraStream() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacingMode },
+      audio: true
+    }).then(function(stream) {
+      liveCameraStream = stream;
+      var video = document.getElementById('rfLiveCameraFeed');
+      if (video) video.srcObject = stream;
+    }).catch(function(err) {
+      console.warn("Camera stream error:", err);
+    });
+  }
+}
+
+function closeReelsCameraScreen() {
+  var modal = document.getElementById('rfCameraModal');
+  if (liveCameraStream) {
+    liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
+    liveCameraStream = null;
+  }
+  if (modal) modal.style.setProperty('display', 'none', 'important');
+}
+
+function flipLiveCamera() {
+  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+  if (liveCameraStream) {
+    liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
+  }
+  startLiveCameraStream();
+}
+
+function toggleCameraFlash() {
+  // თუ მოწყობილობას აქვს Flash
+  if (liveCameraStream) {
+    var track = liveCameraStream.getVideoTracks()[0];
+    if (track && track.getCapabilities && track.getCapabilities().torch) {
+      var currentSetting = track.getSettings().torch || false;
+      track.applyConstraints({ advanced: [{ torch: !currentSetting }] }).catch(function(){});
+    }
+  }
+}
+
+function setRecordDuration(sec, el) {
+  var items = document.querySelectorAll('#rfCameraModal span[id^="rf-dur-"]');
+  items.forEach(function(s) { s.style.borderBottom = 'none'; s.style.opacity = '0.6'; s.style.color = '#ffffff'; });
+  if (el) {
+    el.style.borderBottom = '2px solid #fe2c55';
+    el.style.opacity = '1';
+    el.style.color = '#fe2c55';
+  }
+}
+
+// 🖼️ 4. გალერეის გახსნა (კამერა ფონზე რჩება, მთავარზე არ გაგდებს)
+function triggerGalleryDirectPicker() {
+  var input = document.getElementById('reelsGalleryDirectInput');
+  if (input) {
+    input.value = "";
+    input.click();
+  }
+}
+
+// ვიდეოს არჩევის გადაჭერა გალერეიდან
+function handleReelsDirectUpload(event) {
+  var fileInput = event.target;
+  var file = fileInput.files[0];
+  if (!file) return;
+
+  var t = getReelsLangT();
+
+  if (!currentUser) {
+    alert(t.authReq || "გთხოვთ გაიაროთ ავტორიზაცია.");
+    fileInput.value = "";
+    return;
+  }
+
+  // მხოლოდ ფაილის არჩევის შემდეგ ვთიშავთ კამერას
+  closeReelsCameraScreen();
+
+  selectedReelFile = file;
+  selectedReelMusicObj = null;
+  selectedReelAudience = 'public';
+
+  openReelsFlowPreview(file);
+}
+
+// 🔴 5. კამერით ჩაწერა წითელი ღილაკით
+function toggleCameraRecording() {
+  var inner = document.getElementById('rfRecordInnerCircle');
+  if (!liveCameraStream) return;
+
+  if (!isRecordingVideo) {
+    recordedChunks = [];
+    try {
+      mediaRecorder = new MediaRecorder(liveCameraStream);
+    } catch(e) {
+      mediaRecorder = new MediaRecorder(liveCameraStream, { mimeType: 'video/webm' });
+    }
+
+    mediaRecorder.ondataavailable = function(e) {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = function() {
+      var blob = new Blob(recordedChunks, { type: 'video/mp4' });
+      selectedReelFile = new File([blob], "recorded_reel.mp4", { type: 'video/mp4' });
+      closeReelsCameraScreen();
+      openReelsFlowPreview(selectedReelFile);
+    };
+
+    mediaRecorder.start();
+    isRecordingVideo = true;
+    if (inner) {
+      inner.style.borderRadius = "8px";
+      inner.style.transform = "scale(0.6)";
+    }
+  } else {
+    mediaRecorder.stop();
+    isRecordingVideo = false;
+    if (inner) {
+      inner.style.borderRadius = "50%";
+      inner.style.transform = "scale(1)";
+    }
+  }
+}
+
+// 🎬 6. Preview ეკრანის მართვა
+function openReelsFlowPreview(file) {
+  var modal = document.getElementById('rfPreviewModal');
+  var video = document.getElementById('rfPreviewVideo');
+  var fileUrl = URL.createObjectURL(file);
+
+  if (video) {
+    video.src = fileUrl;
+    video.currentTime = 0;
+    video.play().catch(function(){});
+  }
+
+  applyReelsFlowTranslations();
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeReelsFlowPreview() {
+  var modal = document.getElementById('rfPreviewModal');
+  var video = document.getElementById('rfPreviewVideo');
+  if (video) {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  }
+  if (modal) modal.style.display = 'none';
+
+  var fileInput = document.getElementById('reelsGalleryDirectInput');
+  if (fileInput) fileInput.value = "";
+  selectedReelFile = null;
+}
+
+// 📝 7. გამოქვეყნების ეკრანზე გადასვლა და ქავერის გენერაცია
+function goToPublishScreen() {
+  var previewModal = document.getElementById('rfPreviewModal');
+  var previewVideo = document.getElementById('rfPreviewVideo');
+  var publishModal = document.getElementById('rfPublishModal');
+
+  generateVideoThumbnail(previewVideo);
+
+  if (previewVideo) previewVideo.pause();
+  if (previewModal) previewModal.style.display = 'none';
+  if (publishModal) publishModal.style.display = 'flex';
+}
+
+function backToPreviewScreen() {
+  var previewModal = document.getElementById('rfPreviewModal');
+  var previewVideo = document.getElementById('rfPreviewVideo');
+  var publishModal = document.getElementById('rfPublishModal');
+
+  if (publishModal) publishModal.style.display = 'none';
+  if (previewModal) previewModal.style.display = 'flex';
+  if (previewVideo) previewVideo.play().catch(function(){});
+}
+
+function generateVideoThumbnail(videoElem) {
+  var canvas = document.getElementById('rfThumbCanvas');
+  var img = document.getElementById('rfThumbPreviewImg');
+  if (!canvas || !img || !videoElem) return;
+
+  canvas.width = videoElem.videoWidth || 300;
+  canvas.height = videoElem.videoHeight || 400;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height);
+
+  try {
+    img.src = canvas.toDataURL('image/jpeg', 0.8);
+  } catch (e) {
+    img.src = "icons/video.svg";
+  }
+}
+
+// 8. ჰეშთეგები და აუდიტორია
+function addReelHashtag(tag) {
+  var input = document.getElementById('rfPostCaption');
+  if (!input) return;
+  var current = input.value.trim();
+  if (current.includes(tag)) return;
+  input.value = current ? current + " " + tag : tag;
+  input.focus();
+}
+
+function toggleReelAudience() {
+  var t = getReelsLangT();
+  var label = document.getElementById('rf-selected-audience-label');
+
+  if (selectedReelAudience === 'public') {
+    selectedReelAudience = 'friends';
+    label.innerText = t.audFriends;
+  } else if (selectedReelAudience === 'friends') {
+    selectedReelAudience = 'private';
+    label.innerText = t.audPrivate;
+  } else {
+    selectedReelAudience = 'public';
+    label.innerText = t.audPublic;
+  }
+}
+
+// 🎵 9. მუსიკის არჩევა
+function openReelsMusicSheet() {
+  var sheet = document.getElementById('rfMusicSheet');
+  if (sheet) {
+    sheet.style.display = 'flex';
+    renderMusicList('foryou');
+  }
+}
+
+function closeReelsMusicSheet(e) {
+  var sheet = document.getElementById('rfMusicSheet');
+  if (sheet) sheet.style.display = 'none';
+}
+
+function switchMusicTab(tab) {
+  var tabForYou = document.getElementById('rf-tab-for-you');
+  var tabPopular = document.getElementById('rf-tab-popular');
+  if (tabForYou) tabForYou.classList.toggle('active', tab === 'foryou');
+  if (tabPopular) tabPopular.classList.toggle('active', tab === 'popular');
+  renderMusicList(tab);
+}
+
+function renderMusicList(tab) {
+  var list = document.getElementById('rfMusicListContainer');
+  if (!list) return;
+  var t = getReelsLangT();
+  var filtered = REELS_MUSIC_CACHE.filter(function(m) { return tab === 'foryou' ? true : m.type === tab; });
+
+  list.innerHTML = filtered.map(function(item) {
+    return `
+      <div class="rf-music-item" onclick="selectReelMusic('${item.id}')">
+        <div class="rf-music-item-left">
+          <img src="${item.cover}" class="rf-music-cover" alt="cover">
+          <div>
+            <div class="rf-music-title">${item.title}</div>
+            <div class="rf-music-sub">${item.author} • ${item.duration}</div>
+          </div>
+        </div>
+        <button type="button" class="rf-music-select-btn">${t.select}</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectReelMusic(musicId) {
+  var camMusicLabel = document.getElementById('rf-cam-selected-music');
+  var prevMusicLabel = document.getElementById('rf-lbl-selected-music');
+  var t = getReelsLangT();
+
+  if (!musicId) {
+    selectedReelMusicObj = null;
+    if (camMusicLabel) camMusicLabel.innerText = t.addMusic;
+    if (prevMusicLabel) prevMusicLabel.innerText = t.addMusic;
+  } else {
+    var found = REELS_MUSIC_CACHE.find(function(m) { return m.id === musicId; });
+    selectedReelMusicObj = found || null;
+    var title = found ? found.title : t.addMusic;
+    if (camMusicLabel) camMusicLabel.innerText = title;
+    if (prevMusicLabel) prevMusicLabel.innerText = title;
+  }
+
+  closeReelsMusicSheet();
+}
+
+// 💾 10. დრაფტებში შენახვა
+function saveReelAsDraft() {
+  var t = getReelsLangT();
+  var caption = document.getElementById('rfPostCaption') ? document.getElementById('rfPostCaption').value.trim() : "";
+  var draft = {
+    caption: caption,
+    music: selectedReelMusicObj,
+    audience: selectedReelAudience,
+    date: new Date().toISOString()
+  };
+  localStorage.setItem('eb_last_reel_draft', JSON.stringify(draft));
+  alert(t.draftSaved);
+  document.getElementById('rfPublishModal').style.display = 'none';
+  closeReelsFlowPreview();
+}
+
+// 🚀 11. გამოქვეყნება Cloudflare R2-ზე და Firestore-ში
+function startFinalReelUpload() {
+  if (!selectedReelFile) return;
+  var t = getReelsLangT();
+
+  var caption = document.getElementById('rfPostCaption') ? document.getElementById('rfPostCaption').value.trim() : "";
+  var allowComments = document.getElementById('rfAllowCommentsCheckbox') ? document.getElementById('rfAllowCommentsCheckbox').checked : true;
+
+  var overlay = document.getElementById('reelsUploadOverlay');
+  var statusText = document.getElementById('reelsUploadStatusText');
+
+  document.getElementById('rfPublishModal').style.display = 'none';
+  if (overlay) overlay.style.display = 'flex';
+  if (statusText) statusText.innerText = `${t.uploading} (0%)...`;
+
+  uploadReelToR2(
+    selectedReelFile,
+    function(percent) {
+      if (statusText) statusText.innerText = `${t.uploading} (${percent}%)...`;
+    },
+    function(publicUrl, error) {
+      if (error || !publicUrl) {
+        if (overlay) overlay.style.display = 'none';
+        alert("Upload error: " + (error ? error.message : "Unknown error"));
+        return;
+      }
+
+      var myName = currentUserProfile ? currentUserProfile.full_name : (currentUser.displayName || currentUser.email || "Emigrant");
+
+      db.collection('posts').add({
+        user_id: currentUser.uid,
+        author_name: myName,
+        content: caption,
+        media_url: publicUrl,
+        media_type: 'video',
+        likes_count: 0,
+        comments_count: 0,
+        audience: selectedReelAudience,
+        allow_comments: allowComments,
+        music_title: selectedReelMusicObj ? selectedReelMusicObj.title : null,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        if (overlay) overlay.style.display = 'none';
+        alert(t.uploadSuccess);
+        closeReelsFlowPreview();
+        loadRealReelsFromFirestore();
+      }).catch(function(err) {
+        if (overlay) overlay.style.display = 'none';
+        alert("Database error: " + err.message);
+      });
+    }
+  );
+}
+
+// 🌐 12. ენების მორგება DOM ელემენტებზე
+function applyReelsFlowTranslations() {
+  var t = getReelsLangT();
+  var setEl = function(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.innerText = text;
+  };
+
+  var musicTitle = selectedReelMusicObj ? selectedReelMusicObj.title : t.addMusic;
+  setEl('rf-cam-selected-music', musicTitle);
+  setEl('rf-lbl-selected-music', musicTitle);
+  setEl('rf-lbl-gallery-btn', t.galleryBtn);
+  setEl('rf-lbl-flash', t.flash);
+  setEl('rf-lbl-timer', t.timer);
+  setEl('rf-lbl-effects', t.effects);
+  setEl('rf-lbl-next-btn', t.next);
+  setEl('rf-lbl-publish-title', t.publishTitle);
+  setEl('rf-lbl-cover-tag', t.coverTag);
+  setEl('rf-lbl-aud-title', t.audienceTitle);
+  setEl('rf-selected-audience-label', selectedReelAudience === 'friends' ? t.audFriends : (selectedReelAudience === 'private' ? t.audPrivate : t.audPublic));
+  setEl('rf-lbl-allow-comments', t.allowComments);
+  setEl('rf-lbl-allow-comments-sub', t.allowCommentsSub);
+  setEl('rf-lbl-draft-btn', t.draftBtn);
+  setEl('rf-lbl-publish-btn-text', t.publishBtn);
+  setEl('rf-lbl-music-header', t.musicHeader);
+  setEl('rf-tab-for-you', t.tabForYou);
+  setEl('rf-tab-popular', t.tabPopular);
+  setEl('rf-tab-none', t.tabNoMusic);
+
+  var desc = document.getElementById('rfPostCaption');
+  if (desc) desc.placeholder = t.descPlaceholder;
+}
+ 
   </script>
     <!-- ატვირთვის პროგრესის ფანჯარა -->
   <div class="reels-upload-overlay" id="reelsUploadOverlay">
@@ -2658,74 +3308,88 @@ function toggleCameraRecording() {
 
 
 
-  <!-- ==========================================================================
-     📸 1. TIKTOK CAMERA RECORDING SCREEN (პირველი ეკრანი)
-     ========================================================================== -->
-<div class="reels-flow-modal" id="rfCameraModal" style="background: #000000; overflow: hidden;">
-  <!-- ცოცხალი კამერის ვიდეო -->
-  <video id="rfLiveCameraFeed" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-
-  <!-- ზედა პანელი: დახურვა, მუსიკა, კამერის გადართვა -->
-  <div style="position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 20; background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);">
-    <button type="button" onclick="closeReelsCameraScreen()" style="background: none; border: none; color: #ffffff; font-size: 26px; cursor: pointer; padding: 4px;">✕</button>
-    <div class="rf-music-pill-btn" onclick="openReelsMusicSheet()" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #ffffff;">
-      <span>🎵</span>
-      <span id="rf-cam-selected-music">მუსიკის დამატება</span>
-    </div>
-    <button type="button" onclick="flipLiveCamera()" style="background: none; border: none; color: #ffffff; font-size: 24px; cursor: pointer;">🔄</button>
-  </div>
-
-  <!-- მარჯვენა ინსტრუმენტების ზოლი -->
-  <div style="position: absolute; top: 70px; right: 14px; display: flex; flex-direction: column; gap: 18px; z-index: 20; align-items: center; color: #ffffff;">
-    <div style="cursor: pointer; text-align: center;" onclick="toggleCameraFlash()">
-      <span style="font-size: 22px;">⚡</span>
-    </div>
-    <div style="cursor: pointer; text-align: center;">
-      <span style="font-size: 22px;">⏱️</span>
-    </div>
-    <div style="cursor: pointer; text-align: center;">
-      <span style="font-size: 22px;">✨</span>
-    </div>
-  </div>
-
-  <!-- ქვედა მართვის ზონა -->
-  <div style="position: absolute; bottom: 0; left: 0; right: 0; padding-bottom: 24px; display: flex; flex-direction: column; align-items: center; z-index: 20; background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%);">
-    <!-- ტაიმერის რეჟიმები -->
-    <div style="display: flex; gap: 16px; margin-bottom: 16px; font-size: 13px; font-weight: 700; color: #ffffff;">
-      <span style="cursor: pointer; opacity: 0.6;" onclick="setRecordDuration(600, this)">10 წთ</span>
-      <span style="cursor: pointer; opacity: 0.6;" onclick="setRecordDuration(60, this)">60 წმ</span>
-      <span style="cursor: pointer; color: #ff2d55; border-bottom: 2px solid #ff2d55; padding-bottom: 2px;" onclick="setRecordDuration(15, this)">15 წმ</span>
-      <span style="cursor: pointer; opacity: 0.6;">ფოტო</span>
-    </div>
-
-    <!-- ჩაწერის ზოლი: გალერეა მარცხნივ, წითელი ღილაკი ცენტრში -->
-    <div style="width: 100%; display: flex; align-items: center; justify-content: space-around; padding: 0 20px;">
-      <!-- 🖼️ გალერეიდან არჩევა (მარცხნივ ქვემოთ) -->
-      <div onclick="triggerGalleryPickerFromCam()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
-        <div style="width: 44px; height: 44px; border-radius: 10px; border: 2px solid #ffffff; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-          <img src="icons/camera.svg" style="width: 24px; height: 24px; filter: invert(1);" alt="გალერეა">
-        </div>
-        <span style="font-size: 11px; font-weight: 600; color: #fff;">გალერეა</span>
-      </div>
-
-      <!-- 🔴 დიდი წითელი ჩამწერი ღილაკი -->
-      <div id="rfRecordBigBtn" onclick="toggleCameraRecording()" style="width: 76px; height: 76px; border-radius: 50%; border: 4px solid #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;">
-        <div id="rfRecordInnerCircle" style="width: 60px; height: 60px; border-radius: 50%; background: #fe2c55; transition: all 0.2s;"></div>
-      </div>
-
-      <!-- ცარიელი ბალანსისთვის მარჯვნივ -->
-      <div style="width: 44px;"></div>
-    </div>
-  </div>
-</div>
-
-  <!-- ==========================================================================
-       🚀 NEW: TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (HTML MODALS)
-       ყველა ახალი ეკრანი და Bottom Sheet (Facebook White Style)
+   <!-- ==========================================================================
+       🚀 FULL TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (HTML MODALS)
        ========================================================================== -->
 
-  <!-- 1. ვიდეოს გადახედვის ეკრანი (Preview Screen) -->
-  <div class="reels-flow-modal" id="rfPreviewModal">
+  <!-- 📸 1. TIKTOK კამერის ეკრანი (სუფთა ვექტორული SVG-ებით) -->
+  <div class="reels-flow-modal" id="rfCameraModal" style="background: #000000; overflow: hidden; display: none;">
+    <!-- ცოცხალი კამერის ვიდეო -->
+    <video id="rfLiveCameraFeed" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+
+    <!-- ფარული input პირდაპირ გალერეიდან ასარჩევად -->
+    <input type="file" id="reelsGalleryDirectInput" accept="video/mp4,video/quicktime,video/*" style="display: none;" onchange="handleReelsDirectUpload(event)">
+
+    <!-- ზედა პანელი: დახურვა, მუსიკა, კამერის გადართვა -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 20; background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);">
+      <button type="button" onclick="closeReelsCameraScreen()" style="background: none; border: none; color: #ffffff; cursor: pointer; padding: 6px; display: flex; align-items: center;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      
+      <div class="rf-music-pill-btn" onclick="openReelsMusicSheet()" style="background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; display: flex; align-items: center; gap: 6px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="#ffffff"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <span id="rf-cam-selected-music">მუსიკის დამატება</span>
+      </div>
+
+      <!-- კამერის გადაბრუნება (Flip Camera) -->
+      <button type="button" onclick="flipLiveCamera()" style="background: none; border: none; cursor: pointer; padding: 6px; display: flex; align-items: center;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8c0 1.954.702 3.744 1.87 5.143L4 17h5v-5L7.26 13.74C6.47 12.64 6 11.37 6 10c0-3.314 2.686-6 6-6s6 2.686 6 6c0 1.37-.47 2.64-1.26 3.74L15 12v5h5l-1.87-1.857C19.298 13.744 20 11.954 20 10z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- მარჯვენა ინსტრუმენტების ზოლი (TikTok SVG-ები) -->
+    <div style="position: absolute; top: 75px; right: 14px; display: flex; flex-direction: column; gap: 20px; z-index: 20; align-items: center;">
+      <!-- ფლეში -->
+      <div onclick="toggleCameraFlash()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-flash">Flash</span>
+      </div>
+      <!-- ტაიმერი -->
+      <div style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-timer">Timer</span>
+      </div>
+      <!-- ეფექტები -->
+      <div style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-effects">Effects</span>
+      </div>
+    </div>
+
+    <!-- ქვედა მართვის ზონა -->
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding-bottom: 28px; display: flex; flex-direction: column; align-items: center; z-index: 20; background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);">
+      <!-- ტაიმერის რეჟიმები -->
+      <div style="display: flex; gap: 20px; margin-bottom: 18px; font-size: 13.5px; font-weight: 700; color: #ffffff;">
+        <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-10m" onclick="setRecordDuration(600, this)">10 წთ</span>
+        <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-60s" onclick="setRecordDuration(60, this)">60 წმ</span>
+        <span style="cursor: pointer; color: #fe2c55; border-bottom: 2px solid #fe2c55; padding-bottom: 2px;" id="rf-dur-15s" onclick="setRecordDuration(15, this)">15 წმ</span>
+        <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-photo">ფოტო</span>
+      </div>
+
+      <!-- ჩაწერის ზოლი -->
+      <div style="width: 100%; display: flex; align-items: center; justify-content: space-around; padding: 0 24px;">
+        <!-- 🖼️ გალერეის ღილაკი -->
+        <div onclick="triggerGalleryDirectPicker()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <div style="width: 44px; height: 44px; border-radius: 10px; border: 2px solid #ffffff; background: rgba(255,255,255,0.15); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          </div>
+          <span style="font-size: 11px; font-weight: 700; color: #ffffff;" id="rf-lbl-gallery-btn">გალერეა</span>
+        </div>
+
+        <!-- 🔴 დიდი წითელი ჩამწერი ღილაკი -->
+        <div id="rfRecordBigBtn" onclick="toggleCameraRecording()" style="width: 76px; height: 76px; border-radius: 50%; border: 4px solid #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <div id="rfRecordInnerCircle" style="width: 60px; height: 60px; border-radius: 50%; background: #fe2c55; transition: all 0.2s;"></div>
+        </div>
+
+        <div style="width: 44px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎬 2. ვიდეოს გადახედვის ეკრანი (Preview Screen - Facebook White) -->
+  <div class="reels-flow-modal" id="rfPreviewModal" style="display: none;">
     <div class="rf-header">
       <button type="button" class="rf-back-btn" onclick="closeReelsFlowPreview()">✕</button>
       <div class="rf-music-pill-btn" onclick="openReelsMusicSheet()">
@@ -2747,8 +3411,8 @@ function toggleCameraRecording() {
     </div>
   </div>
 
-  <!-- 2. გამოქვეყნების ეკრანი (Publish / Details Screen) -->
-  <div class="reels-flow-modal" id="rfPublishModal">
+  <!-- 📝 3. გამოქვეყნების ეკრანი (Publish Screen - Facebook White) -->
+  <div class="reels-flow-modal" id="rfPublishModal" style="display: none;">
     <div class="rf-header">
       <button type="button" class="rf-back-btn" onclick="backToPreviewScreen()">‹</button>
       <div class="rf-header-title" id="rf-lbl-publish-title">გამოქვეყნება</div>
@@ -2766,7 +3430,7 @@ function toggleCameraRecording() {
         </div>
       </div>
 
-      <!-- ჰეშთეგების სწრაფი ღილაკები -->
+      <!-- ჰეშთეგები -->
       <div class="rf-tags-row">
         <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#reels')">#reels</button>
         <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#emigrantbook')">#emigrantbook</button>
@@ -2775,7 +3439,7 @@ function toggleCameraRecording() {
 
       <div style="height: 1px; background: #dadde1; margin: 4px 0;"></div>
 
-      <!-- პარამეტრების მწკრივები (Facebook White Style) -->
+      <!-- პარამეტრები -->
       <div class="rf-setting-row" onclick="toggleReelAudience()">
         <div class="rf-setting-left">
           <img src="icons/globe.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Audience">
@@ -2798,7 +3462,7 @@ function toggleCameraRecording() {
         <input type="checkbox" id="rfAllowCommentsCheckbox" checked style="width: 20px; height: 20px; accent-color: #1877f2;">
       </div>
 
-      <!-- ქვედა ღილაკები: დრაფტი და გამოქვეყნება -->
+      <!-- ქვედა ღილაკები -->
       <div class="rf-action-bottom-row">
         <button type="button" class="rf-btn-draft" onclick="saveReelAsDraft()" id="rf-lbl-draft-btn">შენახვა დრაფტებში</button>
         <button type="button" class="rf-btn-publish" onclick="startFinalReelUpload()" id="rf-lbl-submit-btn">
@@ -2809,7 +3473,7 @@ function toggleCameraRecording() {
     </div>
   </div>
 
-  <!-- 3. მუსიკის არჩევის Bottom Sheet -->
+  <!-- 🎵 4. მუსიკის Bottom Sheet (თეთრი Facebook სტილი) -->
   <div class="rf-music-sheet" id="rfMusicSheet" onclick="closeReelsMusicSheet(event)">
     <div class="rf-music-panel" onclick="event.stopPropagation()">
       <div class="rf-music-header">
@@ -2822,10 +3486,11 @@ function toggleCameraRecording() {
         <div class="rf-music-tab-item" id="rf-tab-none" onclick="selectReelMusic(null)">მუსიკის გარეშე</div>
       </div>
       <div class="rf-music-list" id="rfMusicListContainer">
-        <!-- მუსიკები ჩაიხატება დინამიურად (ქეშირებული სიიდან) -->
+        <!-- მუსიკები დინამიურად იხატება -->
       </div>
     </div>
   </div>
+     
 
 </body>
 </html>
