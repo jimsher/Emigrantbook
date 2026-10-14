@@ -2538,50 +2538,30 @@ function toggleCameraRecording() {
   if (!isRecordingVideo) {
     recordedChunks = [];
 
-    // 1. კამერის სუფთა ნაკადი
-    var combinedStream = new MediaStream();
-    liveCameraStream.getVideoTracks().forEach(function(track) {
-      combinedStream.addTrack(track);
-    });
-
-    // 2. თუ მუსიკაა, უბრალოდ ვუკრავთ ფონზე და ვცდილობთ ტრეკის უსაფრთხოდ მიბმას
-    if (selectedReelMusicObj && currentCameraAudio && currentCameraAudio.src) {
+    // 1. თუ მუსიკაა არჩეული, ჩაწერის დაწყებასთან ერთად ვრთავთ მუსიკას
+    if (selectedReelMusicObj && typeof activeCameraMusicAudio !== 'undefined' && activeCameraMusicAudio.src) {
       try {
-        currentCameraAudio.currentTime = 0;
-        currentCameraAudio.play().catch(function(){});
+        activeCameraMusicAudio.currentTime = 0;
+        activeCameraMusicAudio.play().catch(function(e) {
+          console.warn("Audio play error on record:", e);
+        });
       } catch(e) {}
-
-      // უსაფრთხო მიერთება: თუ ბრაუზერმა არ დაუშვა, შეცდომას ჩაყლაპავს და ჩაწერას არ გაყინავს!
-      try {
-        var aStream = (typeof currentCameraAudio.captureStream === 'function') 
-          ? currentCameraAudio.captureStream() 
-          : (typeof currentCameraAudio.mozCaptureStream === 'function' ? currentCameraAudio.mozCaptureStream() : null);
-
-        if (aStream && aStream.getAudioTracks().length > 0) {
-          aStream.getAudioTracks().forEach(function(track) {
-            combinedStream.addTrack(track);
-          });
-        }
-      } catch(err) {
-        console.warn("Audio stream attach skipped due to security policy:", err);
-      }
     }
 
-    // 3. ჩამწერის გაშვება (გარანტირებული)
-    var streamToRecord = (combinedStream.getTracks().length > 0) ? combinedStream : liveCameraStream;
+    // 2. MediaRecorder-ის მხარდაჭერილი ფორმატი
     var options = { mimeType: 'video/mp4' };
     if (!MediaRecorder.isTypeSupported('video/mp4')) {
-      options = { mimeType: 'video/webm' };
+      if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
+        options = { mimeType: 'video/webm;codecs=vp8,opus' };
+      } else {
+        options = { mimeType: 'video/webm' };
+      }
     }
 
     try {
-      mediaRecorder = new MediaRecorder(streamToRecord, options);
+      mediaRecorder = new MediaRecorder(liveCameraStream, options);
     } catch(e) {
-      try {
-        mediaRecorder = new MediaRecorder(streamToRecord);
-      } catch(e2) {
-        mediaRecorder = new MediaRecorder(liveCameraStream);
-      }
+      mediaRecorder = new MediaRecorder(liveCameraStream);
     }
 
     mediaRecorder.ondataavailable = function(e) {
@@ -2591,9 +2571,9 @@ function toggleCameraRecording() {
     };
 
     mediaRecorder.onstop = function() {
-      // მუსიკის გაჩერება
-      if (currentCameraAudio) {
-        currentCameraAudio.pause();
+      // ჩაწერის დასრულებისას მუსიკის გაჩერება
+      if (typeof activeCameraMusicAudio !== 'undefined') {
+        activeCameraMusicAudio.pause();
       }
 
       var finalMime = mediaRecorder.mimeType || 'video/mp4';
@@ -2613,13 +2593,17 @@ function toggleCameraRecording() {
         inner.style.borderRadius = "8px";
         inner.style.transform = "scale(0.6)";
       }
-    } catch(startErr) {
-      console.error("Start failed:", startErr);
+    } catch(err) {
+      console.error("Recording start error:", err);
       isRecordingVideo = false;
+      if (inner) {
+        inner.style.borderRadius = "50%";
+        inner.style.transform = "scale(1)";
+      }
     }
 
   } else {
-    // 🛑 ჩაწერის შეჩერება
+    // 🛑 ჩაწერის გაჩერება
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
@@ -2630,10 +2614,9 @@ function toggleCameraRecording() {
     }
   }
 }
+        
 
        
-
-
 
 // 🎬 6. Preview მოდალი
 function openReelsFlowPreview(file) {
