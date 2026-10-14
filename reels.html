@@ -2399,21 +2399,35 @@ function closeReelsCameraScreen() {
 
 function flipLiveCamera() {
   currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+  
+  var video = document.getElementById('rfLiveCameraFeed');
+  if (video) {
+    // წინა კამერაზე სარკისებური (Mirror), უკანაზე ჩვეულებრივი
+    video.style.transform = (currentFacingMode === 'user') ? 'scaleX(-1)' : 'scaleX(1)';
+  }
+
   if (liveCameraStream) {
     liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
     liveCameraStream = null;
   }
+  
+  // ხელახლა ჩართვა
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({
       video: { facingMode: currentFacingMode },
       audio: false
     }).then(function(stream) {
       liveCameraStream = stream;
-      var video = document.getElementById('rfLiveCameraFeed');
-      if (video) video.srcObject = stream;
-    }).catch(function(){});
+      if (video) {
+        video.srcObject = stream;
+        video.play().catch(function(){});
+      }
+    }).catch(function(e) {
+      console.warn("Flip camera error:", e);
+    });
   }
 }
+
 
 function toggleCameraFlash() {
   if (liveCameraStream) {
