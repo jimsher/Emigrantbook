@@ -2281,7 +2281,7 @@ const REELS_I18N = {
   }
 };
 
-    
+                      
  function getReelsActiveLangCode() {
   if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
   if (typeof window.currentSiteLang !== 'undefined' && window.currentSiteLang) return window.currentSiteLang;
@@ -2293,7 +2293,7 @@ function getReelsLangT() {
   return REELS_I18N[lang] || REELS_I18N['ka'];
 }
 
-// 2. ლოკალური მუსიკების ბაზა
+// 2. ლოკალური მუსიკების ბაზა (Read-ების 0 ხარჯი)
 const REELS_MUSIC_CACHE = [
   { 
     id: "m1", 
@@ -2342,32 +2342,11 @@ var selectedReelFile = null;
 var selectedReelMusicObj = null;
 var selectedReelAudience = 'public';
 
-// 🎵 გლობალური ფლეიერი და აუდიო ძრავი
+// 🎵 გლობალური ფლეიერი კამერაზე მუსიკის დასაკრავად
 var activeCameraMusicAudio = new Audio();
 activeCameraMusicAudio.loop = true;
 
-var musicAudioCtx = null;
-var musicSourceNode = null;
-var musicDestNode = null;
-
-function initMusicAudioGraph() {
-  try {
-    if (!musicAudioCtx) {
-      musicAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      musicSourceNode = musicAudioCtx.createMediaElementSource(activeCameraMusicAudio);
-      musicDestNode = musicAudioCtx.createMediaStreamDestination();
-      musicSourceNode.connect(musicAudioCtx.destination);
-      musicSourceNode.connect(musicDestNode);
-    }
-    if (musicAudioCtx.state === 'suspended') {
-      musicAudioCtx.resume();
-    }
-  } catch(e) {
-    console.warn("Audio graph error:", e);
-  }
-}
-
-// 📸 3. კამერის გახსნა (სტაბილური, გაყინვის გარეშე, ხმის ფილტრების გათიშვით)
+// 📸 3. კამერის გახსნა (სტაბილური, გაყინვის გარეშე, ხმის ჩახშობის გათიშვით)
 function openReelsCameraScreen() {
   var t = getReelsLangT();
   if (!currentUser) {
@@ -2384,6 +2363,7 @@ function openReelsCameraScreen() {
   }
 
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    // 1. ვითხოვთ კამერას მაქსიმალურად ფართო ხედვით და ხმის ფილტრების გარეშე
     navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: currentFacingMode,
@@ -2398,6 +2378,7 @@ function openReelsCameraScreen() {
     }).then(function(stream) {
       liveCameraStream = stream;
       
+      // 2. ⚡ აპარატურული ზუმის იძულებითი განულება (Wide Angle-ზე გადაყვანა)
       var track = stream.getVideoTracks()[0];
       if (track && track.getCapabilities) {
         var capabilities = track.getCapabilities();
@@ -2423,6 +2404,7 @@ function openReelsCameraScreen() {
         video.play().catch(function(){});
       }
     }).catch(function(err) {
+      // Fallback
       navigator.mediaDevices.getUserMedia({
         video: { facingMode: currentFacingMode },
         audio: true
@@ -2442,6 +2424,7 @@ function openReelsCameraScreen() {
 function closeReelsCameraScreen() {
   var modal = document.getElementById('rfCameraModal');
   
+  // მუსიკის გაჩერება კამერის დახურვისას
   if (activeCameraMusicAudio) {
     activeCameraMusicAudio.pause();
     activeCameraMusicAudio.currentTime = 0;
@@ -2467,6 +2450,7 @@ function flipLiveCamera() {
     liveCameraStream = null;
   }
   
+  // ხელახლა ჩართვა
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({
       video: { facingMode: currentFacingMode },
@@ -2516,6 +2500,7 @@ function triggerGalleryFromCameraScreen() {
   }
 }
 
+// ვიდეოს არჩევის დამუშავება
 function handleReelsDirectUpload(event) {
   var fileInput = event.target;
   var file = fileInput.files[0];
@@ -2536,6 +2521,7 @@ function handleReelsDirectUpload(event) {
     return;
   }
 
+  // კამერა იხურება მხოლოდ მაშინ, როცა ვიდეო უკვე არჩეულია
   closeReelsCameraScreen();
 
   selectedReelFile = file;
@@ -2545,7 +2531,7 @@ function handleReelsDirectUpload(event) {
   openReelsFlowPreview(file);
 }
 
-// 🔴 5. კამერიდან ვიდეოს ჩაწერა (მუსიკისა და ხმის გარანტირებული შენახვით)
+// 🔴 5. კამერიდან ვიდეოს ჩაწერა (მუსიკის ჩაკერებით)
 function toggleCameraRecording() {
   var inner = document.getElementById('rfRecordInnerCircle');
   if (!liveCameraStream) return;
@@ -2553,39 +2539,48 @@ function toggleCameraRecording() {
   if (!isRecordingVideo) {
     recordedChunks = [];
 
+    // ჩაწერის მომენტში მუსიკის ჩართვა თავიდან
+    if (selectedReelMusicObj && activeCameraMusicAudio && activeCameraMusicAudio.src) {
+      activeCameraMusicAudio.currentTime = 0;
+      activeCameraMusicAudio.play().catch(function(e) {
+        console.warn("Audio play error on record:", e);
+      });
+    }
+
+    // ვკრებთ ვიდეო და აუდიო ტრეკებს
     var tracks = [];
-    liveCameraStream.getVideoTracks().forEach(function(vt) {
-      tracks.push(vt);
+
+    // 1. ვიდეო ტრეკი კამერიდან
+    liveCameraStream.getVideoTracks().forEach(function(track) {
+      tracks.push(track);
     });
 
-    var audioAdded = false;
+    // 2. აუდიო ტრეკი მუსიკიდან ან მიკროფონიდან
+    var audioStreamToUse = null;
 
-    if (selectedReelMusicObj && typeof musicDestNode !== 'undefined' && musicDestNode && musicDestNode.stream) {
-      if (musicAudioCtx && musicAudioCtx.state === 'suspended') {
-        musicAudioCtx.resume();
-      }
-
-      var musicTracks = musicDestNode.stream.getAudioTracks();
-      if (musicTracks.length > 0) {
-        tracks.push(musicTracks[0]);
-        audioAdded = true;
-      }
-
-      if (activeCameraMusicAudio) {
-        activeCameraMusicAudio.currentTime = 0;
-        activeCameraMusicAudio.play().catch(function(){});
+    if (activeCameraMusicAudio && (activeCameraMusicAudio.captureStream || activeCameraMusicAudio.mozCaptureStream)) {
+      try {
+        var musicStream = activeCameraMusicAudio.captureStream ? activeCameraMusicAudio.captureStream() : activeCameraMusicAudio.mozCaptureStream();
+        var mTracks = musicStream.getAudioTracks();
+        if (mTracks && mTracks.length > 0) {
+          audioStreamToUse = mTracks[0];
+        }
+      } catch (e) {
+        console.warn("CaptureStream fallback:", e);
       }
     }
 
-    if (!audioAdded) {
-      var micTracks = liveCameraStream.getAudioTracks();
-      if (micTracks.length > 0) {
-        tracks.push(micTracks[0]);
-      }
+    if (audioStreamToUse) {
+      tracks.push(audioStreamToUse);
+    } else {
+      liveCameraStream.getAudioTracks().forEach(function(track) {
+        tracks.push(track);
+      });
     }
 
     var combinedStream = new MediaStream(tracks);
 
+    // 3. Android WebView-სთვის კოდეკი
     var mime = 'video/webm;codecs=vp8,opus';
     if (!MediaRecorder.isTypeSupported(mime)) {
       if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2')) {
@@ -2610,7 +2605,8 @@ function toggleCameraRecording() {
     };
 
     mediaRecorder.onstop = function() {
-      if (typeof activeCameraMusicAudio !== 'undefined' && activeCameraMusicAudio) {
+      // მუსიკის გაჩერება
+      if (activeCameraMusicAudio) {
         activeCameraMusicAudio.pause();
       }
 
@@ -2618,6 +2614,7 @@ function toggleCameraRecording() {
       var blob = new Blob(recordedChunks, { type: finalMime });
       var fileExt = finalMime.includes('mp4') ? '.mp4' : '.webm';
       
+      // ფაილი, რომელშიც მუსიკა უკვე ჩაკერებულია
       selectedReelFile = new File([blob], "reel_" + Date.now() + fileExt, { type: finalMime });
 
       closeReelsCameraScreen();
@@ -2637,6 +2634,7 @@ function toggleCameraRecording() {
     }
 
   } else {
+    // ჩაწერის შეჩერება
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
@@ -2792,8 +2790,6 @@ function selectReelMusic(musicId) {
   var prevMusicLabel = document.getElementById('rf-lbl-selected-music');
   var t = getReelsLangT();
 
-  initMusicAudioGraph();
-
   if (!musicId) {
     selectedReelMusicObj = null;
     activeCameraMusicAudio.pause();
@@ -2810,8 +2806,10 @@ function selectReelMusic(musicId) {
     if (prevMusicLabel) prevMusicLabel.innerText = title;
 
     if (found && found.url) {
+      activeCameraMusicAudio.pause();
       activeCameraMusicAudio.src = found.url;
       activeCameraMusicAudio.currentTime = 0;
+
       activeCameraMusicAudio.play().catch(function(err) {
         console.warn("Music play error:", err);
       });
@@ -2888,9 +2886,8 @@ function startFinalReelUpload() {
     }
   );
 }
-         
+        
     
-                
 
 // 🌐 10. 7 ენის ტექსტების მორგება
 function applyReelsFlowTranslations() {
