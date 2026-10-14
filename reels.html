@@ -2763,6 +2763,10 @@ function renderMusicList(tab) {
   }).join('');
 }
 
+// 🎵 გლობალური ფლეიერი კამერაზე მუსიკის დასაკრავად
+var activeCameraMusicAudio = new Audio();
+activeCameraMusicAudio.loop = true;
+
 function selectReelMusic(musicId) {
   var camMusicLabel = document.getElementById('rf-cam-selected-music');
   var prevMusicLabel = document.getElementById('rf-lbl-selected-music');
@@ -2770,6 +2774,10 @@ function selectReelMusic(musicId) {
 
   if (!musicId) {
     selectedReelMusicObj = null;
+    activeCameraMusicAudio.pause();
+    activeCameraMusicAudio.currentTime = 0;
+    activeCameraMusicAudio.src = "";
+
     if (camMusicLabel) camMusicLabel.innerText = t.addMusic;
     if (prevMusicLabel) prevMusicLabel.innerText = t.addMusic;
   } else {
@@ -2778,9 +2786,19 @@ function selectReelMusic(musicId) {
     var title = found ? found.title : t.addMusic;
     if (camMusicLabel) camMusicLabel.innerText = title;
     if (prevMusicLabel) prevMusicLabel.innerText = title;
+
+    // ⚡ აი აქ ირთვება მუსიკა კამერაზე!
+    if (found && found.url) {
+      activeCameraMusicAudio.src = found.url;
+      activeCameraMusicAudio.currentTime = 0;
+      activeCameraMusicAudio.play().catch(function(err) {
+        console.warn("Music play block/error:", err);
+      });
+    }
   }
   closeReelsMusicSheet();
 }
+
 
 function saveReelAsDraft() {
   var t = getReelsLangT();
