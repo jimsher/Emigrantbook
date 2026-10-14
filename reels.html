@@ -2531,6 +2531,9 @@ function handleReelsDirectUpload(event) {
 
     
 // 🔴 5. კამერიდან ვიდეოს ჩაწერა
+var recordAudioCtx = null;
+var recordAudioSource = null;
+
 function toggleCameraRecording() {
   var inner = document.getElementById('rfRecordInnerCircle');
   if (!liveCameraStream) return;
@@ -2538,30 +2541,61 @@ function toggleCameraRecording() {
   if (!isRecordingVideo) {
     recordedChunks = [];
 
-    // 1. თუ მუსიკაა არჩეული, ჩაწერის დაწყებასთან ერთად ვრთავთ მუსიკას
+    // 1. ვიღებთ კამერის ვიდეო ტრეკს
+    var combinedStream = new MediaStream();
+    liveCameraStream.getVideoTracks().forEach(function(track) {
+      combinedStream.addTrack(track);
+    });
+
+    // 2. თუ მუსიკაა არჩეული, აუდიო ტრეკს ვურთავთ ვიდეოს ნაკადში
     if (selectedReelMusicObj && typeof activeCameraMusicAudio !== 'undefined' && activeCameraMusicAudio.src) {
       try {
-        activeCameraMusicAudio.currentTime = 0;
-        activeCameraMusicAudio.play().catch(function(e) {
-          console.warn("Audio play error on record:", e);
+        if (!recordAudioCtx || recordAudioCtx.state === 'closed') {
+          recordAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (recordAudioCtx.state === 'suspended') {
+          recordAudioCtx.resume();
+        }
+
+        // ვქმნით აუდიოს გადამცემს მხოლოდ ერთხელ, რომ არ გაიჭედოს
+        if (!recordAudioSource) {
+          activeCameraMusicAudio.crossOrigin = "anonymous";
+          recordAudioSource = recordAudioCtx.createMediaElementSource(activeCameraMusicAudio);
+        }
+
+        var audioDest = recordAudioCtx.createMediaStreamDestination();
+        recordAudioSource.disconnect();
+        recordAudioSource.connect(audioDest);
+        recordAudioSource.connect(recordAudioCtx.destination); // რომ დინამიკშიც ისმოდეს
+
+        // ვამატებთ მუსიკის ხმას ვიდეოს ნაკადში
+        audioDest.stream.getAudioTracks().forEach(function(track) {
+          combinedStream.addTrack(track);
         });
-      } catch(e) {}
+
+        activeCameraMusicAudio.currentTime = 0;
+        activeCameraMusicAudio.play().catch(function(e) { console.warn("Audio play err:", e); });
+      } catch (err) {
+        console.warn("AudioContext capture error:", err);
+      }
     }
 
-    // 2. MediaRecorder-ის მხარდაჭერილი ფორმატი
-    var options = { mimeType: 'video/mp4' };
+    // 3. MediaRecorder-ის მომზადება (ვიდეო + ჩაკერებული მუსიკა)
+    var streamToUse = (combinedStream.getAudioTracks().length > 0) ? combinedStream : liveCameraStream;
+
+    var mimeType = 'video/mp4';
     if (!MediaRecorder.isTypeSupported('video/mp4')) {
       if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-        options = { mimeType: 'video/webm;codecs=vp8,opus' };
+        mimeType = 'video/webm;codecs=vp8,opus';
       } else {
-        options = { mimeType: 'video/webm' };
+        mimeType = 'video/webm';
       }
     }
 
     try {
-      mediaRecorder = new MediaRecorder(liveCameraStream, options);
+      mediaRecorder = new MediaRecorder(streamToUse, { mimeType: mimeType });
     } catch(e) {
-      mediaRecorder = new MediaRecorder(liveCameraStream);
+      mediaRecorder = new MediaRecorder(streamToUse);
     }
 
     mediaRecorder.ondataavailable = function(e) {
@@ -2571,7 +2605,7 @@ function toggleCameraRecording() {
     };
 
     mediaRecorder.onstop = function() {
-      // ჩაწერის დასრულებისას მუსიკის გაჩერება
+      // მუსიკის გაჩერება
       if (typeof activeCameraMusicAudio !== 'undefined') {
         activeCameraMusicAudio.pause();
       }
@@ -2580,6 +2614,7 @@ function toggleCameraRecording() {
       var blob = new Blob(recordedChunks, { type: finalMime });
       var fileExt = finalMime.includes('webm') ? '.webm' : '.mp4';
       
+      // ეს ფაილი უკვე შეიცავს ჩაწერილ მუსიკას!
       selectedReelFile = new File([blob], "reel_" + Date.now() + fileExt, { type: finalMime });
 
       closeReelsCameraScreen();
@@ -2603,7 +2638,7 @@ function toggleCameraRecording() {
     }
 
   } else {
-    // 🛑 ჩაწერის გაჩერება
+    // 🛑 ჩაწერის შეჩერება
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
@@ -2614,7 +2649,7 @@ function toggleCameraRecording() {
     }
   }
 }
-        
+
 
        
 
