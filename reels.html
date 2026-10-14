@@ -2533,6 +2533,7 @@ function handleReelsDirectUpload(event) {
 // 🔴 5. კამერიდან ვიდეოს ჩაწერა
 var recordAudioCtx = null;
 var recordAudioSource = null;
+var recordAudioDest = null;
 
 function toggleCameraRecording() {
   var inner = document.getElementById('rfRecordInnerCircle');
@@ -2541,47 +2542,52 @@ function toggleCameraRecording() {
   if (!isRecordingVideo) {
     recordedChunks = [];
 
-    // 1. ვიღებთ კამერის ვიდეო ტრეკს
+    // 1. ვიდეო ტრეკი
     var combinedStream = new MediaStream();
     liveCameraStream.getVideoTracks().forEach(function(track) {
       combinedStream.addTrack(track);
     });
 
-    // 2. თუ მუსიკაა არჩეული, აუდიო ტრეკს ვურთავთ ვიდეოს ნაკადში
+    // 2. აუდიო ტრეკის ჩაკერება გათიშვის გარეშე
     if (selectedReelMusicObj && typeof activeCameraMusicAudio !== 'undefined' && activeCameraMusicAudio.src) {
       try {
-        if (!recordAudioCtx || recordAudioCtx.state === 'closed') {
+        if (!recordAudioCtx) {
           recordAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
+
+        // აუცილებელია მობილურზე დაუყოვნებლივი გამოღვიძება
         if (recordAudioCtx.state === 'suspended') {
           recordAudioCtx.resume();
         }
 
-        // ვქმნით აუდიოს გადამცემს მხოლოდ ერთხელ, რომ არ გაიჭედოს
         if (!recordAudioSource) {
-          activeCameraMusicAudio.crossOrigin = "anonymous";
           recordAudioSource = recordAudioCtx.createMediaElementSource(activeCameraMusicAudio);
+          recordAudioDest = recordAudioCtx.createMediaStreamDestination();
+          
+          // ვაკავშირებთ: მუსიკა -> დინამიკი (რომ არ ჩაქრეს)
+          recordAudioSource.connect(recordAudioCtx.destination);
+          // ვაკავშირებთ: მუსიკა -> ჩამწერი (ვიდეო ფაილში შესასვლელად)
+          recordAudioSource.connect(recordAudioDest);
         }
 
-        var audioDest = recordAudioCtx.createMediaStreamDestination();
-        recordAudioSource.disconnect();
-        recordAudioSource.connect(audioDest);
-        recordAudioSource.connect(recordAudioCtx.destination); // რომ დინამიკშიც ისმოდეს
+        // ვამატებთ აუდიოს ჩასაწერ ვიდეო ნაკადში
+        if (recordAudioDest && recordAudioDest.stream) {
+          recordAudioDest.stream.getAudioTracks().forEach(function(track) {
+            combinedStream.addTrack(track);
+          });
+        }
 
-        // ვამატებთ მუსიკის ხმას ვიდეოს ნაკადში
-        audioDest.stream.getAudioTracks().forEach(function(track) {
-          combinedStream.addTrack(track);
-        });
-
-        activeCameraMusicAudio.currentTime = 0;
-        activeCameraMusicAudio.play().catch(function(e) { console.warn("Audio play err:", e); });
+        // თუ რაიმე მიზეზით შეჩერდა, ვაგრძელებთ დაკვრას
+        if (activeCameraMusicAudio.paused) {
+          activeCameraMusicAudio.play().catch(function(e){});
+        }
       } catch (err) {
-        console.warn("AudioContext capture error:", err);
+        console.warn("Audio routing error:", err);
       }
     }
 
-    // 3. MediaRecorder-ის მომზადება (ვიდეო + ჩაკერებული მუსიკა)
-    var streamToUse = (combinedStream.getAudioTracks().length > 0) ? combinedStream : liveCameraStream;
+    // 3. MediaRecorder
+    var streamToUse = (combinedStream.getTracks().length > 0) ? combinedStream : liveCameraStream;
 
     var mimeType = 'video/mp4';
     if (!MediaRecorder.isTypeSupported('video/mp4')) {
@@ -2605,7 +2611,7 @@ function toggleCameraRecording() {
     };
 
     mediaRecorder.onstop = function() {
-      // მუსიკის გაჩერება
+      // ჩაწერის დასრულებისას მუსიკის გაჩერება
       if (typeof activeCameraMusicAudio !== 'undefined') {
         activeCameraMusicAudio.pause();
       }
@@ -2614,7 +2620,6 @@ function toggleCameraRecording() {
       var blob = new Blob(recordedChunks, { type: finalMime });
       var fileExt = finalMime.includes('webm') ? '.webm' : '.mp4';
       
-      // ეს ფაილი უკვე შეიცავს ჩაწერილ მუსიკას!
       selectedReelFile = new File([blob], "reel_" + Date.now() + fileExt, { type: finalMime });
 
       closeReelsCameraScreen();
@@ -2649,6 +2654,7 @@ function toggleCameraRecording() {
     }
   }
 }
+
 
 
        
