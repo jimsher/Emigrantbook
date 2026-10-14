@@ -2327,20 +2327,46 @@ function openReelsCameraScreen() {
   }
 
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    // 1. ვითხოვთ კამერას მაქსიმალურად ფართო ხედვით
     navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: currentFacingMode,
-        width: { ideal: 720 },
-        height: { ideal: 1280 }
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
       },
       audio: false
     }).then(function(stream) {
       liveCameraStream = stream;
+      
+      // 2. ⚡ აპარატურული ზუმის იძულებითი განულება (Wide Angle-ზე გადაყვანა)
+      var track = stream.getVideoTracks()[0];
+      if (track && track.getCapabilities) {
+        var capabilities = track.getCapabilities();
+        var constraintsToApply = {};
+
+        // თუ ტელეფონის კამერას აქვს ზუმის მართვა, ვაყენებთ მინიმუმზე (1.0 ან ნაკლები)
+        if ('zoom' in capabilities) {
+          constraintsToApply.zoom = capabilities.zoom.min;
+        }
+
+        // ფოკუსის დაყენება უსასრულო/უწყვეტ რეჟიმზე, რომ სახეზე არ მოახლოვდეს
+        if ('focusMode' in capabilities && capabilities.focusMode.includes('continuous')) {
+          constraintsToApply.focusMode = 'continuous';
+        }
+
+        if (Object.keys(constraintsToApply).length > 0) {
+          track.applyConstraints({ advanced: [constraintsToApply] }).catch(function(e) {
+            console.warn("Constraints apply error:", e);
+          });
+        }
+      }
+
       if (video) {
         video.srcObject = stream;
         video.play().catch(function(){});
       }
     }).catch(function(err) {
+      // Fallback
       navigator.mediaDevices.getUserMedia({
         video: { facingMode: currentFacingMode },
         audio: false
@@ -2351,11 +2377,12 @@ function openReelsCameraScreen() {
           video.play().catch(function(){});
         }
       }).catch(function(e) {
-        console.warn("Camera start error:", e);
+        console.warn("Camera fallback error:", e);
       });
     });
   }
 }
+        
 
           
 
