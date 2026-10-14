@@ -2052,6 +2052,504 @@ document.addEventListener('play', function(e) {
       );
     }
 
+
+
+    /* ==========================================================================
+   🚀 NEW: TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (JS ENGINE)
+   7 ენის მხარდაჭერა, Firestore Read-ების ეკონომია და სრული ნაკადი
+   ========================================================================== */
+
+// 1. 7 ენის ლექსიკონი
+const REELS_I18N = {
+  ka: {
+    addMusic: "მუსიკის დამატება",
+    next: "შემდეგი",
+    publishTitle: "გამოქვეყნება",
+    descPlaceholder: "დაამატეთ აღწერა...",
+    coverTag: "ქავერი",
+    audienceTitle: "ვის შეუძლია ნახვა",
+    audPublic: "ყველას (საჯარო)",
+    audFriends: "მხოლოდ მეგობრებს",
+    audPrivate: "მხოლოდ მე (პირადი)",
+    allowComments: "კომენტარების დაშვება",
+    allowCommentsSub: "ყველას შეუძლია კომენტარის დაწერა",
+    draftBtn: "შენახვა დრაფტებში",
+    publishBtn: "გამოქვეყნება",
+    musicHeader: "მუსიკის არჩევა",
+    tabForYou: "თქვენთვის",
+    tabPopular: "პოპულარული",
+    tabNoMusic: "მუსიკის გარეშე",
+    select: "არჩევა",
+    authReq: "გთხოვთ გაიაროთ ავტორიზაცია.",
+    videoOnly: "გთხოვთ აირჩიოთ მხოლოდ ვიდეო ფაილი!",
+    sizeLimit: "ვიდეოს ზომა აჭარბებს 100MB-ს. გთხოვთ აირჩიოთ უფრო პატარა ვიდეო.",
+    draftSaved: "ვიდეო შენახულია დრაფტებში!",
+    uploadSuccess: "ვიდეო წარმატებით გამოქვეყნდა!",
+    uploading: "ვიდეო იტვირთება"
+  },
+  en: {
+    addMusic: "Add sound",
+    next: "Next",
+    publishTitle: "Post",
+    descPlaceholder: "Describe your post...",
+    coverTag: "Cover",
+    audienceTitle: "Who can watch this video",
+    audPublic: "Everyone (Public)",
+    audFriends: "Friends only",
+    audPrivate: "Only me (Private)",
+    allowComments: "Allow comments",
+    allowCommentsSub: "Everyone can comment",
+    draftBtn: "Drafts",
+    publishBtn: "Post",
+    musicHeader: "Select sound",
+    tabForYou: "For you",
+    tabPopular: "Popular",
+    tabNoMusic: "Original sound",
+    select: "Select",
+    authReq: "Please log in to upload.",
+    videoOnly: "Please select a valid video file!",
+    sizeLimit: "File size exceeds 100MB.",
+    draftSaved: "Saved to drafts!",
+    uploadSuccess: "Video published successfully!",
+    uploading: "Uploading video"
+  },
+  it: {
+    addMusic: "Aggiungi suono",
+    next: "Avanti",
+    publishTitle: "Pubblica",
+    descPlaceholder: "Descrivi il tuo video...",
+    coverTag: "Copertina",
+    audienceTitle: "Chi può vedere questo video",
+    audPublic: "Tutti (Pubblico)",
+    audFriends: "Solo amici",
+    audPrivate: "Solo io (Privato)",
+    allowComments: "Consenti commenti",
+    allowCommentsSub: "Tutti possono commentare",
+    draftBtn: "Bozze",
+    publishBtn: "Pubblica",
+    musicHeader: "Seleziona suono",
+    tabForYou: "Per te",
+    tabPopular: "Popolari",
+    tabNoMusic: "Suono originale",
+    select: "Seleziona",
+    authReq: "Effettua l'accesso per caricare.",
+    videoOnly: "Seleziona un file video valido!",
+    sizeLimit: "Il file supera i 100MB.",
+    draftSaved: "Salvato nelle bozze!",
+    uploadSuccess: "Video pubblicato con successo!",
+    uploading: "Caricamento video"
+  },
+  ru: {
+    addMusic: "Добавить музыку",
+    next: "Далее",
+    publishTitle: "Опубликовать",
+    descPlaceholder: "Добавьте описание...",
+    coverTag: "Обложка",
+    audienceTitle: "Кто может просматривать",
+    audPublic: "Все (Публично)",
+    audFriends: "Только друзья",
+    audPrivate: "Только я (Приватно)",
+    allowComments: "Разрешить комментарии",
+    allowCommentsSub: "Все могут комментировать",
+    draftBtn: "Черновики",
+    publishBtn: "Опубликовать",
+    musicHeader: "Выбор музыки",
+    tabForYou: "Для вас",
+    tabPopular: "Популярное",
+    tabNoMusic: "Без музыки",
+    select: "Выбрать",
+    authReq: "Пожалуйста, авторизуйтесь.",
+    videoOnly: "Пожалуйста, выберите видеофайл!",
+    sizeLimit: "Размер видео превышает 100МБ.",
+    draftSaved: "Сохранено в черновиках!",
+    uploadSuccess: "Видео успешно опубликовано!",
+    uploading: "Загрузка видео"
+  },
+  fr: {
+    addMusic: "Ajouter un son",
+    next: "Suivant",
+    publishTitle: "Publier",
+    descPlaceholder: "Décrivez votre vidéo...",
+    coverTag: "Couverture",
+    audienceTitle: "Qui peut voir cette vidéo",
+    audPublic: "Tout le monde (Public)",
+    audFriends: "Amis uniquement",
+    audPrivate: "Moi uniquement (Privé)",
+    allowComments: "Autoriser les commentaires",
+    allowCommentsSub: "Tout le monde peut commenter",
+    draftBtn: "Brouillons",
+    publishBtn: "Publier",
+    musicHeader: "Sélectionner un son",
+    tabForYou: "Pour vous",
+    tabPopular: "Populaire",
+    tabNoMusic: "Son original",
+    select: "Sélectionner",
+    authReq: "Veuillez vous connecter pour publier.",
+    videoOnly: "Veuillez sélectionner un fichier vidéo valide!",
+    sizeLimit: "Le fichier dépasse 100Mo.",
+    draftSaved: "Enregistré dans les brouillons!",
+    uploadSuccess: "Vidéo publiée avec succès!",
+    uploading: "Téléversement en cours"
+  },
+  de: {
+    addMusic: "Sound hinzufügen",
+    next: "Weiter",
+    publishTitle: "Veröffentlichen",
+    descPlaceholder: "Beschreibe deinen Beitrag...",
+    coverTag: "Cover",
+    audienceTitle: "Wer kann dieses Video sehen",
+    audPublic: "Jeder (Öffentlich)",
+    audFriends: "Nur Freunde",
+    audPrivate: "Nur ich (Privat)",
+    allowComments: "Kommentare erlauben",
+    allowCommentsSub: "Jeder kann kommentieren",
+    draftBtn: "Entwürfe",
+    publishBtn: "Posten",
+    musicHeader: "Sound auswählen",
+    tabForYou: "Für dich",
+    tabPopular: "Beliebt",
+    tabNoMusic: "Originalton",
+    select: "Auswählen",
+    authReq: "Bitte melde dich an.",
+    videoOnly: "Bitte wähle eine gültige Videodatei aus!",
+    sizeLimit: "Datei ist größer als 100MB.",
+    draftSaved: "Als Entwurf gespeichert!",
+    uploadSuccess: "Video erfolgreich veröffentlicht!",
+    uploading: "Video wird hochgeladen"
+  },
+  el: {
+    addMusic: "Προσθήκη ήχου",
+    next: "Επόμενο",
+    publishTitle: "Δημοσίευση",
+    descPlaceholder: "Προσθέστε περιγραφή...",
+    coverTag: "Εξώφυλλο",
+    audienceTitle: "Ποιος μπορεί να δει αυτό το βίντεο",
+    audPublic: "Όλοι (Δημόσιο)",
+    audFriends: "Μόνο φίλοι",
+    audPrivate: "Μόνο εγώ (Ιδιωτικό)",
+    allowComments: "Να επιτρέπονται σχόλια",
+    allowCommentsSub: "Όλοι μπορούν να σχολιάσουν",
+    draftBtn: "Πρόχειρα",
+    publishBtn: "Δημοσίευση",
+    musicHeader: "Επιλογή ήχου",
+    tabForYou: "Για εσάς",
+    tabPopular: "Δημοφιλή",
+    tabNoMusic: "Πρωτότυπος ήχος",
+    select: "Επιλογή",
+    authReq: "Παρακαλώ συνδεθείτε.",
+    videoOnly: "Επιλέξτε ένα έγκυρο αρχείο βίντεο!",
+    sizeLimit: "Το μέγεθος υπερβαίνει τα 100MB.",
+    draftSaved: "Αποθηκεύτηκε στα πρόχειρα!",
+    uploadSuccess: "Το βίντεο δημοσιεύτηκε με επιτυχία!",
+    uploading: "Μεταφόρτωση βίντεο"
+  }
+};
+
+function getReelsLangT() {
+  const currentLang = localStorage.getItem('eb_lang') || 'ka';
+  return REELS_I18N[currentLang] || REELS_I18N['ka'];
+}
+
+// 2. ლოკალური ქეშირებული მუსიკების ბაზა (Firestore Read-ების 0 ხარჯი)
+const REELS_MUSIC_CACHE = [
+  { id: "m1", title: "DJ Geo Remix", author: "DJ Geo", cover: "icons/clapperboard.svg", duration: "1:27", type: "popular" },
+  { id: "m2", title: "Vibe 5789 Exclusive", author: "Vibe Music", cover: "icons/clapperboard.svg", duration: "1:01", type: "popular" },
+  { id: "m3", title: "Motivat2 Original Beat", author: "Motivat2", cover: "icons/clapperboard.svg", duration: "2:33", type: "foryou" },
+  { id: "m4", title: "Sheni Tvalebi Remix", author: "Ilarion Studio", cover: "icons/clapperboard.svg", duration: "1:00", type: "foryou" },
+  { id: "m5", title: "I Won't Let You Go", author: "Monkey Beats", cover: "icons/clapperboard.svg", duration: "4:36", type: "foryou" }
+];
+
+// მიმდინარე ატვირთვის ცვლადები
+let selectedReelFile = null;
+let selectedReelMusicObj = null;
+let selectedReelAudience = 'public'; // 'public', 'friends', 'private'
+
+// 3. ვიდეოს არჩევის გადაჭერა (ჩანაცვლებულია ძველი prompt)
+function handleReelsDirectUpload(event) {
+  const fileInput = event.target;
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const t = getReelsLangT();
+
+  if (!currentUser) {
+    alert(t.authReq);
+    fileInput.value = "";
+    return;
+  }
+
+  const isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
+  if (!isVideo) {
+    alert(t.videoOnly);
+    fileInput.value = "";
+    return;
+  }
+
+  if (file.size > 100 * 1024 * 1024) {
+    alert(t.sizeLimit);
+    fileInput.value = "";
+    return;
+  }
+
+  selectedReelFile = file;
+  selectedReelMusicObj = null;
+  selectedReelAudience = 'public';
+
+  // 1-ლი ეკრანის გახსნა: Preview
+  openReelsFlowPreview(file);
+}
+
+// 4. Preview მოდალის მართვა
+function openReelsFlowPreview(file) {
+  const modal = document.getElementById('rfPreviewModal');
+  const video = document.getElementById('rfPreviewVideo');
+  const fileUrl = URL.createObjectURL(file);
+
+  video.src = fileUrl;
+  video.currentTime = 0;
+  video.play().catch(() => {});
+
+  applyReelsFlowTranslations();
+  modal.style.display = 'flex';
+}
+
+function closeReelsFlowPreview() {
+  const modal = document.getElementById('rfPreviewModal');
+  const video = document.getElementById('rfPreviewVideo');
+  if (video) {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  }
+  modal.style.display = 'none';
+
+  const fileInput = document.getElementById('reelsDirectVideoInput');
+  if (fileInput) fileInput.value = "";
+  selectedReelFile = null;
+}
+
+// 5. გამოქვეყნების (Publish) ეკრანზე გადასვლა და ქავერის დაგენერირება
+function goToPublishScreen() {
+  const previewModal = document.getElementById('rfPreviewModal');
+  const previewVideo = document.getElementById('rfPreviewVideo');
+  const publishModal = document.getElementById('rfPublishModal');
+
+  // ვიდეოს პირველი კადრის (Thumbnail) გენერაცია
+  generateVideoThumbnail(previewVideo);
+
+  if (previewVideo) previewVideo.pause();
+  previewModal.style.display = 'none';
+  publishModal.style.display = 'flex';
+}
+
+function backToPreviewScreen() {
+  const previewModal = document.getElementById('rfPreviewModal');
+  const previewVideo = document.getElementById('rfPreviewVideo');
+  const publishModal = document.getElementById('rfPublishModal');
+
+  publishModal.style.display = 'none';
+  previewModal.style.display = 'flex';
+  if (previewVideo) previewVideo.play().catch(() => {});
+}
+
+function generateVideoThumbnail(videoElem) {
+  const canvas = document.getElementById('rfThumbCanvas');
+  const img = document.getElementById('rfThumbPreviewImg');
+  if (!canvas || !img || !videoElem) return;
+
+  canvas.width = videoElem.videoWidth || 300;
+  canvas.height = videoElem.videoHeight || 400;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height);
+
+  try {
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    img.src = dataUrl;
+  } catch (e) {
+    img.src = "icons/video.svg";
+  }
+}
+
+// 6. ჰეშთეგების დამატება
+function addReelHashtag(tag) {
+  const input = document.getElementById('rfPostCaption');
+  if (!input) return;
+  const current = input.value.trim();
+  if (current.includes(tag)) return;
+  input.value = current ? current + " " + tag : tag;
+  input.focus();
+}
+
+// 7. აუდიტორიის გადართვა (Public / Friends / Private)
+function toggleReelAudience() {
+  const t = getReelsLangT();
+  const label = document.getElementById('rf-selected-audience-label');
+
+  if (selectedReelAudience === 'public') {
+    selectedReelAudience = 'friends';
+    label.innerText = t.audFriends;
+  } else if (selectedReelAudience === 'friends') {
+    selectedReelAudience = 'private';
+    label.innerText = t.audPrivate;
+  } else {
+    selectedReelAudience = 'public';
+    label.innerText = t.audPublic;
+  }
+}
+
+// 8. მუსიკის Bottom Sheet-ის გახსნა და მართვა
+function openReelsMusicSheet() {
+  const sheet = document.getElementById('rfMusicSheet');
+  sheet.style.display = 'flex';
+  renderMusicList('foryou');
+}
+
+function closeReelsMusicSheet(e) {
+  const sheet = document.getElementById('rfMusicSheet');
+  if (sheet) sheet.style.display = 'none';
+}
+
+function switchMusicTab(tab) {
+  document.getElementById('rf-tab-for-you').classList.toggle('active', tab === 'foryou');
+  document.getElementById('rf-tab-popular').classList.toggle('active', tab === 'popular');
+  renderMusicList(tab);
+}
+
+function renderMusicList(tab) {
+  const list = document.getElementById('rfMusicListContainer');
+  const t = getReelsLangT();
+  const filtered = REELS_MUSIC_CACHE.filter(m => tab === 'foryou' ? true : m.type === tab);
+
+  list.innerHTML = filtered.map(item => `
+    <div class="rf-music-item" onclick="selectReelMusic('${item.id}')">
+      <div class="rf-music-item-left">
+        <img src="${item.cover}" class="rf-music-cover" alt="cover">
+        <div>
+          <div class="rf-music-title">${item.title}</div>
+          <div class="rf-music-sub">${item.author} • ${item.duration}</div>
+        </div>
+      </div>
+      <button type="button" class="rf-music-select-btn">${t.select}</button>
+    </div>
+  `).join('');
+}
+
+function selectReelMusic(musicId) {
+  const musicLabel = document.getElementById('rf-lbl-selected-music');
+  const t = getReelsLangT();
+
+  if (!musicId) {
+    selectedReelMusicObj = null;
+    musicLabel.innerText = t.addMusic;
+  } else {
+    const found = REELS_MUSIC_CACHE.find(m => m.id === musicId);
+    selectedReelMusicObj = found || null;
+    musicLabel.innerText = found ? found.title : t.addMusic;
+  }
+
+  closeReelsMusicSheet();
+}
+
+// 9. დრაფტში შენახვა (Local Storage - ბაზის ხარჯის გარეშე)
+function saveReelAsDraft() {
+  const t = getReelsLangT();
+  const caption = document.getElementById('rfPostCaption').value.trim();
+  const draft = {
+    caption: caption,
+    music: selectedReelMusicObj,
+    audience: selectedReelAudience,
+    date: new Date().toISOString()
+  };
+  localStorage.setItem('eb_last_reel_draft', JSON.stringify(draft));
+  alert(t.draftSaved);
+  document.getElementById('rfPublishModal').style.display = 'none';
+  closeReelsFlowPreview();
+}
+
+// 10. საბოლოო გამოქვეყნება (Cloudflare R2 + Firestore)
+function startFinalReelUpload() {
+  if (!selectedReelFile) return;
+  const t = getReelsLangT();
+
+  const caption = document.getElementById('rfPostCaption').value.trim();
+  const allowComments = document.getElementById('rfAllowCommentsCheckbox').checked;
+
+  const overlay = document.getElementById('reelsUploadOverlay');
+  const statusText = document.getElementById('reelsUploadStatusText');
+
+  // ვხურავთ Publish მოდალს და ვაჩვენებთ ატვირთვის ოვერლეის
+  document.getElementById('rfPublishModal').style.display = 'none';
+  overlay.style.display = 'flex';
+  statusText.innerText = `${t.uploading} (0%)...`;
+
+  // ვიყენებთ არსებულ, გამოცდილ R2 ატვირთვას
+  uploadReelToR2(
+    selectedReelFile,
+    function(percent) {
+      statusText.innerText = `${t.uploading} (${percent}%)...`;
+    },
+    function(publicUrl, error) {
+      if (error || !publicUrl) {
+        overlay.style.display = 'none';
+        alert("Upload error: " + (error ? error.message : "Unknown error"));
+        return;
+      }
+
+      const myName = currentUserProfile ? currentUserProfile.full_name : (currentUser.displayName || currentUser.email || "Emigrant");
+
+      // საბოლოო ჩაწერა posts კოლექციაში
+      db.collection('posts').add({
+        user_id: currentUser.uid,
+        author_name: myName,
+        content: caption,
+        media_url: publicUrl,
+        media_type: 'video',
+        likes_count: 0,
+        comments_count: 0,
+        audience: selectedReelAudience,
+        allow_comments: allowComments,
+        music_title: selectedReelMusicObj ? selectedReelMusicObj.title : null,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        overlay.style.display = 'none';
+        alert(t.uploadSuccess);
+        closeReelsFlowPreview();
+        loadRealReelsFromFirestore(); // სია თავიდან ჩაიტვირთება და ახალი ვიდეო პირველივე გამოჩნდება
+      }).catch(function(err) {
+        overlay.style.display = 'none';
+        alert("Database error: " + err.message);
+      });
+    }
+  );
+}
+
+// 11. 7 ენის ტექსტების მორგება DOM-ზე
+function applyReelsFlowTranslations() {
+  const t = getReelsLangT();
+  const setEl = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = text;
+  };
+
+  setEl('rf-lbl-selected-music', selectedReelMusicObj ? selectedReelMusicObj.title : t.addMusic);
+  setEl('rf-lbl-next-btn', t.next);
+  setEl('rf-lbl-publish-title', t.publishTitle);
+  setEl('rf-lbl-cover-tag', t.coverTag);
+  setEl('rf-lbl-aud-title', t.audienceTitle);
+  setEl('rf-selected-audience-label', selectedReelAudience === 'friends' ? t.audFriends : (selectedReelAudience === 'private' ? t.audPrivate : t.audPublic));
+  setEl('rf-lbl-allow-comments', t.allowComments);
+  setEl('rf-lbl-allow-comments-sub', t.allowCommentsSub);
+  setEl('rf-lbl-draft-btn', t.draftBtn);
+  setEl('rf-lbl-publish-btn-text', t.publishBtn);
+  setEl('rf-lbl-music-header', t.musicHeader);
+  setEl('rf-tab-for-you', t.tabForYou);
+  setEl('rf-tab-popular', t.tabPopular);
+  setEl('rf-tab-none', t.tabNoMusic);
+
+  const desc = document.getElementById('rfPostCaption');
+  if (desc) desc.placeholder = t.descPlaceholder;
+}
+
   </script>
     <!-- ატვირთვის პროგრესის ფანჯარა -->
   <div class="reels-upload-overlay" id="reelsUploadOverlay">
