@@ -2319,28 +2319,44 @@ function openReelsCameraScreen() {
   }
 
   var modal = document.getElementById('rfCameraModal');
+  var video = document.getElementById('rfLiveCameraFeed');
+  
   if (modal) {
     modal.style.display = 'flex';
     applyReelsFlowTranslations();
   }
 
-  // მხოლოდ ვიდეო ნაკადი ოპტიმალური გარჩევადობით, რომ ბრაუზერი არ გაიყინოს
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({
-      video: { facingMode: currentFacingMode, width: { ideal: 720 }, height: { ideal: 1280 } },
+      video: {
+        facingMode: currentFacingMode,
+        zoom: 1.0 // აიძულებს კამერას მინიმალურ (1x) ზუმზე დადგეს
+      },
       audio: false
     }).then(function(stream) {
       liveCameraStream = stream;
-      var video = document.getElementById('rfLiveCameraFeed');
       if (video) {
         video.srcObject = stream;
         video.play().catch(function(){});
       }
     }).catch(function(err) {
-      console.warn("Camera start:", err);
+      // Fallback ჩვეულებრივ რეჟიმზე
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: currentFacingMode },
+        audio: false
+      }).then(function(stream) {
+        liveCameraStream = stream;
+        if (video) {
+          video.srcObject = stream;
+          video.play().catch(function(){});
+        }
+      }).catch(function(e) {
+        console.warn("Camera start error:", e);
+      });
     });
   }
 }
+
 
 
 function closeReelsCameraScreen() {
