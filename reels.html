@@ -2363,22 +2363,17 @@ function openReelsCameraScreen() {
   }
 
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    // 1. ვითხოვთ კამერას მაქსიმალურად ფართო ხედვით და ხმის ფილტრების გარეშე
+    // ⚡ 720p გარჩევადობა, რომ ტელეფონმა არ იჭედოს ჩაწერისას
     navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: currentFacingMode,
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
+        width: { ideal: 720 },
+        height: { ideal: 1280 }
       },
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
-      }
+      audio: true
     }).then(function(stream) {
       liveCameraStream = stream;
       
-      // 2. ⚡ აპარატურული ზუმის იძულებითი განულება (Wide Angle-ზე გადაყვანა)
       var track = stream.getVideoTracks()[0];
       if (track && track.getCapabilities) {
         var capabilities = track.getCapabilities();
@@ -2398,6 +2393,28 @@ function openReelsCameraScreen() {
           });
         }
       }
+
+      if (video) {
+        video.srcObject = stream;
+        video.play().catch(function(){});
+      }
+    }).catch(function(err) {
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: currentFacingMode },
+        audio: true
+      }).then(function(stream) {
+        liveCameraStream = stream;
+        if (video) {
+          video.srcObject = stream;
+          video.play().catch(function(){});
+        }
+      }).catch(function(e) {
+        console.warn("Camera fallback error:", e);
+      });
+    });
+  }
+}
+
 
       if (video) {
         video.srcObject = stream;
