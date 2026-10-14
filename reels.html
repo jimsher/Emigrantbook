@@ -2546,34 +2546,41 @@ function handleReelsDirectUpload(event) {
       tracks.push(track);
     });
 
-    // 2. ხმის ლოგიკა:
-    // თუ მუსიკაა, ვიწერთ მხოლოდ სუფთა ციფრულ მუსიკას (მიკროფონი ითიშება, რომ ექო არ შეიქმნას)
-    var musicAdded = false;
+    // 2. ხმის მართვა:
+    if (selectedReelMusicObj) {
+      // ⚡ თუ მუსიკაა არჩეული, მიკროფონის ყველა ტრეკს მთლიანად ვთიშავთ (ვადუმებთ)!
+      liveCameraStream.getAudioTracks().forEach(function(track) {
+        track.enabled = false;
+      });
 
-    if (selectedReelMusicObj && activeCameraMusicAudio && (activeCameraMusicAudio.captureStream || activeCameraMusicAudio.mozCaptureStream)) {
+      // ვცდილობთ მუსიკის ციფრული ტრეკის აღებას
+      var musicStream = null;
       try {
-        var musicStream = activeCameraMusicAudio.captureStream ? activeCameraMusicAudio.captureStream() : activeCameraMusicAudio.mozCaptureStream();
-        var mTracks = musicStream.getAudioTracks();
-        if (mTracks && mTracks.length > 0) {
-          tracks.push(mTracks[0]);
-          musicAdded = true;
+        if (typeof activeCameraMusicAudio.captureStream === 'function') {
+          musicStream = activeCameraMusicAudio.captureStream();
+        } else if (typeof activeCameraMusicAudio.mozCaptureStream === 'function') {
+          musicStream = activeCameraMusicAudio.mozCaptureStream();
         }
       } catch (e) {
-        console.warn("CaptureStream error:", e);
+        console.warn("CaptureStream failed:", e);
       }
-    }
 
-    // თუ მუსიკა არ არის არჩეული, მხოლოდ მაშინ ვიწერთ მიკროფონის ხმას
-    if (!musicAdded) {
+      if (musicStream && musicStream.getAudioTracks().length > 0) {
+        tracks.push(musicStream.getAudioTracks()[0]);
+      }
+
+      // მუსიკის დაკვრა ჩაწერის დაწყებისას
+      if (activeCameraMusicAudio && activeCameraMusicAudio.src) {
+        activeCameraMusicAudio.currentTime = 0;
+        activeCameraMusicAudio.play().catch(function(){});
+      }
+
+    } else {
+      // ⚡ თუ მუსიკა არ არის არჩეული, მხოლოდ მაშინ ვრთავთ მიკროფონს!
       liveCameraStream.getAudioTracks().forEach(function(track) {
+        track.enabled = true;
         tracks.push(track);
       });
-    }
-
-    // მუსიკის დაკვრა ჩაწერის დაწყებისას
-    if (selectedReelMusicObj && activeCameraMusicAudio && activeCameraMusicAudio.src) {
-      activeCameraMusicAudio.currentTime = 0;
-      activeCameraMusicAudio.play().catch(function(){});
     }
 
     var combinedStream = new MediaStream(tracks);
@@ -2606,6 +2613,13 @@ function handleReelsDirectUpload(event) {
         activeCameraMusicAudio.pause();
       }
 
+      // მიკროფონის ხელახლა გააქტიურება კამერისთვის
+      if (liveCameraStream) {
+        liveCameraStream.getAudioTracks().forEach(function(track) {
+          track.enabled = true;
+        });
+      }
+
       var finalMime = mediaRecorder.mimeType || mime;
       var blob = new Blob(recordedChunks, { type: finalMime });
       var fileExt = finalMime.includes('mp4') ? '.mp4' : '.webm';
@@ -2617,7 +2631,6 @@ function handleReelsDirectUpload(event) {
     };
 
     try {
-      // ⚡ start(1000) 100-ის ნაცვლად, რათა პროცესორი არ გადაიტვირთოს და ვიდეო არ გაიჭედოს
       mediaRecorder.start(1000);
       isRecordingVideo = true;
       if (inner) {
@@ -2640,6 +2653,7 @@ function handleReelsDirectUpload(event) {
     }
   }
 }
+
    
 
 // 🎬 6. Preview მოდალი
