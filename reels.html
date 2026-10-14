@@ -2820,8 +2820,10 @@ function selectReelMusic(musicId) {
     if (camMusicLabel) camMusicLabel.innerText = title;
     if (prevMusicLabel) prevMusicLabel.innerText = title;
 
-    // ⚡ აი აქ ირთვება მუსიკა კამერაზე!
     if (found && found.url) {
+      activeCameraMusicAudio.pause();
+      // ⚡ კრიტიკულია: crossOrigin უნდა მიეთითოს სანამ src მიეცემა!
+      activeCameraMusicAudio.crossOrigin = "anonymous";
       activeCameraMusicAudio.src = found.url;
       activeCameraMusicAudio.currentTime = 0;
       activeCameraMusicAudio.play().catch(function(err) {
@@ -2831,6 +2833,7 @@ function selectReelMusic(musicId) {
   }
   closeReelsMusicSheet();
 }
+
 
 
 function saveReelAsDraft() {
