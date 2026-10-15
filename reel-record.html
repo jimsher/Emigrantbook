@@ -837,6 +837,28 @@
     }
 
     window.onload = openReelsCameraScreen;
+
+
+    (function initRecordBackHandler() {
+  history.pushState({ page: 'record' }, '', location.href);
+
+  window.addEventListener('popstate', function () {
+    // თუ მუსიკის ფანჯარაა გახსნილი, ჯერ მუსიკა დახუროს
+    var musicSheet = document.getElementById('rfMusicSheet');
+    if (musicSheet && musicSheet.style.display === 'flex') {
+      musicSheet.style.display = 'none';
+      history.pushState({ page: 'record' }, '', location.href);
+      return;
+    }
+
+    if (liveCameraStream) {
+      liveCameraStream.getTracks().forEach(function(t) { t.stop(); });
+      liveCameraStream = null;
+    }
+    window.location.href = 'reels.html';
+  });
+})();
+
   </script>
 </body>
 </html>
