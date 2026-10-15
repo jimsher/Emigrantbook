@@ -1,1 +1,861 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Reel Preview & Publish</title>
+  
+  <!-- Firebase SDKs (Compat v10.8.0) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
+  <!-- Cloudflare R2 AWS SDK -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       🚀 NEW: TIKTOK / REELS UPLOAD & PUBLISH SYSTEM (FACEBOOK LIGHT THEME)
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      color: #050505;
+      overflow-x: hidden;
+    }
+
+    /* 1. სრული ეკრანის გადაფარვა (Full Modal Overlay) */
+    .reels-flow-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: #ffffff;
+      z-index: 2000000;
+      flex-direction: column;
+      box-sizing: border-box;
+      color: #050505;
+      overflow-y: auto;
+    }
+
+    .reels-flow-modal.active {
+      display: flex;
+    }
+
+    /* 2. ზედა ჰედერი ნავიგაციისთვის */
+    .rf-header {
+      width: 100%;
+      height: 52px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #dadde1;
+      background: #ffffff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .rf-back-btn {
+      background: none;
+      border: none;
+      font-size: 26px;
+      color: #050505;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .rf-header-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    /* 3. მუსიკის დამატების აბი (Pill) */
+    .rf-music-pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f0f2f5;
+      border: 1px solid #dadde1;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #050505;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      user-select: none;
+    }
+
+    .rf-music-pill-btn:active {
+      background: #e4e6eb;
+    }
+
+    /* 4. ვიდეოს გადახედვის (Preview) კონტეინერი */
+    .rf-preview-box {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      flex: 1;
+      background: #000000;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .rf-preview-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* 5. გამოქვეყნების ეკრანის ბლოკი (Post Screen) */
+    .rf-publish-content {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .rf-desc-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .rf-desc-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #050505;
+      font-size: 15px;
+      font-family: inherit;
+      resize: none;
+      min-height: 90px;
+      line-height: 1.4;
+    }
+
+    .rf-desc-input::placeholder {
+      color: #8a8d91;
+    }
+
+    /* ქავერის პატარა პრევიუ */
+    .rf-thumb-preview-box {
+      width: 80px;
+      height: 110px;
+      background: #f0f2f5;
+      border-radius: 8px;
+      border: 1px solid #dadde1;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rf-thumb-preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .rf-thumb-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.65);
+      color: #ffffff;
+      font-size: 9.5px;
+      font-weight: 600;
+      text-align: center;
+      padding: 3px 2px;
+    }
+
+    /* ჰეშთეგების ღილაკები */
+    .rf-tags-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .rf-tag-btn {
+      background: #f0f2f5;
+      border: 1px solid #ccd0d5;
+      color: #050505;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .rf-tag-btn:active {
+      background: #e4e6eb;
+    }
+
+    /* პარამეტრების მწკრივები (Facebook White Style) */
+    .rf-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 4px;
+      border-bottom: 1px solid #f0f2f5;
+      cursor: pointer;
+    }
+
+    .rf-setting-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rf-setting-title {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #050505;
+    }
+
+    .rf-setting-desc {
+      font-size: 12px;
+      color: #65676b;
+      margin-top: 2px;
+    }
+
+    .rf-setting-arrow {
+      color: #8a8d91;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* ქვედა მთავარი მოქმედების ღილაკები */
+    .rf-action-bottom-row {
+      display: flex;
+      gap: 12px;
+      margin-top: auto;
+      padding: 16px 0 24px 0;
+    }
+
+    .rf-btn-draft {
+      flex: 1;
+      background: #f0f2f5;
+      color: #050505;
+      border: 1px solid #dadde1;
+      padding: 13px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .rf-btn-publish {
+      flex: 1.3;
+      background: #1877f2;
+      color: #ffffff;
+      border: none;
+      padding: 13px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(24, 119, 242, 0.3);
+    }
+
+    .rf-btn-publish:active {
+      background: #166fe5;
+    }
+
+    /* ატვირთვის პროგრესის ოვერლეი */
+    .reels-upload-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      gap: 15px;
+    }
+
+    .reels-upload-spinner {
+      width: 45px;
+      height: 45px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #fe0979;
+      border-right-color: #00f2fe;
+      border-radius: 50%;
+      animation: spinOverlay 0.8s linear infinite;
+    }
+
+    @keyframes spinOverlay {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🎬 2. ვიდეოს გადახედვის ეკრანი (Preview Screen - Facebook White) -->
+  <div class="reels-flow-modal active" id="rfPreviewModal">
+    <div class="rf-header">
+      <button type="button" class="rf-back-btn" onclick="closeReelsFlowPreview()">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#050505" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <div class="rf-music-pill-btn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <span id="rf-lbl-selected-music">მუსიკის დამატება</span>
+      </div>
+      <div style="width: 26px;"></div>
+    </div>
+
+    <div class="rf-preview-box">
+      <video class="rf-preview-video" id="rfPreviewVideo" loop playsinline autoplay></video>
+    </div>
+
+    <div style="background: #ffffff; padding: 14px 16px; border-top: 1px solid #dadde1; display: flex; justify-content: flex-end; max-width: 480px; width: 100%; margin: 0 auto;">
+      <button type="button" class="rf-btn-publish" style="padding: 10px 24px; flex: none;" onclick="goToPublishScreen()">
+        <span id="rf-lbl-next-btn">შემდეგი</span>
+        <span style="font-size: 16px;">›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 📝 3. გამოქვეყნების ეკრანი (Publish Screen - Facebook White) -->
+  <div class="reels-flow-modal" id="rfPublishModal">
+    <div class="rf-header">
+      <button type="button" class="rf-back-btn" onclick="backToPreviewScreen()">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#050505" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <div class="rf-header-title" id="rf-lbl-publish-title">გამოქვეყნება</div>
+      <div style="width: 26px;"></div>
+    </div>
+
+    <div class="rf-publish-content">
+      <div class="rf-desc-row">
+        <textarea id="rfPostCaption" class="rf-desc-input" placeholder="დაამატეთ აღწერა..."></textarea>
+        <div class="rf-thumb-preview-box">
+          <canvas id="rfThumbCanvas" style="display:none;"></canvas>
+          <img id="rfThumbPreviewImg" class="rf-thumb-preview-img" src="" alt="Cover">
+          <div class="rf-thumb-label" id="rf-lbl-cover-tag">ქავერი</div>
+        </div>
+      </div>
+
+      <div class="rf-tags-row">
+        <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#reels')">#reels</button>
+        <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#emigrantbook')">#emigrantbook</button>
+        <button type="button" class="rf-tag-btn" onclick="addReelHashtag('#viral')">#viral</button>
+      </div>
+
+      <div style="height: 1px; background: #dadde1; margin: 4px 0;"></div>
+
+      <div class="rf-setting-row" onclick="toggleReelAudience()">
+        <div class="rf-setting-left">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#65676b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          <div>
+            <div class="rf-setting-title" id="rf-lbl-aud-title">ვის შეუძლია ნახვა</div>
+            <div class="rf-setting-desc" id="rf-selected-audience-label">ყველას (საჯარო)</div>
+          </div>
+        </div>
+        <span class="rf-setting-arrow">›</span>
+      </div>
+
+      <div class="rf-setting-row">
+        <div class="rf-setting-left">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#65676b" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <div>
+            <div class="rf-setting-title" id="rf-lbl-allow-comments">კომენტარების დაშვება</div>
+            <div class="rf-setting-desc" id="rf-lbl-allow-comments-sub">ყველას შეუძლია კომენტარის დაწერა</div>
+          </div>
+        </div>
+        <input type="checkbox" id="rfAllowCommentsCheckbox" checked style="width: 20px; height: 20px; accent-color: #1877f2;">
+      </div>
+
+      <div class="rf-action-bottom-row">
+        <button type="button" class="rf-btn-draft" onclick="saveReelAsDraft()" id="rf-lbl-draft-btn">შენახვა დრაფტებში</button>
+        <button type="button" class="rf-btn-publish" onclick="startFinalReelUpload()" id="rf-lbl-submit-btn">
+          <span id="rf-lbl-publish-btn-text">გამოქვეყნება</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ატვირთვის პროგრესის ფანჯარა -->
+  <div class="reels-upload-overlay" id="reelsUploadOverlay">
+    <div class="reels-upload-spinner"></div>
+    <span id="reelsUploadStatusText" style="font-weight: 700; font-size: 15px;">ვიდეო იტვირთება (0%)...</span>
+  </div>
+
+  <script>
+    // Firebase კონფიგურაცია
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+      measurementId: "G-MRPP7G4H30"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let currentUserProfile = null;
+
+    auth.onAuthStateChanged(user => {
+      currentUser = user;
+      if (user) {
+        db.collection('profiles').doc(user.uid).get().then(doc => {
+          if (doc.exists) {
+            currentUserProfile = doc.data();
+          }
+        });
+      }
+    });
+
+    // 🌐 1. 7 ენის ლექსიკონი
+    const REELS_I18N = {
+      ka: {
+        addMusic: "მუსიკის დამატება",
+        next: "შემდეგი",
+        publishTitle: "გამოქვეყნება",
+        descPlaceholder: "დაამატეთ აღწერა...",
+        coverTag: "ქავერი",
+        audienceTitle: "ვის შეუძლია ნახვა",
+        audPublic: "ყველას (საჯარო)",
+        audFriends: "მხოლოდ მეგობრებს",
+        audPrivate: "მხოლოდ მე (პირადი)",
+        allowComments: "კომენტარების დაშვება",
+        allowCommentsSub: "ყველას შეუძლია კომენტარის დაწერა",
+        draftBtn: "შენახვა დრაფტებში",
+        publishBtn: "გამოქვეყნება",
+        authReq: "გთხოვთ გაიაროთ ავტორიზაცია.",
+        draftSaved: "ვიდეო შენახულია დრაფტებში!",
+        uploadSuccess: "ვიდეო წარმატებით გამოქვეყნდა!",
+        uploading: "ვიდეო იტვირთება"
+      },
+      en: {
+        addMusic: "Add sound",
+        next: "Next",
+        publishTitle: "Post",
+        descPlaceholder: "Describe your post...",
+        coverTag: "Cover",
+        audienceTitle: "Who can watch this video",
+        audPublic: "Everyone (Public)",
+        audFriends: "Friends only",
+        audPrivate: "Only me (Private)",
+        allowComments: "Allow comments",
+        allowCommentsSub: "Everyone can comment",
+        draftBtn: "Drafts",
+        publishBtn: "Post",
+        authReq: "Please log in to upload.",
+        draftSaved: "Saved to drafts!",
+        uploadSuccess: "Video published successfully!",
+        uploading: "Uploading video"
+      },
+      it: {
+        addMusic: "Aggiungi suono",
+        next: "Avanti",
+        publishTitle: "Pubblica",
+        descPlaceholder: "Descrivi il tuo video...",
+        coverTag: "Copertina",
+        audienceTitle: "Chi può vedere questo video",
+        audPublic: "Tutti (Pubblico)",
+        audFriends: "Solo amici",
+        audPrivate: "Solo io (Privato)",
+        allowComments: "Consenti commenti",
+        allowCommentsSub: "Tutti possono commentare",
+        draftBtn: "Bozze",
+        publishBtn: "Pubblica",
+        authReq: "Effettua l'accesso per caricare.",
+        draftSaved: "Salvato nelle bozze!",
+        uploadSuccess: "Video pubblicato con successo!",
+        uploading: "Caricamento video"
+      },
+      ru: {
+        addMusic: "Добавить музыку",
+        next: "Далее",
+        publishTitle: "Опубликовать",
+        descPlaceholder: "Добавьте описание...",
+        coverTag: "Обложка",
+        audienceTitle: "Кто может просматривать",
+        audPublic: "Все (Публично)",
+        audFriends: "Только друзья",
+        audPrivate: "Только я (Приватно)",
+        allowComments: "Разрешить комментарии",
+        allowCommentsSub: "Все могут комментировать",
+        draftBtn: "Черновики",
+        publishBtn: "Опубликовать",
+        authReq: "Пожалуйста, авторизуйтесь.",
+        draftSaved: "Сохранено в черновиках!",
+        uploadSuccess: "Видео успешно опубликовано!",
+        uploading: "Загрузка видео"
+      },
+      fr: {
+        addMusic: "Ajouter un son",
+        next: "Suivant",
+        publishTitle: "Publier",
+        descPlaceholder: "Décrivez votre vidéo...",
+        coverTag: "Couverture",
+        audienceTitle: "Qui peut voir cette vidéo",
+        audPublic: "Tout le monde (Public)",
+        audFriends: "Amis uniquement",
+        audPrivate: "Moi uniquement (Privé)",
+        allowComments: "Autoriser les commentaires",
+        allowCommentsSub: "Tout le monde peut commenter",
+        draftBtn: "Brouillons",
+        publishBtn: "Publier",
+        authReq: "Veuillez vous connecter pour publier.",
+        draftSaved: "Enregistré dans les brouillons!",
+        uploadSuccess: "Vidéo publiée avec succès!",
+        uploading: "Téléversement en cours"
+      },
+      de: {
+        addMusic: "Sound hinzufügen",
+        next: "Weiter",
+        publishTitle: "Veröffentlichen",
+        descPlaceholder: "Beschreibe deinen Beitrag...",
+        coverTag: "Cover",
+        audienceTitle: "Wer kann dieses Video sehen",
+        audPublic: "Jeder (Öffentlich)",
+        audFriends: "Nur Freunde",
+        audPrivate: "Nur ich (Privat)",
+        allowComments: "Kommentare erlauben",
+        allowCommentsSub: "Jeder kann kommentieren",
+        draftBtn: "Entwürfe",
+        publishBtn: "Posten",
+        authReq: "Bitte melde dich an.",
+        draftSaved: "Als Entwurf gespeichert!",
+        uploadSuccess: "Video erfolgreich veröffentlicht!",
+        uploading: "Video wird hochgeladen"
+      },
+      el: {
+        addMusic: "Προσθήκη ήχου",
+        next: "Επόμενο",
+        publishTitle: "Δημοσίευση",
+        descPlaceholder: "Προσθέστε περιγραφή...",
+        coverTag: "Εξώφυλλο",
+        audienceTitle: "Ποιος μπορεί να δει αυτό το βίντεο",
+        audPublic: "Όλοι (Δημόσιο)",
+        audFriends: "Μόνο φίλοι",
+        audPrivate: "Μόνο εγώ (Ιδιωτικό)",
+        allowComments: "Να επιτρέπονται σχόλια",
+        allowCommentsSub: "Όλοι μπορούν να σχολιάσουν",
+        draftBtn: "Πρόχειρα",
+        publishBtn: "Δημοσίευση",
+        authReq: "Παρακαλώ συνδεθείτε.",
+        draftSaved: "Αποθηκεύτηκε στα πρόχειρα!",
+        uploadSuccess: "Το βίντεο δημοσιεύτηκε με επιτυχία!",
+        uploading: "Μεταφόρτωση βίντεο"
+      }
+    };
+
+    function getReelsActiveLangCode() {
+      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+      if (typeof window.currentSiteLang !== 'undefined' && window.currentSiteLang) return window.currentSiteLang;
+      return localStorage.getItem('eb_lang') || localStorage.getItem('emigrant_lang') || 'ka';
+    }
+
+    function getReelsLangT() {
+      var lang = getReelsActiveLangCode();
+      return REELS_I18N[lang] || REELS_I18N['ka'];
+    }
+
+    var selectedReelFile = null;
+    var selectedReelMusicObj = null;
+    var selectedReelAudience = 'public';
+
+    // ამოღება IndexedDB-დან
+    window.onload = function() {
+      var req = indexedDB.open('ReelsUploadDB', 1);
+      req.onsuccess = function(e) {
+        var dbInstance = e.target.result;
+        if (!dbInstance.objectStoreNames.contains('reelStore')) {
+          window.location.href = 'reel-record.html';
+          return;
+        }
+        var tx = dbInstance.transaction('reelStore', 'readonly');
+        var getReq = tx.objectStore('reelStore').get('tempReel');
+        getReq.onsuccess = function() {
+          if (getReq.result && getReq.result.blob) {
+            selectedReelFile = getReq.result.blob;
+            selectedReelMusicObj = getReq.result.music;
+            openReelsFlowPreview(selectedReelFile);
+          } else {
+            window.location.href = 'reel-record.html';
+          }
+        };
+      };
+      req.onerror = function() {
+        window.location.href = 'reel-record.html';
+      };
+    };
+
+    // 🎬 6. Preview მოდალი
+    function openReelsFlowPreview(file) {
+      var video = document.getElementById('rfPreviewVideo');
+      if (video) {
+        video.src = URL.createObjectURL(file);
+        video.currentTime = 0;
+        video.muted = false;
+        video.volume = 1.0;
+        video.play().catch(function(){});
+      }
+      applyReelsFlowTranslations();
+    }
+
+    function closeReelsFlowPreview() {
+      var video = document.getElementById('rfPreviewVideo');
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
+      window.location.href = 'reel-record.html';
+    }
+
+    // 📝 7. Publish
+    function goToPublishScreen() {
+      var previewModal = document.getElementById('rfPreviewModal');
+      var previewVideo = document.getElementById('rfPreviewVideo');
+      var publishModal = document.getElementById('rfPublishModal');
+
+      generateVideoThumbnail(previewVideo);
+
+      if (previewVideo) previewVideo.pause();
+      if (previewModal) previewModal.classList.remove('active');
+      if (publishModal) publishModal.classList.add('active');
+    }
+
+    function backToPreviewScreen() {
+      var previewModal = document.getElementById('rfPreviewModal');
+      var previewVideo = document.getElementById('rfPreviewVideo');
+      var publishModal = document.getElementById('rfPublishModal');
+
+      if (publishModal) publishModal.classList.remove('active');
+      if (previewModal) previewModal.classList.add('active');
+      if (previewVideo) previewVideo.play().catch(function(){});
+    }
+
+    function generateVideoThumbnail(videoElem) {
+      var canvas = document.getElementById('rfThumbCanvas');
+      var img = document.getElementById('rfThumbPreviewImg');
+      if (!canvas || !img || !videoElem) return;
+
+      canvas.width = videoElem.videoWidth || 300;
+      canvas.height = videoElem.videoHeight || 400;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height);
+
+      try {
+        img.src = canvas.toDataURL('image/jpeg', 0.8);
+      } catch (e) {
+        img.src = "icons/video.svg";
+      }
+    }
+
+    function addReelHashtag(tag) {
+      var input = document.getElementById('rfPostCaption');
+      if (!input) return;
+      var current = input.value.trim();
+      if (current.includes(tag)) return;
+      input.value = current ? current + " " + tag : tag;
+      input.focus();
+    }
+
+    function toggleReelAudience() {
+      var t = getReelsLangT();
+      var label = document.getElementById('rf-selected-audience-label');
+
+      if (selectedReelAudience === 'public') {
+        selectedReelAudience = 'friends';
+        label.innerText = t.audFriends;
+      } else if (selectedReelAudience === 'friends') {
+        selectedReelAudience = 'private';
+        label.innerText = t.audPrivate;
+      } else {
+        selectedReelAudience = 'public';
+        label.innerText = t.audPublic;
+      }
+    }
+
+    function saveReelAsDraft() {
+      var t = getReelsLangT();
+      var caption = document.getElementById('rfPostCaption') ? document.getElementById('rfPostCaption').value.trim() : "";
+      var draft = {
+        caption: caption,
+        music: selectedReelMusicObj,
+        audience: selectedReelAudience,
+        date: new Date().toISOString()
+      };
+      localStorage.setItem('eb_last_reel_draft', JSON.stringify(draft));
+      alert(t.draftSaved || "ვიდეო შენახულია დრაფტებში!");
+      window.location.href = 'reels.html';
+    }
+
+    // 1. Cloudflare R2-ში ვიდეოს ატვირთვა პროგრესით
+    function uploadReelToR2(file, onProgress, onComplete) {
+      var r2S3 = new AWS.S3({
+        endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+        accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+        secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+        signatureVersion: 'v4',
+        region: 'auto',
+        s3ForcePathStyle: true
+      });
+
+      var fileExt = file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i) ? file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i)[0] : '.mp4';
+      var fileKey = 'videos/' + Date.now() + '_' + Math.random().toString(36).substring(2, 7) + fileExt;
+
+      var params = {
+        Bucket: 'emigrantbook-videos',
+        Key: fileKey,
+        Body: file,
+        ContentType: file.type || 'video/mp4',
+        CacheControl: 'public, max-age=31536000, immutable'
+      };
+
+      var uploader = r2S3.upload(params);
+
+      uploader.on('httpUploadProgress', function(evt) {
+        if (evt.total && typeof onProgress === 'function') {
+          var percent = Math.round((evt.loaded / evt.total) * 100);
+          onProgress(percent);
+        }
+      });
+
+      uploader.send(function(err, data) {
+        if (err) {
+          console.error("R2 Upload Error:", err);
+          onComplete(null, err);
+        } else {
+          var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+          onComplete(publicUrl, null);
+        }
+      });
+    }
+
+    // 🚀 9. გამოქვეყნება Cloudflare R2-ზე და Firestore-ში
+    function startFinalReelUpload() {
+      if (!selectedReelFile) return;
+      var t = getReelsLangT();
+
+      if (!currentUser) {
+        alert(t.authReq || "გთხოვთ გაიაროთ ავტორიზაცია.");
+        return;
+      }
+
+      var caption = document.getElementById('rfPostCaption') ? document.getElementById('rfPostCaption').value.trim() : "";
+      var allowComments = document.getElementById('rfAllowCommentsCheckbox') ? document.getElementById('rfAllowCommentsCheckbox').checked : true;
+
+      var overlay = document.getElementById('reelsUploadOverlay');
+      var statusText = document.getElementById('reelsUploadStatusText');
+
+      var publishModal = document.getElementById('rfPublishModal');
+      if (publishModal) publishModal.classList.remove('active');
+      
+      if (overlay) overlay.style.display = 'flex';
+      if (statusText) statusText.innerText = (t.uploading || "ვიდეო იტვირთება") + " (0%)...";
+
+      uploadReelToR2(
+        selectedReelFile,
+        function(percent) {
+          if (statusText) statusText.innerText = (t.uploading || "ვიდეო იტვირთება") + " (" + percent + "%)...";
+        },
+        function(publicUrl, error) {
+          if (error || !publicUrl) {
+            if (overlay) overlay.style.display = 'none';
+            if (publishModal) publishModal.classList.add('active');
+            alert("Upload error: " + (error ? error.message : "Unknown error"));
+            return;
+          }
+
+          var myName = currentUserProfile ? currentUserProfile.full_name : (currentUser.displayName || currentUser.email || "Emigrant");
+
+          db.collection('posts').add({
+            user_id: currentUser.uid,
+            author_name: myName,
+            content: caption,
+            media_url: publicUrl,
+            media_type: 'video',
+            likes_count: 0,
+            comments_count: 0,
+            audience: selectedReelAudience,
+            allow_comments: allowComments,
+            music_title: selectedReelMusicObj ? selectedReelMusicObj.title : null,
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(function() {
+            if (overlay) overlay.style.display = 'none';
+            alert(t.uploadSuccess || "ვიდეო წარმატებით გამოქვეყნდა!");
+            window.location.href = 'reels.html';
+          }).catch(function(err) {
+            if (overlay) overlay.style.display = 'none';
+            if (publishModal) publishModal.classList.add('active');
+            alert("Database error: " + err.message);
+          });
+        }
+      );
+    }
+
+    // 🌐 10. 7 ენის ტექსტების მორგება
+    function applyReelsFlowTranslations() {
+      var t = getReelsLangT();
+      var setEl = function(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.innerText = text;
+      };
+
+      var musicTitle = selectedReelMusicObj ? selectedReelMusicObj.title : t.addMusic;
+      setEl('rf-lbl-selected-music', musicTitle);
+      setEl('rf-lbl-next-btn', t.next);
+      setEl('rf-lbl-publish-title', t.publishTitle);
+      setEl('rf-lbl-cover-tag', t.coverTag);
+      setEl('rf-lbl-aud-title', t.audienceTitle);
+      setEl('rf-selected-audience-label', selectedReelAudience === 'friends' ? t.audFriends : (selectedReelAudience === 'private' ? t.audPrivate : t.audPublic));
+      setEl('rf-lbl-allow-comments', t.allowComments);
+      setEl('rf-lbl-allow-comments-sub', t.allowCommentsSub);
+      setEl('rf-lbl-draft-btn', t.draftBtn);
+      setEl('rf-lbl-publish-btn-text', t.publishBtn);
+
+      var desc = document.getElementById('rfPostCaption');
+      if (desc) desc.placeholder = t.descPlaceholder;
+    }
+  </script>
+</body>
+</html>
