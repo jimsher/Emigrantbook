@@ -555,17 +555,18 @@
     }
 
     function closeReelsCameraScreen() {
-      if (activeCameraMusicAudio) {
-        activeCameraMusicAudio.pause();
-        activeCameraMusicAudio.currentTime = 0;
-      }
+  if (activeCameraMusicAudio) {
+    activeCameraMusicAudio.pause();
+    activeCameraMusicAudio.currentTime = 0;
+  }
 
-      if (liveCameraStream) {
-        liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
-        liveCameraStream = null;
-      }
-      window.history.back();
-    }
+  if (liveCameraStream) {
+    liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
+    liveCameraStream = null;
+  }
+  window.location.href = 'reels.html'; // ✅ პირდაპირ მთავარ ფიდზე გასვლა
+}
+
 
     function flipLiveCamera() {
       currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
