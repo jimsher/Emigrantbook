@@ -10148,6 +10148,40 @@ function clearAllSearchHistory() {
     });
 }
  // აქ მთავრდება
+
+  (function initGlobalBackHandler() {
+  var backPressedOnce = false;
+
+  // ხელოვნური წერტილი ისტორიაში
+  history.pushState({ page: 'home' }, '', location.href);
+
+  window.addEventListener('popstate', function (event) {
+    // 1. თუ გახსნილია რაიმე მოდალი/ფანჯარა საიტზე — ჯერ ის დავხუროთ!
+    var openModal = document.querySelector('.reels-flow-modal[style*="display: flex"], .comments-sheet-modal[style*="display: flex"], .modal.show, .popup.active');
+    if (openModal) {
+      openModal.style.display = 'none';
+      history.pushState({ page: 'home' }, '', location.href);
+      return;
+    }
+
+    // 2. თუ მთავარ ეკრანზე ხარ, ზედიზედ 2 დაჭერის ლოგიკა (რომ უცებ არ გამოვარდეს)
+    if (!backPressedOnce) {
+      backPressedOnce = true;
+      history.pushState({ page: 'home' }, '', location.href);
+      
+      // შეგიძლია პატარა ტოსტი/მინიშნებაც გამოაჩინო:
+      console.log("დააჭირეთ კიდევ ერთხელ გასასვლელად");
+
+      setTimeout(function () {
+        backPressedOnce = false;
+      }, 2000); // 2 წამში უქმდება
+    } else {
+      // მეორედ დაჭერისას მართლა გავიდეს
+      history.back();
+    }
+  });
+})();
+  
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
