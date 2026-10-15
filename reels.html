@@ -1672,7 +1672,23 @@ document.addEventListener('play', function(e) {
     }
 
 
- 
+ (function initReelsBackHandler() {
+  history.pushState({ page: 'reels' }, '', location.href);
+
+  window.addEventListener('popstate', function () {
+    // 1. თუ კომენტარების მოდალია გახსნილი, მხოლოდ კომენტარები დახუროს
+    var commentsModal = document.getElementById('commentsSheetModal');
+    if (commentsModal && commentsModal.style.display === 'flex') {
+      commentsModal.style.display = 'none';
+      history.pushState({ page: 'reels' }, '', location.href);
+      return;
+    }
+
+    // 2. სხვა შემთხვევაში დაბრუნდეს მთავარ გვერდზე
+    window.location.href = 'index.html';
+  });
+})();
+
   </script>
     <!-- ატვირთვის პროგრესის ფანჯარა -->
   <div class="reels-upload-overlay" id="reelsUploadOverlay">
