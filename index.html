@@ -3935,8 +3935,36 @@ function openAllDetailsSheet() {
   if (u.pronouns) allItems.push({ icon: 'icons/circle-user-round.svg', label: t.subPronouns || 'ნაცვალსახელები', text: escapeAboutHtml(u.pronouns) });
   if (u.languages) allItems.push({ icon: 'icons/globe.svg', label: t.subLangs || 'ენები', text: escapeAboutHtml(u.languages) });
   if (u.nickname) allItems.push({ icon: 'icons/circle-user-round.svg', label: t.subNickname || 'მეტსახელი', text: escapeAboutHtml(u.nickname) });
-  if (u.website) allItems.push({ icon: 'icons/globe.svg', label: t.subWebsite || 'ვებსაიტი', text: `<a href="${escapeAboutHtml(u.website)}" target="_blank" style="color:#1877f2;text-decoration:none;">${escapeAboutHtml(u.website)}</a>` });
-  if (u.social_link) allItems.push({ icon: 'icons/tag.svg', label: t.subSocial || 'სოციალური ბმული', text: `<a href="${escapeAboutHtml(u.social_link)}" target="_blank" style="color:#1877f2;text-decoration:none;">${escapeAboutHtml(u.social_link)}</a>` });
+
+  if (u.website) {
+  var wLink = escapeAboutHtml(u.website.trim());
+  var wLabel = "Website";
+  var wIcon = "icons/globe.svg";
+  if (wLink.includes('instagram.com')) { wLabel = "Instagram"; wIcon = "icons/camera.svg"; }
+  else if (wLink.includes('facebook.com') || wLink.includes('fb.me')) { wLabel = "Facebook"; wIcon = "icons/globe.svg"; }
+  else if (wLink.includes('tiktok.com')) { wLabel = "TikTok"; wIcon = "icons/video.svg"; }
+  allItems.push({ 
+    icon: wIcon, 
+    label: t.subWebsite || 'ვებსაიტი', 
+    text: `<a href="${wLink.startsWith('http') ? wLink : 'https://' + wLink}" target="_blank" rel="noopener noreferrer" style="color:#1877f2;text-decoration:none;font-weight:700;">${wLabel} ↗</a>` 
+  });
+}
+
+if (u.social_link) {
+  var sLink = escapeAboutHtml(u.social_link.trim());
+  var sLabel = "Social link";
+  var sIcon = "icons/tag.svg";
+  if (sLink.includes('instagram.com')) { sLabel = "Instagram"; sIcon = "icons/camera.svg"; }
+  else if (sLink.includes('facebook.com') || sLink.includes('fb.me')) { sLabel = "Facebook"; sIcon = "icons/globe.svg"; }
+  else if (sLink.includes('tiktok.com')) { sLabel = "TikTok"; sIcon = "icons/video.svg"; }
+  allItems.push({ 
+    icon: sIcon, 
+    label: t.subSocial || 'სოციალური ბმული', 
+    text: `<a href="${sLink.startsWith('http') ? sLink : 'https://' + sLink}" target="_blank" rel="noopener noreferrer" style="color:#1877f2;text-decoration:none;font-weight:700;">${sLabel} ↗</a>` 
+  });
+}
+
+  
   if (u.family_members) allItems.push({ icon: 'icons/users.svg', label: t.subFamily || 'ოჯახის წევრები', text: escapeAboutHtml(u.family_members) });
   if (u.life_events) allItems.push({ icon: 'icons/award.svg', label: t.subEvents || 'მოვლენები', text: escapeAboutHtml(u.life_events) });
   if (u.favorite_music) allItems.push({ icon: 'icons/clapperboard.svg', label: t.subMusic || 'საყვარელი მუსიკა', text: escapeAboutHtml(u.favorite_music) });
