@@ -3802,18 +3802,33 @@ function renderProfileDetails(user) {
   // საკონტაქტო ბლოკი
   var contactItems = [];
   if (u.social_link && u.social_link.trim() !== '') {
-    var cleanSoc = escapeAboutHtml(u.social_link).replace(/^https?:\/\/(www\.)?instagram\.com\//, '@').replace(/\/$/, '');
+    var sLink = escapeAboutHtml(u.social_link.trim());
+    var sLabel = "Social link";
+    var sIcon = "icons/tag.svg";
+    if (sLink.includes('instagram.com')) { sLabel = "Instagram"; sIcon = "icons/camera.svg"; }
+    else if (sLink.includes('facebook.com') || sLink.includes('fb.me')) { sLabel = "Facebook"; sIcon = "icons/globe.svg"; }
+    else if (sLink.includes('tiktok.com')) { sLabel = "TikTok"; sIcon = "icons/video.svg"; }
+
     contactItems.push({ 
-      icon: 'icons/tag.svg', 
-      text: `<a href="${escapeAboutHtml(u.social_link)}" target="_blank" style="color: #050505; text-decoration: none; font-weight: 500;">${cleanSoc}</a>` 
+      icon: sIcon, 
+      text: `<a href="${sLink.startsWith('http') ? sLink : 'https://' + sLink}" target="_blank" rel="noopener noreferrer" style="color: #1877f2; text-decoration: none; font-weight: 700;">${sLabel} ↗</a>` 
     });
   }
+
   if (u.website && u.website.trim() !== '') {
+    var wLink = escapeAboutHtml(u.website.trim());
+    var wLabel = "Website";
+    var wIcon = "icons/globe.svg";
+    if (wLink.includes('instagram.com')) { wLabel = "Instagram"; wIcon = "icons/camera.svg"; }
+    else if (wLink.includes('facebook.com') || wLink.includes('fb.me')) { wLabel = "Facebook"; wIcon = "icons/globe.svg"; }
+    else if (wLink.includes('tiktok.com')) { wLabel = "TikTok"; wIcon = "icons/video.svg"; }
+
     contactItems.push({ 
-      icon: 'icons/globe.svg', 
-      text: `<a href="${escapeAboutHtml(u.website)}" target="_blank" style="color: #1877f2; text-decoration: none;">${escapeAboutHtml(u.website)}</a>` 
+      icon: wIcon, 
+      text: `<a href="${wLink.startsWith('http') ? wLink : 'https://' + wLink}" target="_blank" rel="noopener noreferrer" style="color: #1877f2; text-decoration: none; font-weight: 700;">${wLabel} ↗</a>` 
     });
   }
+
 
   // თუ ცარიელია
   if (basicItems.length === 0 && contactItems.length === 0) {
