@@ -856,6 +856,22 @@
       var desc = document.getElementById('rfPostCaption');
       if (desc) desc.placeholder = t.descPlaceholder;
     }
+
+
+    (function initPublishBackHandler() {
+  history.pushState({ page: 'publish_flow' }, '', location.href);
+
+  window.addEventListener('popstate', function () {
+    var publishModal = document.getElementById('rfPublishModal');
+    if (publishModal && publishModal.classList.contains('active')) {
+      backToPreviewScreen();
+      history.pushState({ page: 'publish_flow' }, '', location.href);
+    } else {
+      window.location.href = 'reel-record.html';
+    }
+  });
+})();
+
   </script>
 </body>
 </html>
