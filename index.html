@@ -5124,6 +5124,13 @@ firebase.auth().onAuthStateChanged(function(user) {
       if (postsWall) postsWall.style.display = 'none';
       if (photosWall) photosWall.style.display = 'none';
 
+       /* 🌟 აი ეს 3 ხაზი ჩასვი აქ (ანულებს JavaScript-ის ინლაინ დაშორებას) 🌟 */
+      var modernCard = document.querySelector('.profile-modern-card');
+      var tabsBox = document.querySelector('.profile-tabs');
+      if (modernCard) modernCard.style.setProperty('padding-bottom', '0px', 'important');
+      if (tabsBox) tabsBox.style.setProperty('padding-bottom', '0px', 'important');
+      if (postsWall) postsWall.style.setProperty('padding-top', '0px', 'important');
+
       var targetUserId = activeViewingProfileId || currentUser.uid;
 
       if (tabName === 'posts') {
