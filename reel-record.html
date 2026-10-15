@@ -1,1 +1,841 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Reel Record</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
+    body, html {
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      overflow: hidden;
+    }
+
+    .reels-record-container {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      height: 100dvh;
+      background: #000000;
+      margin: 0 auto;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ვიდეოს პლეიერის კონტროლების სრული დამალვა */
+    video::-webkit-media-controls,
+    video::-webkit-media-controls-enclosure,
+    video::-webkit-media-controls-panel,
+    video::-webkit-media-controls-overlay-play-button,
+    video::-webkit-media-controls-start-playback-button,
+    video::-webkit-media-controls-play-button {
+      display: none !important;
+      -webkit-appearance: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    /* 3. მუსიკის დამატების აბი (Pill) */
+    .rf-music-pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #ffffff;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      user-select: none;
+    }
+
+    /* 6. მუსიკის არჩევის Bottom Sheet (თეთრი დიზაინით) */
+    .rf-music-sheet {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 2100000;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .rf-music-panel {
+      width: 100%;
+      max-width: 480px;
+      height: 70vh;
+      background: #ffffff;
+      border-radius: 18px 18px 0 0;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+      border-top: 1px solid #dadde1;
+      animation: slideUpMusic 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    @keyframes slideUpMusic {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .rf-music-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #dadde1;
+    }
+
+    .rf-music-tabs {
+      display: flex;
+      gap: 18px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+
+    .rf-music-tab-item {
+      font-size: 14px;
+      font-weight: 600;
+      color: #65676b;
+      cursor: pointer;
+      position: relative;
+      padding-bottom: 6px;
+    }
+
+    .rf-music-tab-item.active {
+      color: #050505;
+      font-weight: 700;
+      border-bottom: 2.5px solid #050505;
+    }
+
+    .rf-music-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .rf-music-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      cursor: pointer;
+    }
+
+    .rf-music-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rf-music-cover {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: #f0f2f5;
+      border: 1px solid #dadde1;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .rf-music-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #050505;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rf-music-sub {
+      font-size: 12px;
+      color: #65676b;
+      margin-top: 2px;
+    }
+
+    .rf-music-select-btn {
+      background: #1877f2;
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .comments-close-btn {
+      background: none;
+      border: none;
+      color: #65676b;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="reels-record-container">
+    <!-- ცოცხალი კამერა Base64 პოსტერით და ფლეიერის დამალვით -->
+    <video id="rfLiveCameraFeed" autoplay playsinline muted 
+       poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" 
+       style="width: 100%; height: 100%; height: 100dvh; object-fit: cover; object-position: center; background: #000000; transform: scaleX(-1);"></video>
+
+    <!-- ფარული input პირდაპირ გალერეიდან ვიდეოს ასარჩევად -->
+    <input type="file" id="rfGalleryPickerInput" accept="video/*" style="display: none;" onchange="handleReelsDirectUpload(event)">
+
+    <!-- ზედა ზოლი -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 20; background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);">
+      <button type="button" onclick="closeReelsCameraScreen()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      
+      <div class="rf-music-pill-btn" onclick="openReelsMusicSheet()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="#ffffff"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <span id="rf-cam-selected-music">მუსიკის დამატება</span>
+      </div>
+
+      <!-- კამერის როტაცია (Flip Camera) -->
+      <button type="button" onclick="flipLiveCamera()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8c0 1.954.702 3.744 1.87 5.143L4 17h5v-5L7.26 13.74C6.47 12.64 6 11.37 6 10c0-3.314 2.686-6 6-6s6 2.686 6 6c0 1.37-.47 2.64-1.26 3.74L15 12v5h5l-1.87-1.857C19.298 13.744 20 11.954 20 10z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- მარჯვენა ინსტრუმენტების ზოლი (TikTok SVG-ები) -->
+    <div style="position: absolute; top: 75px; right: 14px; display: flex; flex-direction: column; gap: 20px; z-index: 20; align-items: center;">
+      <!-- ფლეში -->
+      <div onclick="toggleCameraFlash()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-flash">ფლეში</span>
+      </div>
+      <!-- ტაიმერი -->
+      <div style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-timer">ტაიმერი</span>
+      </div>
+      <!-- ეფექტები -->
+      <div style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span style="color:#ffffff; font-size:10px; font-weight:600;" id="rf-lbl-effects">ეფექტები</span>
+      </div>
+    </div>
+
+    <!-- ქვედა მართვის ზონა -->
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding-bottom: 26px; display: flex; flex-direction: column; align-items: center; z-index: 20; background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);">
+      <div style="display: flex; gap: 20px; margin-bottom: 18px; font-size: 13.5px; font-weight: 700; color: #ffffff;">
+        <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-10m" onclick="setRecordDuration(600, this)">10 წთ</span>
+        <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-60s" onclick="setRecordDuration(60, this)">60 წმ</span>
+        <span style="cursor: pointer; color: #fe2c55; border-bottom: 2px solid #fe2c55; padding-bottom: 2px;" id="rf-dur-15s" onclick="setRecordDuration(15, this)">15 წმ</span>
+        <span style="cursor: pointer; opacity: 0.6;" id="rf-dur-photo">ფოტო</span>
+      </div>
+
+      <div style="width: 100%; display: flex; align-items: center; justify-content: space-around; padding: 0 24px;">
+        <!-- 🖼️ გალერეა -->
+        <div onclick="triggerGalleryFromCameraScreen()" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <div style="width: 44px; height: 44px; border-radius: 10px; border: 2px solid #ffffff; background: rgba(255,255,255,0.15); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          </div>
+          <span style="font-size: 11px; font-weight: 700; color: #ffffff;" id="rf-lbl-gallery-btn">გალერეა</span>
+        </div>
+
+        <!-- 🔴 დიდი წითელი ჩამწერი ღილაკი -->
+        <div id="rfRecordBigBtn" onclick="toggleCameraRecording()" style="width: 76px; height: 76px; border-radius: 50%; border: 4px solid #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <div id="rfRecordInnerCircle" style="width: 60px; height: 60px; border-radius: 50%; background: #fe2c55; transition: all 0.2s;"></div>
+        </div>
+
+        <div style="width: 44px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎵 მუსიკის Bottom Sheet -->
+  <div class="rf-music-sheet" id="rfMusicSheet" onclick="closeReelsMusicSheet(event)">
+    <div class="rf-music-panel" onclick="event.stopPropagation()">
+      <div class="rf-music-header">
+        <div class="rf-header-title" id="rf-lbl-music-header" style="font-size: 17px; font-weight: 700; color: #050505;">მუსიკის არჩევა</div>
+        <button type="button" class="comments-close-btn" onclick="closeReelsMusicSheet()">✕</button>
+      </div>
+      <div class="rf-music-tabs">
+        <div class="rf-music-tab-item active" id="rf-tab-for-you" onclick="switchMusicTab('foryou')">თქვენთვის</div>
+        <div class="rf-music-tab-item" id="rf-tab-popular" onclick="switchMusicTab('popular')">პოპულარული</div>
+        <div class="rf-music-tab-item" id="rf-tab-none" onclick="selectReelMusic(null)">მუსიკის გარეშე</div>
+      </div>
+      <div class="rf-music-list" id="rfMusicListContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    // 🌐 1. 7 ენის ლექსიკონი
+    const REELS_I18N = {
+      ka: {
+        addMusic: "მუსიკის დამატება",
+        musicHeader: "მუსიკის არჩევა",
+        tabForYou: "თქვენთვის",
+        tabPopular: "პოპულარული",
+        tabNoMusic: "მუსიკის გარეშე",
+        select: "არჩევა",
+        galleryBtn: "გალერეა",
+        flash: "ფლეში",
+        timer: "ტაიმერი",
+        effects: "ეფექტები",
+        videoOnly: "გთხოვთ აირჩიოთ მხოლოდ ვიდეო ფაილი!",
+        sizeLimit: "ვიდეოს ზომა აჭარბებს 100MB-ს."
+      },
+      en: {
+        addMusic: "Add sound",
+        musicHeader: "Select sound",
+        tabForYou: "For you",
+        tabPopular: "Popular",
+        tabNoMusic: "Original sound",
+        select: "Select",
+        galleryBtn: "Upload",
+        flash: "Flash",
+        timer: "Timer",
+        effects: "Effects",
+        videoOnly: "Please select a valid video file!",
+        sizeLimit: "File size exceeds 100MB."
+      },
+      it: {
+        addMusic: "Aggiungi suono",
+        musicHeader: "Seleziona suono",
+        tabForYou: "Per te",
+        tabPopular: "Popolari",
+        tabNoMusic: "Suono originale",
+        select: "Seleziona",
+        galleryBtn: "Galleria",
+        flash: "Flash",
+        timer: "Timer",
+        effects: "Effetti",
+        videoOnly: "Seleziona un file video valido!",
+        sizeLimit: "Il file supera i 100MB."
+      },
+      ru: {
+        addMusic: "Добавить музыку",
+        musicHeader: "Выбор музыки",
+        tabForYou: "Для вас",
+        tabPopular: "Популярное",
+        tabNoMusic: "Без музыки",
+        select: "Выбрать",
+        galleryBtn: "Загрузить",
+        flash: "Вспышка",
+        timer: "Таймер",
+        effects: "Эффекты",
+        videoOnly: "Пожалуйста, выберите видеофайл!",
+        sizeLimit: "Размер видео превышает 100МБ."
+      },
+      fr: {
+        addMusic: "Ajouter un son",
+        musicHeader: "Sélectionner un son",
+        tabForYou: "Pour vous",
+        tabPopular: "Populaire",
+        tabNoMusic: "Son original",
+        select: "Sélectionner",
+        galleryBtn: "Galerie",
+        flash: "Flash",
+        timer: "Minuteur",
+        effects: "Effets",
+        videoOnly: "Veuillez sélectionner un fichier vidéo valide!",
+        sizeLimit: "Le fichier dépasse 100Mo."
+      },
+      de: {
+        addMusic: "Sound hinzufügen",
+        musicHeader: "Sound auswählen",
+        tabForYou: "Für dich",
+        tabPopular: "Beliebt",
+        tabNoMusic: "Originalton",
+        select: "Auswählen",
+        galleryBtn: "Galerie",
+        flash: "Blitz",
+        timer: "Timer",
+        effects: "Effekte",
+        videoOnly: "Bitte wähle eine gültige Videodatei aus!",
+        sizeLimit: "Datei ist größer als 100MB."
+      },
+      el: {
+        addMusic: "Προσθήκη ήχου",
+        musicHeader: "Επιλογή ήχου",
+        tabForYou: "Για εσάς",
+        tabPopular: "Δημοφιλή",
+        tabNoMusic: "Πρωτότυπος ήχος",
+        select: "Επιλογή",
+        galleryBtn: "Γκαλερί",
+        flash: "Φλας",
+        timer: "Χρονόμετρο",
+        effects: "Εφέ",
+        videoOnly: "Επιλέξτε ένα έγκυρο αρχείο βίντεο!",
+        sizeLimit: "Το μέγεθος υπερβαίνει τα 100MB."
+      }
+    };
+
+    function getReelsActiveLangCode() {
+      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+      if (typeof window.currentSiteLang !== 'undefined' && window.currentSiteLang) return window.currentSiteLang;
+      return localStorage.getItem('eb_lang') || localStorage.getItem('emigrant_lang') || 'ka';
+    }
+
+    function getReelsLangT() {
+      var lang = getReelsActiveLangCode();
+      return REELS_I18N[lang] || REELS_I18N['ka'];
+    }
+
+    // 2. ლოკალური მუსიკების ბაზა
+    const REELS_MUSIC_CACHE = [
+      { 
+        id: "m1", 
+        title: "DJ Geo Remix", 
+        author: "DJ Geo", 
+        cover: "icons/clapperboard.svg", 
+        duration: "1:27", 
+        type: "popular",
+        url: "https://github.com/jimsher/Emigrantbook/raw/refs/heads/main/music/2026%20%E1%83%AC%E1%83%9A%E1%83%98%E1%83%A1.m4a"
+      },
+      { 
+        id: "m2", 
+        title: "Vibe 5789 Exclusive", 
+        author: "Vibe Music", 
+        cover: "icons/clapperboard.svg", 
+        duration: "1:01", 
+        type: "popular",
+        url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/vibe.mp3"
+      },
+      { 
+        id: "m3", 
+        title: "Motivat2 Original Beat", 
+        author: "Motivat2", 
+        cover: "icons/clapperboard.svg", 
+        duration: "2:33", 
+        type: "foryou",
+        url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/motivat.mp3"
+      },
+      { 
+        id: "m4", 
+        title: "Sheni Tvalebi Remix", 
+        author: "Ilarion Studio", 
+        cover: "icons/clapperboard.svg", 
+        duration: "1:00", 
+        type: "foryou",
+        url: "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/sheni-tvalebi.mp3"
+      }
+    ];
+
+    var liveCameraStream = null;
+    var currentFacingMode = 'user';
+    var mediaRecorder = null;
+    var recordedChunks = [];
+    var isRecordingVideo = false;
+    var selectedReelMusicObj = null;
+
+    // 🎵 გლობალური ფლეიერი
+    var activeCameraMusicAudio = new Audio();
+    activeCameraMusicAudio.loop = true;
+
+    // IndexedDB-ში დროებით შენახვა და მეორე გვერდზე გადასვლა
+    function passToPublishScreen(fileBlob, musicObj) {
+      if (liveCameraStream) {
+        liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
+        liveCameraStream = null;
+      }
+      if (activeCameraMusicAudio) {
+        activeCameraMusicAudio.pause();
+        activeCameraMusicAudio.src = "";
+      }
+
+      var req = indexedDB.open('ReelsUploadDB', 1);
+      req.onupgradeneeded = function(e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('reelStore')) {
+          db.createObjectStore('reelStore');
+        }
+      };
+      req.onsuccess = function(e) {
+        var db = e.target.result;
+        var tx = db.transaction('reelStore', 'readwrite');
+        tx.objectStore('reelStore').put({
+          blob: fileBlob,
+          music: musicObj,
+          timestamp: Date.now()
+        }, 'tempReel');
+        tx.oncomplete = function() {
+          window.location.href = 'reel-publish.html';
+        };
+      };
+      req.onerror = function(err) {
+        console.error("IndexedDB Error:", err);
+      };
+    }
+
+    // 📸 3. კამერის გახსნა (ჩართულია ექოს და ხმაურის ფილტრაცია)
+    function openReelsCameraScreen() {
+      applyRecordTranslations();
+      var video = document.getElementById('rfLiveCameraFeed');
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: currentFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        }).then(function(stream) {
+          liveCameraStream = stream;
+          
+          var track = stream.getVideoTracks()[0];
+          if (track && track.getCapabilities) {
+            var capabilities = track.getCapabilities();
+            var constraintsToApply = {};
+
+            if ('zoom' in capabilities) {
+              constraintsToApply.zoom = capabilities.zoom.min;
+            }
+
+            if ('focusMode' in capabilities && capabilities.focusMode.includes('continuous')) {
+              constraintsToApply.focusMode = 'continuous';
+            }
+
+            if (Object.keys(constraintsToApply).length > 0) {
+              track.applyConstraints({ advanced: [constraintsToApply] }).catch(function(e) {
+                console.warn("Constraints apply error:", e);
+              });
+            }
+          }
+
+          if (video) {
+            video.srcObject = stream;
+            video.play().catch(function(){});
+          }
+        }).catch(function(err) {
+          navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode },
+            audio: true
+          }).then(function(stream) {
+            liveCameraStream = stream;
+            if (video) {
+              video.srcObject = stream;
+              video.play().catch(function(){});
+            }
+          }).catch(function(e) {
+            console.warn("Camera fallback error:", e);
+          });
+        });
+      }
+    }
+
+    function closeReelsCameraScreen() {
+      if (activeCameraMusicAudio) {
+        activeCameraMusicAudio.pause();
+        activeCameraMusicAudio.currentTime = 0;
+      }
+
+      if (liveCameraStream) {
+        liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
+        liveCameraStream = null;
+      }
+      window.history.back();
+    }
+
+    function flipLiveCamera() {
+      currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+      
+      var video = document.getElementById('rfLiveCameraFeed');
+      if (video) {
+        video.style.transform = (currentFacingMode === 'user') ? 'scaleX(-1)' : 'scaleX(1)';
+      }
+
+      if (liveCameraStream) {
+        liveCameraStream.getTracks().forEach(function(track) { track.stop(); });
+        liveCameraStream = null;
+      }
+      
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          video: { facingMode: currentFacingMode },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        }).then(function(stream) {
+          liveCameraStream = stream;
+          if (video) {
+            video.srcObject = stream;
+            video.play().catch(function(){});
+          }
+        }).catch(function(e) {
+          console.warn("Flip camera error:", e);
+        });
+      }
+    }
+
+    function toggleCameraFlash() {
+      if (liveCameraStream) {
+        var track = liveCameraStream.getVideoTracks()[0];
+        if (track && track.getCapabilities && track.getCapabilities().torch) {
+          var currentSetting = track.getSettings().torch || false;
+          track.applyConstraints({ advanced: [{ torch: !currentSetting }] }).catch(function(){});
+        }
+      }
+    }
+
+    function setRecordDuration(sec, el) {
+      var items = document.querySelectorAll('.reels-record-container span[id^="rf-dur-"]');
+      items.forEach(function(s) { s.style.borderBottom = 'none'; s.style.opacity = '0.6'; s.style.color = '#ffffff'; });
+      if (el) {
+        el.style.borderBottom = '2px solid #fe2c55';
+        el.style.opacity = '1';
+        el.style.color = '#fe2c55';
+      }
+    }
+
+    // 🖼️ 4. გალერეა
+    function triggerGalleryFromCameraScreen() {
+      var input = document.getElementById('rfGalleryPickerInput');
+      if (input) {
+        input.value = "";
+        input.click();
+      }
+    }
+
+    function handleReelsDirectUpload(event) {
+      var fileInput = event.target;
+      var file = fileInput.files[0];
+      if (!file) return;
+
+      var t = getReelsLangT();
+
+      var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
+      if (!isVideo) {
+        alert(t.videoOnly || "გთხოვთ აირჩიოთ მხოლოდ ვიდეო ფაილი!");
+        fileInput.value = "";
+        return;
+      }
+
+      if (file.size > 100 * 1024 * 1024) {
+        alert(t.sizeLimit || "ვიდეოს ზომა აჭარბებს 100MB-ს.");
+        fileInput.value = "";
+        return;
+      }
+
+      passToPublishScreen(file, null);
+    }
+
+    // 🔴 5. კამერიდან ვიდეოს ჩაწერა (მუშა ვერსია)
+    function toggleCameraRecording() {
+      var inner = document.getElementById('rfRecordInnerCircle');
+      if (!liveCameraStream) return;
+
+      if (!isRecordingVideo) {
+        recordedChunks = [];
+
+        // მუსიკის გაშვება ჩაწერის მომენტში
+        if (selectedReelMusicObj && activeCameraMusicAudio && activeCameraMusicAudio.src) {
+          activeCameraMusicAudio.currentTime = 0;
+          activeCameraMusicAudio.play().catch(function(e) {
+            console.warn("Audio play error:", e);
+          });
+        }
+
+        var tracks = [];
+
+        // 1. ვიდეო ტრეკი
+        liveCameraStream.getVideoTracks().forEach(function(track) {
+          tracks.push(track);
+        });
+
+        // 2. აუდიო ტრეკი
+        liveCameraStream.getAudioTracks().forEach(function(track) {
+          tracks.push(track);
+        });
+
+        var combinedStream = new MediaStream(tracks);
+
+        var mime = 'video/webm;codecs=vp8,opus';
+        if (!MediaRecorder.isTypeSupported(mime)) {
+          if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2')) {
+            mime = 'video/mp4;codecs=avc1,mp4a.40.2';
+          } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+            mime = 'video/mp4';
+          } else {
+            mime = 'video/webm';
+          }
+        }
+
+        try {
+          mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mime });
+        } catch(e) {
+          mediaRecorder = new MediaRecorder(combinedStream);
+        }
+
+        mediaRecorder.ondataavailable = function(e) {
+          if (e.data && e.data.size > 0) {
+            recordedChunks.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = function() {
+          if (activeCameraMusicAudio) {
+            activeCameraMusicAudio.pause();
+          }
+
+          var finalMime = mediaRecorder.mimeType || mime;
+          var blob = new Blob(recordedChunks, { type: finalMime });
+          var fileExt = finalMime.includes('mp4') ? '.mp4' : '.webm';
+          
+          var recordedFile = new File([blob], "reel_" + Date.now() + fileExt, { type: finalMime });
+          passToPublishScreen(recordedFile, selectedReelMusicObj);
+        };
+
+        try {
+          mediaRecorder.start(200);
+          isRecordingVideo = true;
+          if (inner) {
+            inner.style.borderRadius = "8px";
+            inner.style.transform = "scale(0.6)";
+          }
+        } catch(err) {
+          console.error("Recording error:", err);
+          isRecordingVideo = false;
+        }
+
+      } else {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+        isRecordingVideo = false;
+        if (inner) {
+          inner.style.borderRadius = "50%";
+          inner.style.transform = "scale(1)";
+        }
+      }
+    }
+
+    // 🎵 8. მუსიკა
+    function openReelsMusicSheet() {
+      var sheet = document.getElementById('rfMusicSheet');
+      if (sheet) {
+        sheet.style.display = 'flex';
+        renderMusicList('foryou');
+      }
+    }
+
+    function closeReelsMusicSheet(e) {
+      var sheet = document.getElementById('rfMusicSheet');
+      if (sheet) sheet.style.display = 'none';
+    }
+
+    function switchMusicTab(tab) {
+      var tabForYou = document.getElementById('rf-tab-for-you');
+      var tabPopular = document.getElementById('rf-tab-popular');
+      if (tabForYou) tabForYou.classList.toggle('active', tab === 'foryou');
+      if (tabPopular) tabPopular.classList.toggle('active', tab === 'popular');
+      renderMusicList(tab);
+    }
+
+    function renderMusicList(tab) {
+      var list = document.getElementById('rfMusicListContainer');
+      if (!list) return;
+      var t = getReelsLangT();
+      var filtered = REELS_MUSIC_CACHE.filter(function(m) { return tab === 'foryou' ? true : m.type === tab; });
+
+      list.innerHTML = filtered.map(function(item) {
+        return `
+          <div class="rf-music-item" onclick="selectReelMusic('${item.id}')">
+            <div class="rf-music-item-left">
+              <img src="${item.cover}" class="rf-music-cover" alt="cover">
+              <div>
+                <div class="rf-music-title">${item.title}</div>
+                <div class="rf-music-sub">${item.author} • ${item.duration}</div>
+              </div>
+            </div>
+            <button type="button" class="rf-music-select-btn" onclick="event.stopPropagation(); selectReelMusic('${item.id}');">${t.select}</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectReelMusic(musicId) {
+      var camMusicLabel = document.getElementById('rf-cam-selected-music');
+      var t = getReelsLangT();
+
+      if (!musicId) {
+        selectedReelMusicObj = null;
+        activeCameraMusicAudio.pause();
+        activeCameraMusicAudio.currentTime = 0;
+        activeCameraMusicAudio.src = "";
+
+        if (camMusicLabel) camMusicLabel.innerText = t.addMusic;
+      } else {
+        var found = REELS_MUSIC_CACHE.find(function(m) { return m.id === musicId; });
+        selectedReelMusicObj = found || null;
+        var title = found ? found.title : t.addMusic;
+        if (camMusicLabel) camMusicLabel.innerText = title;
+
+        if (found && found.url) {
+          activeCameraMusicAudio.pause();
+          activeCameraMusicAudio.src = found.url;
+          activeCameraMusicAudio.currentTime = 0;
+
+          activeCameraMusicAudio.play().catch(function(err) {
+            console.warn("Music play error:", err);
+          });
+        }
+      }
+      closeReelsMusicSheet();
+    }
+
+    function applyRecordTranslations() {
+      var t = getReelsLangT();
+      var setEl = function(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.innerText = text;
+      };
+
+      var musicTitle = selectedReelMusicObj ? selectedReelMusicObj.title : t.addMusic;
+      setEl('rf-cam-selected-music', musicTitle);
+      setEl('rf-lbl-gallery-btn', t.galleryBtn);
+      setEl('rf-lbl-flash', t.flash);
+      setEl('rf-lbl-timer', t.timer);
+      setEl('rf-lbl-effects', t.effects);
+      setEl('rf-lbl-music-header', t.musicHeader);
+      setEl('rf-tab-for-you', t.tabForYou);
+      setEl('rf-tab-popular', t.tabPopular);
+      setEl('rf-tab-none', t.tabNoMusic);
+    }
+
+    window.onload = openReelsCameraScreen;
+  </script>
+</body>
+</html>
