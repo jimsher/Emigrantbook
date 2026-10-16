@@ -10342,6 +10342,8 @@ function clearAllSearchHistory() {
 }
  // აქ მთავრდება
 
+    
+// აქ იწყება
   (function initGlobalBackHandler() {
   var backPressedOnce = false;
 
@@ -10374,12 +10376,12 @@ function clearAllSearchHistory() {
     }
   });
 })();
+// აქ მთავრდება
 
 
 
 
-
-   
+  // აქ იწყება პოსტის ატვირთვის ახალი ფუნქცია 
  function openCreatePostModal() {
   var modal = document.getElementById('create-post-modal');
   if (!modal) return;
@@ -10433,7 +10435,37 @@ function closeCreatePostModal() {
   if (mainHeader) mainHeader.style.setProperty('display', 'flex', 'important');
   if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
 }
+// აწ მთავრდება
 
+
+    // 1. მიმდინარე არჩეული აუდიტორიის ცვლადი (ნაგულისხმევად საჯარო)
+var currentSelectedPostAudience = 'public';
+
+function openAudienceModal() {
+  var audModal = document.getElementById('fb-audience-modal');
+  if (audModal) audModal.style.setProperty('display', 'flex', 'important');
+}
+
+function closeAudienceModal() {
+  var audModal = document.getElementById('fb-audience-modal');
+  if (audModal) audModal.style.setProperty('display', 'none', 'important');
+}
+
+function selectPostAudience(type, labelText, iconSrc) {
+  currentSelectedPostAudience = type;
+  
+  // საწერ მოდალში ვანახლებთ აიკონსა და წარწერას
+  var lbl = document.getElementById('lbl-create-post-privacy');
+  var ico = document.getElementById('current-privacy-icon');
+  if (lbl) lbl.innerText = labelText;
+  if (ico) ico.src = iconSrc;
+
+  // რადიო ღილაკის მონიშვნა
+  var radios = document.querySelectorAll('input[name="post_audience_opt"]');
+  radios.forEach(function(r) {
+    r.checked = (r.value === type);
+  });
+}
 
   </script>
 
