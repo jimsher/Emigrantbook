@@ -7515,6 +7515,16 @@ function unhidePostFromFeed(postId) {
   var isSponsored = post.is_sponsored === true;
 
   var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
+     
+    // 🔒 პოსტის კონფიდენციალურობის აიკონი (საჯარო, მეგობრები, მხოლოდ მე)
+  var postPrivacyIcon = "icons/globe.svg";
+  if (post.privacy === 'friends') {
+    postPrivacyIcon = "icons/users.svg";
+  } else if (post.privacy === 'private') {
+    postPrivacyIcon = "icons/lock.svg";
+  }
+  var privacyIconHtml = '<img src="' + postPrivacyIcon + '" class="post-action-icon" style="width: 12px; height: 12px; opacity: 0.65; margin-left: 2px;" alt="Privacy">';
+
   
   // სახელი: ჩვეულებრივ პოსტებზე რჩება ზუსტად იგივე post.author_name
   var displayAuthorName = isSponsored ? (post.ad_brand_name || post.author_name) : post.author_name;
