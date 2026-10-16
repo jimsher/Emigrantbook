@@ -10287,7 +10287,7 @@ function clearAllSearchHistory() {
 
 
 
-    function openCreatePostModal() {
+   function openCreatePostModal() {
   var modal = document.getElementById('create-post-modal');
   if (!modal) return;
   
@@ -10300,6 +10300,10 @@ function clearAllSearchHistory() {
   if (nameEl) nameEl.innerText = myName;
   if (avEl) avEl.innerHTML = `<img src="${myAvatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
 
+  // მთავარი გვერდის (Feed-ის) ავატარის შევსებაც, რომ იქაც გამოჩნდეს ფოტო
+  var feedAv = document.getElementById('create-post-trigger-avatar');
+  if (feedAv) feedAv.innerHTML = `<img src="${myAvatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+
   // ენის განახლება
   if (typeof applyLanguageDOM === 'function') applyLanguageDOM();
   var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
@@ -10307,7 +10311,9 @@ function clearAllSearchHistory() {
   var titleEl = document.getElementById('lbl-create-post-modal-title');
   if (titleEl && t.createPostTitle) titleEl.innerText = t.createPostTitle;
 
-  modal.style.display = 'flex';
+  // 🌟 მოდალის გახსნა (კლასით და გარანტირებული სტილით)
+  modal.classList.add('open');
+  modal.style.setProperty('display', 'flex', 'important');
   document.body.style.overflow = 'hidden'; // ეკრანის გაყინვა უკან
   
   var txt = document.getElementById('post-text-input');
@@ -10322,9 +10328,14 @@ function openCreatePostModalWithGallery() {
 
 function closeCreatePostModal() {
   var modal = document.getElementById('create-post-modal');
-  if (modal) modal.style.display = 'none';
+  if (!modal) return;
+  
+  // 🌟 მოდალის სრული დამალვა
+  modal.classList.remove('open');
+  modal.style.setProperty('display', 'none', 'important');
   document.body.style.overflow = '';
 }
+ 
 
   </script>
 
