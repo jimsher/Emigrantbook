@@ -10279,7 +10279,50 @@ function clearAllSearchHistory() {
     }
   });
 })();
+
+
+
+
+
+    function openCreatePostModal() {
+  var modal = document.getElementById('create-post-modal');
+  if (!modal) return;
   
+  // მომხმარებლის ავატარის და სახელის შევსება
+  var myName = (userProfile && (userProfile.full_name || userProfile.name)) || (currentUser ? currentUser.email : "User");
+  var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : DEFAULT_AVATAR_URL;
+  
+  var nameEl = document.getElementById('create-post-modal-author');
+  var avEl = document.getElementById('create-post-modal-avatar');
+  if (nameEl) nameEl.innerText = myName;
+  if (avEl) avEl.innerHTML = `<img src="${myAvatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+
+  // ენის განახლება
+  if (typeof applyLanguageDOM === 'function') applyLanguageDOM();
+  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : {};
+  var titleEl = document.getElementById('lbl-create-post-modal-title');
+  if (titleEl && t.createPostTitle) titleEl.innerText = t.createPostTitle;
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden'; // ეკრანის გაყინვა უკან
+  
+  var txt = document.getElementById('post-text-input');
+  if (txt) txt.focus();
+}
+
+function openCreatePostModalWithGallery() {
+  openCreatePostModal();
+  var fileInput = document.getElementById('post-media-file');
+  if (fileInput) fileInput.click();
+}
+
+function closeCreatePostModal() {
+  var modal = document.getElementById('create-post-modal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
