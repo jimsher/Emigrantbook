@@ -3348,18 +3348,35 @@ auth.onAuthStateChanged(function(user) {
 
 
     
-    function showSelectedFileName() {
-      var fileInput = document.getElementById('post-media-file');
-      var nameDiv = document.getElementById('selected-file-name');
-     if (fileInput && nameDiv) {
-     if (fileInput.files.length > 0) {
-       nameDiv.innerText = "📎 Selected: " + fileInput.files.length + " file(s)";
-       nameDiv.style.display = "block";
+   function showSelectedFileName() {
+  try {
+    var fileInput = document.getElementById('post-media-file');
+    var nameDiv = document.getElementById('selected-file-name');
+    if (!fileInput || !nameDiv) return;
+
+    if (fileInput.files && fileInput.files.length > 0) {
+      var file = fileInput.files[0];
+      var isVid = file.type && file.type.indexOf('video') !== -1;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        if (isVid) {
+          nameDiv.innerHTML = '<video src="' + e.target.result + '" style="width:100%; max-height:220px; border-radius:10px; object-fit:cover;" muted playsinline controls></video>';
+        } else {
+          nameDiv.innerHTML = '<img src="' + e.target.result + '" style="width:100%; max-height:220px; border-radius:10px; object-fit:cover; display:block;">';
+        }
+        nameDiv.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
     } else {
-   nameDiv.style.display = "none";
+      nameDiv.innerHTML = '';
+      nameDiv.style.display = 'none';
+    }
+  } catch (err) {
+    console.error("Preview error:", err);
   }
- }
 }
+ 
       
 
 
