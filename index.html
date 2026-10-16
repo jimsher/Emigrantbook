@@ -7508,6 +7508,20 @@ function unhidePostFromFeed(postId) {
     return "";
   }
 
+     // 🔒 კონფიდენციალურობის ფილტრი
+  if (currentUser && post.user_id !== currentUser.uid) {
+    if (post.privacy === 'private') {
+      return "";
+    }
+    if (post.privacy === 'friends') {
+      var isFriend = typeof cachedFriendsSet !== 'undefined' && cachedFriendsSet && cachedFriendsSet.has(post.user_id);
+      if (!isFriend) {
+        return "";
+      }
+    }
+  }
+  
+
   // 📢 რეკლამის შემოწმება (მხოლოდ რეკლამებზე იმოქმედებს!)
   var isSponsored = post.is_sponsored === true;
 
