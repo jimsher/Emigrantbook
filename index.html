@@ -267,78 +267,81 @@ a:active {
   
     <!-- მთავარი კონტეინერი, რომელიც აერთიანებს მთლიან არხს -->
     <div class="feed-container">
-        <!-- 🌟 1. Facebook-ის კომპაქტური ერთხაზიანი ტრიგერი Feed-ზე -->
+          <!-- 🌟 1. Facebook-ის კომპაქტური ზოლი Feed-ზე -->
   <div class="fb-create-post-trigger-card" onclick="openCreatePostModal()">
-    <div class="fb-trigger-avatar-holder" id="create-post-trigger-avatar">?</div>
-    <div class="fb-trigger-fake-input" id="lbl-feed-mind-trigger" data-lang-key="think">What's on your mind?</div>
+    <div class="fb-trigger-avatar-holder" id="create-post-trigger-avatar"></div>
+    <div class="fb-trigger-fake-input" id="lbl-feed-mind-trigger" data-lang-key="think">საკუთარ აზრებს ხომ არ გაგვიზიარებდით?</div>
     <button type="button" class="fb-trigger-photo-btn" onclick="event.stopPropagation(); openCreatePostModalWithGallery();">
       <img src="icons/camera.svg" class="post-action-icon" alt="Photo">
     </button>
   </div>
 
-  <!-- 🌟 2. Facebook-ის სრულეკრანიანი ახალი პოსტის მოდალი -->
+  <!-- 🌟 2. Facebook-ის სრულეკრანიანი მოდალი -->
   <div id="create-post-modal" class="fb-post-modal-fullscreen" style="display: none;">
-    <!-- ჰედერი -->
+    <!-- ჰედერი: ✕ / სათაური / ••• -->
     <div class="fb-modal-top-bar">
       <button type="button" class="fb-modal-close-icon" onclick="closeCreatePostModal()">✕</button>
       <div class="fb-modal-top-title" id="lbl-create-post-modal-title">ახალი პოსტი</div>
-      <button type="button" class="publish-btn fb-modal-publish-action" id="publish-submit-btn" data-lang-key="publish" onclick="createPost()">Publish</button>
+      <button type="button" class="fb-modal-top-more">•••</button>
     </div>
 
+    <!-- საწერი სივრცე -->
     <div class="fb-modal-scrollable-body">
-      <!-- მომხმარებლის ხაზი -->
       <div class="fb-modal-user-row">
-        <div class="fb-modal-user-avatar" id="create-post-modal-avatar">?</div>
-        <div class="fb-modal-user-meta">
-          <div class="fb-modal-user-name" id="create-post-modal-author">User</div>
-          <div class="fb-modal-privacy-pill">
-            <img src="icons/globe.svg" class="post-action-icon" style="width: 13px; height: 13px;">
-            <span id="lbl-create-post-privacy" data-lang-key="public">Public</span>
-            <span style="font-size: 10px;">▾</span>
-          </div>
-        </div>
+        <div class="fb-modal-user-avatar" id="create-post-modal-avatar"></div>
+        <div class="fb-modal-user-name" id="create-post-modal-author">User</div>
       </div>
 
-      <!-- სწრაფი ტეგები პროექტის ორიგინალი აიკონებით -->
       <div class="fb-modal-tags-row">
         <button type="button" class="fb-pill-tag">
           <img src="icons/clapperboard.svg" class="post-action-icon" style="width: 14px; height: 14px;">
-          <span id="lbl-tag-music">Music</span>
+          <span id="lbl-tag-music">მუსიკა</span>
         </button>
         <button type="button" class="fb-pill-tag">
           <img src="icons/users.svg" class="post-action-icon" style="width: 14px; height: 14px;">
-          <span id="lbl-tag-tagfriends">Tag</span>
+          <span id="lbl-tag-tagfriends">მონიშვნა</span>
         </button>
         <button type="button" class="fb-pill-tag">
           <img src="icons/globe.svg" class="post-action-icon" style="width: 14px; height: 14px;">
-          <span id="lbl-tag-location">Location</span>
+          <span id="lbl-tag-location">მდებარეობა</span>
         </button>
       </div>
 
-      <!-- არსებული საწერი ველი -->
-      <textarea class="create-post-input fb-modal-clean-textarea" id="post-text-input" data-lang-placeholder="think" placeholder="What's on your mind?"></textarea>
-
-      <!-- არჩეული ფაილის სახელი/ინფო -->
-      <div class="selected-file-info" id="selected-file-name" style="display: none; padding: 10px 15px;"></div>
+      <textarea class="fb-modal-clean-textarea" id="post-text-input" placeholder="საკუთარ აზრებს ხომ არ გაგვიზიარებდით?"></textarea>
+      <div class="selected-file-info" id="selected-file-name" style="display: none; padding: 10px 0;"></div>
     </div>
 
-    <!-- რეალური ფაილის ინპუტი (ხელუხლებელი ID და ივენთი) -->
     <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()" style="display: none;">
 
-    <!-- ქვედა Facebook-ის მოქმედების ბარათები ორიგინალი აიკონებით -->
-    <div class="fb-modal-bottom-actions-tray">
-      <button type="button" class="fb-action-tray-card" onclick="document.getElementById('post-media-file').click();">
-        <img src="icons/camera.svg" class="post-action-icon" style="width: 22px; height: 22px;">
-        <span data-lang-key="photoVideo">Photo / Video</span>
-      </button>
+    <!-- ქვედა ფიქსირებული Facebook პანელი -->
+    <div class="fb-modal-bottom-container">
+      <div class="fb-modal-bottom-actions-tray">
+        <button type="button" class="fb-action-tray-card" onclick="document.getElementById('post-media-file').click();">
+          <img src="icons/camera.svg" class="post-action-icon" style="width: 24px; height: 24px;">
+          <span>გალერეა</span>
+        </button>
+        <button type="button" class="fb-action-tray-card">
+          <span style="font-weight: 900; font-size: 13px; color: #1877f2; border: 1.5px solid #1877f2; border-radius: 4px; padding: 0 4px;">GIF</span>
+          <span>GIF</span>
+        </button>
+        <button type="button" class="fb-action-tray-card" onclick="window.location.href='tiktok-live.html'">
+          <img src="icons/video.svg" class="post-action-icon" style="width: 24px; height: 24px;">
+          <span>პირდაპირი</span>
+        </button>
+      </div>
 
-      <button type="button" class="fb-action-tray-card" onclick="window.location.href='tiktok-live.html'">
-        <img src="icons/video.svg" class="post-action-icon" style="width: 22px; height: 22px;">
-        <span data-lang-key="liveBtn">LIVE</span>
-      </button>
+      <div class="fb-modal-footer-bar">
+        <div class="fb-modal-privacy-pill">
+          <img src="icons/globe.svg" class="post-action-icon" style="width: 14px; height: 14px;">
+          <span id="lbl-create-post-privacy">საჯარო</span>
+          <span style="font-size: 10px;">▾</span>
+        </div>
+        <button type="button" class="fb-modal-submit-btn" id="publish-submit-btn" onclick="createPost()">შემდეგი</button>
+      </div>
     </div>
   </div>
-<!-- აწ მთავრდება -->
+
+     <!-- აწ მთავრდება -->
 
       <div class="stories-wrapper">
         <div class="story-card create-story-card" onclick="triggerStoryUpload()">
