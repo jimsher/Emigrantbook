@@ -7015,7 +7015,9 @@ function loadPosts(isNextPage) {
               }
             } catch(e) {}
 
-            var shouldShow = !isBlocked && !isSnoozed && !isManuallyHidden && (isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend));
+            var postPriv = postData.privacy || privacy || 'public';
+            var shouldShow = !isBlocked && !isSnoozed && !isManuallyHidden && (isMyOwnPost || (postPriv === 'public') || (postPriv === 'friends' && isFriend));
+
 
             if (shouldShow) {
               postsWall.innerHTML += createPostCardHtml(postData);
