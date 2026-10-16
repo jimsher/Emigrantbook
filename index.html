@@ -7509,10 +7509,21 @@ function unhidePostFromFeed(postId) {
   }
 
      // 🔒 კონფიდენციალურობის ფილტრი
-      if (post && post.privacy === 'private') {
-    var myId = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : "NO_USER";
-    alert("ტესტი:\nპოსტის ID: " + post.id + "\nპოსტის ავტორი: " + post.user_id + "\nშენი UID: " + myId + "\nPrivacy: " + post.privacy);
+  var pAudience = post.privacy || 'public';
+  var myId = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : null;
+
+  if (myId && post.user_id !== myId) {
+    if (pAudience === 'private') {
+      return "";
+    }
+    if (pAudience === 'friends') {
+      var isFriend = typeof cachedFriendsSet !== 'undefined' && cachedFriendsSet && cachedFriendsSet.has(post.user_id);
+      if (!isFriend) {
+        return "";
+      }
+    }
   }
+ 
 
 
   
