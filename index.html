@@ -341,8 +341,79 @@ a:active {
     </div>
   </div>
 
+     <!-- ახალი გვერდი -->
+      <!-- 1. საწერ მოდალში არსებული ღილაკი, რომელსაც მივაბით გახსნის onclick -->
+<div class="fb-modal-privacy-pill" onclick="openAudienceModal()" style="cursor: pointer;">
+  <img id="current-privacy-icon" src="icons/globe.svg" class="post-action-icon" style="width: 14px; height: 14px;">
+  <span id="lbl-create-post-privacy">საჯარო</span>
+  <span style="font-size: 10px;">▾</span>
+</div>
+
+<!-- 2. აუდიტორიის არჩევის სრულეკრანიანი გვერდი (მეორე სურათის მიხედვით) -->
+<div id="fb-audience-modal" class="fb-audience-screen" style="display: none;">
+  <!-- ზედა ზოლი: უკან დაბრუნების ისარი + სამი წერტილი -->
+  <div class="fb-audience-top-bar">
+    <button type="button" class="fb-audience-back-btn" onclick="closeAudienceModal()">‹</button>
+    <div style="font-size: 22px; font-weight: bold; color: #050505;">•••</div>
+  </div>
+
+  <div class="fb-audience-content">
+    <h2 class="fb-audience-title">ვის შეუძლია თქვენი პოსტის ნახვა?</h2>
+    <p class="fb-audience-sub">თქვენი პოსტები გამოჩნდება ზოლში, თქვენს პროფილსა და ძიების შედეგებში.</p>
+
+    <div class="fb-audience-list">
+      <!-- 1. საჯარო -->
+      <label class="fb-audience-item" onclick="selectPostAudience('public', 'საჯარო', 'icons/globe.svg')">
+        <div class="fb-audience-item-left">
+          <div class="fb-audience-icon-wrap">
+            <img src="icons/globe.svg" class="post-action-icon" alt="Public">
+          </div>
+          <div>
+            <div class="fb-aud-name">საჯარო</div>
+            <div class="fb-aud-desc">ყველა, როგორც Emigrantbook-ზე, ასევე მის მიღმა</div>
+          </div>
+        </div>
+        <input type="radio" name="post_audience_opt" value="public" checked class="fb-aud-radio">
+      </label>
+
+      <!-- 2. მეგობრები -->
+      <label class="fb-audience-item" onclick="selectPostAudience('friends', 'მეგობრები', 'icons/users.svg')">
+        <div class="fb-audience-item-left">
+          <div class="fb-audience-icon-wrap">
+            <img src="icons/users.svg" class="post-action-icon" alt="Friends">
+          </div>
+          <div>
+            <div class="fb-aud-name">მეგობრები</div>
+            <div class="fb-aud-desc">თქვენი მეგობრები Emigrantbook-ზე</div>
+          </div>
+        </div>
+        <input type="radio" name="post_audience_opt" value="friends" class="fb-aud-radio">
+      </label>
+
+      <!-- 3. მხოლოდ მე -->
+      <label class="fb-audience-item" onclick="selectPostAudience('private', 'მხოლოდ მე', 'icons/lock.svg')">
+        <div class="fb-audience-item-left">
+          <div class="fb-audience-icon-wrap">
+            <img src="icons/lock.svg" class="post-action-icon" alt="Private">
+          </div>
+          <div>
+            <div class="fb-aud-name">მხოლოდ მე</div>
+            <div class="fb-aud-desc">მხოლოდ თქვენ ხედავთ ამ პოსტს</div>
+          </div>
+        </div>
+        <input type="radio" name="post_audience_opt" value="private" class="fb-aud-radio">
+      </label>
+    </div>
+  </div>
+
+  <!-- ქვედა ლურჯი ღილაკი: "მზადაა" -->
+  <div class="fb-audience-footer">
+    <button type="button" class="fb-audience-done-btn" onclick="closeAudienceModal()">მზადაა</button>
+  </div>
+</div>
      <!-- აწ მთავრდება -->
 
+      
       <div class="stories-wrapper">
         <div class="story-card create-story-card" onclick="triggerStoryUpload()">
           <div class="story-image-bg" id="my-story-bg-avatar"></div>
