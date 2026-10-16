@@ -3346,66 +3346,21 @@ auth.onAuthStateChanged(function(user) {
       removeProfileMoreMenu();
     });
 
+
+    
     function showSelectedFileName() {
-  var fileInput = document.getElementById('post-media-file');
-  var previewBox = document.getElementById('selected-file-name');
-  if (!fileInput || !previewBox) return;
-
-  if (!fileInput.files || fileInput.files.length === 0) {
-    previewBox.innerHTML = '';
-    previewBox.style.display = 'none';
-    return;
-  }
-
-  var files = Array.from(fileInput.files).slice(0, 6);
-  previewBox.innerHTML = '';
-  previewBox.style.display = 'block';
-
-  // კონტეინერი ფოტოების პრევიუსთვის
-  var gridWrap = document.createElement('div');
-  gridWrap.className = 'fb-create-post-preview-grid count-' + files.length;
-
-  // წაშლის (გასუფთავების) ღილაკი ზედა მარჯვენა კუთხეში
-  var removeBtn = document.createElement('button');
-  removeBtn.type = 'button';
-  removeBtn.className = 'fb-preview-remove-all-btn';
-  removeBtn.innerHTML = '✕';
-  removeBtn.title = 'ფოტოების წაშლა';
-  removeBtn.onclick = function(e) {
-    e.stopPropagation();
-    fileInput.value = '';
-    previewBox.innerHTML = '';
-    previewBox.style.display = 'none';
-  };
-  gridWrap.appendChild(removeBtn);
-
-  files.forEach(function(file) {
-    var itemBox = document.createElement('div');
-    itemBox.className = 'fb-preview-item';
-
-    if (file.type.startsWith('video/')) {
-      var video = document.createElement('video');
-      video.src = URL.createObjectURL(file);
-      video.muted = true;
-      video.playsInline = true;
-      itemBox.appendChild(video);
-      
-      var playBadge = document.createElement('div');
-      playBadge.className = 'fb-preview-video-badge';
-      playBadge.innerText = '▶';
-      itemBox.appendChild(playBadge);
+      var fileInput = document.getElementById('post-media-file');
+      var nameDiv = document.getElementById('selected-file-name');
+     if (fileInput && nameDiv) {
+     if (fileInput.files.length > 0) {
+       nameDiv.innerText = "📎 Selected: " + fileInput.files.length + " file(s)";
+       nameDiv.style.display = "block";
     } else {
-      var img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      img.alt = 'Preview';
-      itemBox.appendChild(img);
-    }
-
-    gridWrap.appendChild(itemBox);
-  });
-
-  previewBox.appendChild(gridWrap);
+   nameDiv.style.display = "none";
+  }
+ }
 }
+      
 
 
     
